@@ -273,6 +273,6 @@ scoringengine/media/
 
 .ipython/
 .env
-.envs/*
+.envs/.production
 
 .idea/

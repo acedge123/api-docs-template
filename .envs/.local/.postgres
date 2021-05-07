@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=scoringengine
+POSTGRES_USER=yqklUxmtLKltxlLAHDoJrQCbEsarjGsC
+POSTGRES_PASSWORD=QTDuXIAhNhPAqLqkOBq8x6tByAm6m3DHyts6LFGglqDzhJAxfsO6N6cGeEcpoFMu
