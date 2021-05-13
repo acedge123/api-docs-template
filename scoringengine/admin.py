@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db import models
 from django.forms import CheckboxSelectMultiple
 
-from scoringengine.models import Question, Choice, Rule
+from scoringengine.models import Question, Choice, Rule, Lead, Answer
 
 admin.site.site_title = 'Scoring engine site admin'
 admin.site.site_header = 'Scoring engine administration'
@@ -10,7 +10,7 @@ admin.site.site_header = 'Scoring engine administration'
 
 class RestrictedAdmin(admin.ModelAdmin):
     def get_exclude(self, request, obj=None):
-        exclude = super().get_exclude(request, obj=None) or []
+        exclude = super().get_exclude(request, obj=obj) or []
 
         if not request.user.is_superuser:
             exclude += ['owner']
@@ -60,7 +60,7 @@ class QuestionAdmin(RestrictedAdmin):
 
 
 class RuleAdmin(RestrictedAdmin):
-    list_display = ('rule', 'response_text')
+    list_display = ('__str__', 'response_text')
     ordering = ['question__number']
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -69,5 +69,25 @@ class RuleAdmin(RestrictedAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class AnswerInline(admin.StackedInline):
+    model = Answer
+    extra = 0
+    readonly_fields = ()
+
+
+class LeadAdmin(RestrictedAdmin):
+    inlines = [AnswerInline]
+    list_display = ('lead_id', 'timestamp')
+    ordering = ['owner__id', 'lead_id']
+    readonly_fields = ('timestamp',)
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Rule, RuleAdmin)
+admin.site.register(Lead, LeadAdmin)
