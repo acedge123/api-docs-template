@@ -22,3 +22,5 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 
     docker-compose -f local.yml run --rm django python manage.py makemigrations scoringengine
     docker-compose -f local.yml run --rm django python manage.py migrate
+
+    docker-compose -f local.yml run --rm django python manage.py shell
