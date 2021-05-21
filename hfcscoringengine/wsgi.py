@@ -16,6 +16,6 @@ from django.core.wsgi import get_wsgi_application
 ROOT_DIR = Path(__file__).resolve(strict=True).parent
 sys.path.append(str(ROOT_DIR / "scoringengine"))
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hfcscoringengine.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hfcscoringengine.settings.production')
 
 application = get_wsgi_application()
