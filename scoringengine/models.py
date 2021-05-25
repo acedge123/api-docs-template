@@ -30,7 +30,7 @@ def validate_field_name(value):
     """ Check that entered field name is valid rule variable """
 
     if not re.fullmatch(RULE_VARIABLE, value):
-        raise ValidationError('"%(value)s" is not valid Field name', params={'field_name': value}, code='invalid_field_name')
+        raise ValidationError('"%(field_name)s" is not valid Field name', params={'field_name': value}, code='invalid_field_name')
 
 
 def validate_choice_text(value):
