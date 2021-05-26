@@ -30,7 +30,7 @@ http:
   routers:
     web-secure-router:
       # TODO: Set actual hosts here
-      rule: "Host(`example.com`) || Host(`www.example.com`)"
+      rule: "Host(`api.homefinancecheck.com`)"
       entryPoints:
         - web-secure
       middlewares:
