@@ -29,7 +29,6 @@ certificatesResolvers:
 http:
   routers:
     web-secure-router:
-      # TODO: Set actual hosts here
       rule: "Host(`api.homefinancecheck.com`)"
       entryPoints:
         - web-secure
