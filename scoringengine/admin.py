@@ -43,6 +43,7 @@ class RestrictedAdmin(admin.ModelAdmin):
         return form
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Ensure that user can set only himself as owner
         if db_field.name == 'owner':
             kwargs['queryset'] = get_user_model().objects.filter(pk=request.user.pk)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -63,11 +64,6 @@ class QuestionAdmin(RestrictedAdmin):
         models.ManyToManyField: {'widget': CheckboxSelectMultiple},
     }
 
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == 'combined_with':
-            kwargs['queryset'] = Question.objects.filter(owner=request.user)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 class RuleAdminForm(forms.ModelForm):
     def clean(self):
@@ -84,8 +80,10 @@ class RuleAdminForm(forms.ModelForm):
             invalid_field_name_errors = []
             for rule_field_name in re.findall(r'{(\w*)}', rule):
                 if rule_field_name not in valid_field_names:
-                    invalid_field_name_errors.append(ValidationError('Field name "%(value)s" used in Rule is not existed',
-                                                                     params={'value': rule_field_name}))
+                    invalid_field_name_errors.append(ValidationError(
+                        'Field name "%(value)s" used in Rule is not existed',
+                        params={'value': rule_field_name}
+                    ))
 
             if invalid_field_name_errors:
                 raise ValidationError(invalid_field_name_errors)
@@ -99,6 +97,7 @@ class RuleAdmin(RestrictedAdmin):
     ordering = ['question__number']
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Ensure that user can select only questions he own
         if db_field.name == 'question':
             kwargs['queryset'] = Question.objects.filter(owner=request.user)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -135,6 +134,7 @@ class LeadAdmin(RestrictedAdmin):
 
 class TokenAdmin(drf_admin.TokenAdmin):
     def get_queryset(self, request):
+        # Ensure user can access only his api tokens
         query_set = super().get_queryset(request)
 
         if not request.user.is_superuser:
@@ -143,6 +143,7 @@ class TokenAdmin(drf_admin.TokenAdmin):
         return query_set
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Ensure user can create api token only for himself
         if db_field.name == 'user':
             if not request.user.is_superuser:
                 kwargs['queryset'] = get_user_model().objects.filter(pk=request.user.pk)
