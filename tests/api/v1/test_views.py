@@ -47,7 +47,7 @@ class TestQuestionViewSet:
 class TestLeadViewSet:
 
     @pytest.mark.usefixtures('questions')
-    def test_get_lead(self, api_client, lead, user1):
+    def test_get_lead(self, api_client, lead):
         url = reverse('api:v1:lead-detail', kwargs={'pk': str(lead.lead_id)})
 
         expected_result = {

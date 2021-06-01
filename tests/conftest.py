@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-from django.contrib.auth import get_user_model
 
 from scoringengine.models import Question, Rule, Choice, Lead, Answer
 
@@ -112,24 +111,28 @@ def questions_for_user(user):
         pk=1,
         question=q1,
         text='Below 1',
-        points=1
+        value=1,
+        points=1,
     )
     c2 = Choice(
         pk=2,
         question=q1,
         text='2+',
+        value=2,
         points=2
     )
     c3 = Choice(
         pk=3,
         question=q2,
         text='1-2',
+        value=2,
         points=3
     )
     c4 = Choice(
         pk=4,
         question=q3,
         text='1',
+        value=1,
         points=3
     )
 
@@ -176,12 +179,14 @@ def questions_for_user1(user1):
         pk=10,
         question=q1,
         text='Below 1',
+        value=1,
         points=1
     )
     c2 = Choice(
         pk=11,
         question=q1,
         text='2+',
+        value=2,
         points=2
     )
 
@@ -269,8 +274,3 @@ def generate_lead_id():
         return str(uuid.uuid4())
 
     return func
-
-
-@pytest.fixture()
-def admin_user(user):
-    return user

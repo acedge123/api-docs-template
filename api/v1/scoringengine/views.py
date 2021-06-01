@@ -50,6 +50,7 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                 })
 
             answer_data['points'] = choice.points * question.weight
+            answer_data['value'] = choice.value
 
     def _calculate_x_and_y_scores(self, answers_data):
         """ Calculate X-axis and Y-axis scores """
@@ -73,7 +74,7 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
     def _collect_recommendations(self, answers_data):
         """  Collect recommendations by checking each question rule against provided answers """
 
-        answers = {a['field_name']: a['response'] for a in answers_data}
+        answers = {a['field_name']: a['value'] for a in answers_data}
 
         for answer_data in answers_data:
             question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()

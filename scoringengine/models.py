@@ -33,14 +33,6 @@ def validate_field_name(value):
         raise ValidationError('"%(field_name)s" is not valid Field name', params={'field_name': value}, code='invalid_field_name')
 
 
-def validate_choice_text(value):
-    """ Check that entered question choice text is contain at least one positive number """
-
-    if not re.findall(r'\d+', value):
-        raise ValidationError('Text should contain at least one positive number', params={'choice_text': value},
-                              code='invalid_choice_text')
-
-
 def validate_rule(value):
     """ Check that entered rule is valid: contain only allowed parts and can be evaluated using "eval" function """
 
@@ -103,12 +95,6 @@ class Question(models.Model):
         ]
 
     @staticmethod
-    def extract_answers_values(answers):
-        """ Extract max number from answers, to be able check rule. """
-
-        return {field_name: max([int(w) for w in re.findall(r'\d+', answer)]) for field_name, answer in answers.items()}
-
-    @staticmethod
     def eval_rule(rule, data):
         """ Remove RULE_PREFIX and eval rule for provided data """
 
@@ -116,8 +102,7 @@ class Question(models.Model):
 
     def check_rule(self, answers):
         try:
-            data = self.extract_answers_values(answers)
-            return self.eval_rule(self.rule.rule, data)
+            return self.eval_rule(self.rule.rule, answers)
         except Rule.DoesNotExist:
             return False
 
@@ -139,9 +124,10 @@ class Question(models.Model):
 
 class Choice(models.Model):
     question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name='choices')
-    text = models.CharField(
-        max_length=200, validators=[validate_choice_text],
-        help_text='Text should contain at least one positive number. Max number will be used in rules checks')
+    text = models.CharField(max_length=200)
+    value = models.DecimalField(
+        max_digits=12, decimal_places=2, help_text='Value that will be used in rules calculation. For ranges it is '
+                                                   'recommended to use highest number in the range.')
     points = models.IntegerField()
 
     class Meta:
@@ -171,6 +157,7 @@ class Answer(models.Model):
 
     field_name = models.CharField(max_length=200)
     response = models.CharField(max_length=200)
+    value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
 
     points = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 

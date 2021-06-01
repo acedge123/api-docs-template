@@ -55,6 +55,11 @@ for model in ['question', 'choice', 'rule']:
 for model in ['lead']:
     for permission in ['delete', 'view']:
         permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
+        
+for model in ['answer']:
+    for permission in ['view']:
+        permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
+
 
 g = Group.objects.create(name='Regular admin')
 g.permissions.set(permissions)

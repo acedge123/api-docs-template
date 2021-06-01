@@ -80,13 +80,6 @@ class TestQuestion:
 
         question.full_clean()
 
-    @pytest.mark.parametrize('answers,expected_result', [(
-        {'field_name0': 'Below 99', 'field_name1': '100-299', 'field_name2': '300+', 'field_name3': '1'},
-        {'field_name0': 99, 'field_name1': 299, 'field_name2': 300, 'field_name3': 1}
-    )])
-    def test_extract_answers_values(self, answers, expected_result):
-        assert Question.extract_answers_values(answers) == expected_result
-
     @pytest.mark.parametrize('rule,data,expected_result', [
         ('If {field_name0} == 99', {'field_name0': 99}, True),
         ('If {field_name0} < {field_name1}', {'field_name0': 99, 'field_name1': 299}, True),
@@ -108,16 +101,16 @@ class TestQuestion:
 
     def test_check_rule_is_true(self, question):
         answers = {
-            'Income': '3000 - 3999',
-            'Rent': '3000 - 4999'
+            'Income': 3999.00,
+            'Rent': 4999.00
         }
 
         assert question.check_rule(answers)
 
     def test_check_rule_is_false(self, question):
         answers = {
-            'Income': '10000+',
-            'Rent': 'Below 999'
+            'Income': 10000.01,
+            'Rent': 999.99
         }
 
         assert not question.check_rule(answers)
@@ -154,18 +147,6 @@ class TestQuestion:
 
 
 class TestChoice:
-    @pytest.mark.parametrize('text', ['Invalid text', '---', '+++'])
-    def test_text_contain_positive_number_raise_validation_error(self, question, text):
-        choice = Choice(question=question, text=text, points=1)
-
-        with pytest.raises(ValidationError, match='Text should contain at least one positive number'):
-            choice.full_clean()
-
-    @pytest.mark.parametrize('text', ['Below 99', '100-299', '300+', '1'])
-    def test_text_contain_positive_number_is_valid(self, question, text):
-        choice = Choice(question=question, text=text, points=1)
-        choice.full_clean()
-
     @pytest.mark.parametrize('text', ['Below 99', '100-299', '300+', '1'])
     def test_str(self, question, text):
         choice = Choice(question=question, text=text, points=1)

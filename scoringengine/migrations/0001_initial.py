@@ -61,7 +61,7 @@ class Migration(migrations.Migration):
             name='Choice',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(help_text='Text should contain at least one positive number. Max number will be used in rules checks', max_length=200, validators=[scoringengine.models.validate_choice_text])),
+                ('text', models.CharField(help_text='Text should contain at least one positive number. Max number will be used in rules checks', max_length=200)),
                 ('points', models.IntegerField()),
                 ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='choices', to='scoringengine.question')),
             ],

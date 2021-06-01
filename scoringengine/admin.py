@@ -4,8 +4,6 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db import models
-from django.forms import CheckboxSelectMultiple
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
 
@@ -59,10 +57,6 @@ class QuestionAdmin(RestrictedAdmin):
     inlines = [ChoiceInline]
     list_display = ('__str__', 'field_name', 'x_axis', 'y_axis')
     ordering = ['owner__id', 'number']
-
-    formfield_overrides = {
-        models.ManyToManyField: {'widget': CheckboxSelectMultiple},
-    }
 
 
 class RuleAdminForm(forms.ModelForm):
