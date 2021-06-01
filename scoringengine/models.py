@@ -81,9 +81,10 @@ class Question(models.Model):
         max_length=200, validators=[validate_field_name],
         help_text='Field name should contain only letters, numbers and underscore')
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=1,
+                                 help_text='<b>Note:</b> Used only for question with choices',
                                  validators=[MinValueValidator(limit_value=0)])
-    x_axis = models.BooleanField()
-    y_axis = models.BooleanField()
+    x_axis = models.BooleanField(help_text='<b>Note:</b> Used only for question with choices')
+    y_axis = models.BooleanField(help_text='<b>Note:</b> Used only for question with choices')
 
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='questions')
 

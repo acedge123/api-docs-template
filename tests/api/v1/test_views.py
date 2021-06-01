@@ -35,6 +35,12 @@ class TestQuestionViewSet:
                 'choices': [
                     {'text': '1'}
                 ]
+            },
+            {
+                'number': 4,
+                'field_name': 'zc',
+                'text': 'Zip code',
+                'choices': []
             }
         ]
 
@@ -123,6 +129,10 @@ class TestLeadViewSet:
                     'response': '1'
                 },
                 {
+                    'field_name': 'zc',
+                    'response': 'ZC29076'
+                },
+                {
                     'field_name': 'non_existing_field_id',
                     'response': '2+'
                 }
@@ -156,6 +166,10 @@ class TestLeadViewSet:
                 {
                     'field_name': 'q3u',
                     'response': '1'
+                },
+                {
+                    'field_name': 'zc',
+                    'response': 'ZC29076'
                 }
             ]
         }
@@ -189,6 +203,10 @@ class TestLeadViewSet:
                 {
                     'field_name': 'q3u',
                     'response': '1'
+                },
+                {
+                    'field_name': 'zc',
+                    'response': 'ZC29076'
                 }
             ]
         }
@@ -230,6 +248,10 @@ class TestLeadViewSet:
                 {
                     'field_name': 'q3u',
                     'response': '1'
+                },
+                {
+                    'field_name': 'zc',
+                    'response': 'ZC29076'
                 }
             ]
         }
@@ -262,6 +284,10 @@ class TestLeadViewSet:
                 {
                     'field_name': 'q3u',
                     'response': '1'
+                },
+                {
+                    'field_name': 'zc',
+                    'response': 'ZC29076'
                 }
             ]
         }

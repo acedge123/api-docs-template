@@ -50,7 +50,6 @@ class RestrictedAdmin(admin.ModelAdmin):
 class ChoiceInline(admin.TabularInline):
     model = Choice
     extra = 0
-    min_num = 1
 
 
 class QuestionAdmin(RestrictedAdmin):

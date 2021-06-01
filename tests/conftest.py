@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-
 from scoringengine.models import Question, Rule, Choice, Lead, Answer
 
 
@@ -97,7 +96,17 @@ def questions_for_user(user):
         number=3,
         text='Question three user?',
         field_name='q3u',
-        weight=3.1,
+        weight=0,
+        x_axis=False,
+        y_axis=False,
+        owner=user
+    )
+    q4 = Question(
+        pk=4,
+        number=4,
+        text='Zip code',
+        field_name='zc',
+        weight=0,
         x_axis=False,
         y_axis=False,
         owner=user
@@ -106,6 +115,7 @@ def questions_for_user(user):
     q1.save()
     q2.save()
     q3.save()
+    q4.save()
 
     c1 = Choice(
         pk=1,

@@ -29,7 +29,7 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
             return LeadSerializerView
 
     def _calculate_answers_points(self, answers_data):
-        """  Calculate answer points
+        """  Calculate answer points for questions that have choices
 
         Answer points = choice points * question weight
         """
@@ -45,12 +45,15 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
             choice = question.choices.filter(text=answer_data['response']).first()
 
             if choice is None:
-                raise serializers.ValidationError({
-                    'answers': {'response': [f"There are no question choice with '{answer_data['response']}' response"]}
-                })
-
-            answer_data['points'] = choice.points * question.weight
-            answer_data['value'] = choice.value
+                if question.choices.count() > 0:
+                    raise serializers.ValidationError({
+                        'answers': {
+                            'response': [f"There are no question choice with '{answer_data['response']}' response"]
+                        }
+                    })
+            else:
+                answer_data['points'] = choice.points * question.weight
+                answer_data['value'] = choice.value
 
     def _calculate_x_and_y_scores(self, answers_data):
         """ Calculate X-axis and Y-axis scores """
@@ -61,20 +64,21 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
         for answer_data in answers_data:
             question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
 
-            points = answer_data['points']
+            points = answer_data.get('points')
 
-            if question.x_axis:
-                x_axis += points
+            if points is not None:
+                if question.x_axis:
+                    x_axis += points
 
-            if question.y_axis:
-                y_axis += points
+                if question.y_axis:
+                    y_axis += points
 
         return x_axis, y_axis
 
     def _collect_recommendations(self, answers_data):
         """  Collect recommendations by checking each question rule against provided answers """
 
-        answers = {a['field_name']: a['value'] for a in answers_data}
+        answers = {a['field_name']: a['value'] for a in answers_data if a.get('value') is not None}
 
         for answer_data in answers_data:
             question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
