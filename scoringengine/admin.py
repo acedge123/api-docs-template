@@ -62,19 +62,17 @@ class RuleAdminForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        # Check that rule contain only existing field names
+        # Check that rule contain only valid field names
         rule = cleaned_data.get('rule')
 
         if rule:
             user = cleaned_data.get('owner')
 
-            valid_field_names = [q.field_name for q in user.questions.all()]
-
             invalid_field_name_errors = []
             for rule_field_name in re.findall(r'{(\w*)}', rule):
-                if rule_field_name not in valid_field_names:
+                if rule_field_name not in Question.get_possible_field_names(user):
                     invalid_field_name_errors.append(ValidationError(
-                        'Field name "%(value)s" used in Rule is not existed',
+                        'Field name "%(value)s" used in Rule is not valid',
                         params={'value': rule_field_name}
                     ))
 
@@ -98,10 +96,10 @@ class RuleAdmin(RestrictedAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj=None, change=False, **kwargs)
 
-        existing_field_names = ", ".join([q.field_name for q in request.user.questions.all()]) or 'No questions created yet'
+        possible_field_names = ', '.join(Question.get_possible_field_names(request.user)) or 'No questions created yet'
 
         # Extend rule help_text to show possible field names
-        form.base_fields['rule'].help_text += f'</br></br>Existing field names: <b>{existing_field_names}</b>'
+        form.base_fields['rule'].help_text += f'</br></br>Possible field names: <b>{possible_field_names}</b>'
 
         return form
 

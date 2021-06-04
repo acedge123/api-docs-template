@@ -1,6 +1,30 @@
 # Scoring Engine
 
-Customizable Scoring and Rules model
+Customizable scoring and rules model
+
+## Scoring and rules logic
+
+### Scoring: X-axis and Y-axis scores
+
+- X-axis score equals sum of questions weight multiplied by selected choice points for all questions with x-axis equals True;
+- Y-axis score equals sum of questions weight multiplied by selected choice points for all questions with y-axis equals True;
+
+Questions without choices do not affect X-axis or Y-axis scores.
+
+### Rules: Recommendations
+
+There may be a rule associated with the question. Questions can be used in rule (as question's field name in curly 
+brackets, e.g. {field_name}), in this case selected choice value for that question is used in rule calculation.
+If rule is True, recommendation for associated question will be returned.
+
+Recommendation can contain some of or all of:
+- response text;
+- affiliate name;
+- affiliate image (url);
+- affiliate link;
+- redirect url.
+
+Questions without choices may have rule associated with it, but can't be used in rule itself.
 
 ## Deployment
 
@@ -38,7 +62,7 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 ## Creating group for regular admin
 
 "Regular admin" group could be created manually or using script below. 
-It should allow full access for Question, Choice and Rule models and read and delete access for Lead model.
+It should allow full access for Question, Choice and Rule models, read access for Answer model and read and delete access for Lead model.
 
     docker-compose -f <envirovment>.yml run --rm django python manage.py shell
 
@@ -140,6 +164,6 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
 }
 ```
 
-## /api/v1/leads/<lead_id>/
+### /api/v1/leads/<lead_id>/
 #### Allowed method: GET
 Return X-axis, Y-axis values with recommendations for provided lead.

@@ -1,6 +1,11 @@
 import uuid
 
 import pytest
+from django.contrib.admin import AdminSite
+from django.test import RequestFactory
+from rest_framework.authtoken.models import TokenProxy
+
+from scoringengine.admin import QuestionAdmin, RuleAdmin, LeadAdmin, TokenAdmin
 from scoringengine.models import Question, Rule, Choice, Lead, Answer
 
 
@@ -164,11 +169,12 @@ def questions_for_user(user):
 
     r.save()
 
-    yield [q1, q2, q3]
+    yield [q1, q2, q3, q4]
 
     q1.delete()
     q2.delete()
     q3.delete()
+    q4.delete()
 
 
 @pytest.fixture()
@@ -202,6 +208,15 @@ def questions_for_user1(user1):
 
     c1.save()
     c2.save()
+
+    r = Rule(
+        pk=10,
+        question=q1,
+        rule='If {q1u1} == 1',
+        owner=user1
+    )
+
+    r.save()
 
     yield [q1]
 
@@ -284,3 +299,102 @@ def generate_lead_id():
         return str(uuid.uuid4())
 
     return func
+
+
+@pytest.fixture()
+def leads_for_user(user):
+    l = Lead(
+        pk=1,
+        x_axis=1,
+        y_axis=2.3,
+        owner=user
+    )
+
+    l.save()
+
+    a1 = Answer(
+        pk=1,
+        lead=l,
+        field_name='fn1u',
+        response='response user',
+    )
+
+    a1.save()
+
+    yield [l]
+
+    l.delete()
+
+
+@pytest.fixture()
+def leads_for_user1(user1):
+    l = Lead(
+        pk=10,
+        x_axis=1,
+        y_axis=2.3,
+        owner=user1
+    )
+
+    l.save()
+
+    a1 = Answer(
+        pk=10,
+        lead=l,
+        field_name='fn1u1',
+        response='response user1',
+    )
+
+    a1.save()
+
+    yield [l]
+
+    l.delete()
+
+
+@pytest.fixture()
+def leads(leads_for_user, leads_for_user1):
+    return leads_for_user + leads_for_user1
+
+
+@pytest.fixture()
+def admin_site():
+    return AdminSite()
+
+
+@pytest.fixture()
+def question_admin_and_model(admin_site):
+    return QuestionAdmin(model=Question, admin_site=admin_site), Question
+
+
+@pytest.fixture()
+def rule_admin_and_model(admin_site):
+    return RuleAdmin(model=Rule, admin_site=admin_site), Rule
+
+
+@pytest.fixture()
+def lead_admin_and_model(admin_site):
+    return LeadAdmin(model=Lead, admin_site=admin_site), Lead
+
+
+@pytest.fixture()
+def token_admin_and_model(admin_site):
+    return TokenAdmin(model=TokenProxy, admin_site=admin_site), TokenProxy
+
+
+@pytest.fixture()
+def fake_request(user, rf: RequestFactory):
+    request = rf.request()
+    request.user = user
+
+    return request
+
+
+@pytest.fixture()
+def db_field_mock(mocker):
+    def get_mock(field_name):
+        mock = mocker.Mock()
+        type(mock).name = field_name
+
+        return mock
+
+    return get_mock

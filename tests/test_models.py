@@ -145,6 +145,15 @@ class TestQuestion:
 
         assert str(question) == f'Q{question_data["number"]}. {question_data["text"]}'
 
+    @pytest.mark.usefixtures('questions')
+    def test_get_possible_field_names_exclude_field_name_of_questions_without_choices(self, user):
+        expected_result = Question.get_possible_field_names(user)
+
+        # Check that user has question without choices
+        assert any([True for q in user.questions.all() if not q.choices.exists()])
+        # Check that that question field name is absent in possible field names
+        assert expected_result == ['q1u', 'q2u', 'q3u']
+
 
 class TestChoice:
     @pytest.mark.parametrize('text', ['Below 99', '100-299', '300+', '1'])

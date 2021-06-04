@@ -6,6 +6,7 @@ psycopg2==2.8.6  # https://github.com/psycopg/psycopg2
 # ------------------------------------------------------------------------------
 pytest==6.2.3  # https://github.com/pytest-dev/pytest
 pytest-django==4.2.0  # https://github.com/pytest-dev/pytest-django
+pytest-mock==3.6.1  # https://github.com/pytest-dev/pytest-mock
 
 # Code quality
 # ------------------------------------------------------------------------------

@@ -53,8 +53,8 @@ class Rule(models.Model):
 
     rule = models.CharField(
         max_length=200, validators=[validate_rule],
-        help_text=f'Rule should start with "If" and may contain only valid numbers, questions "Field names" '
-                  f'in curly braces (e.g. {{field_name}}) '
+        help_text=f'Rule should start with "If" and may contain only valid numbers, questions with choices '
+                  f'"Field names" in curly braces (e.g. {{field_name}}) '
                   f'combined with '
                   f'arithmetic ({", ".join(RULE_ARITHMETIC_OPERATORS)}), '
                   f'comparison ({", ".join(RULE_COMPARISON_OPERATORS)}) and '
@@ -118,6 +118,11 @@ class Question(models.Model):
             }
         except Rule.DoesNotExist:
             return {}
+
+    @staticmethod
+    def get_possible_field_names(user):
+        """ Return field names of questions that has choices """
+        return [q.field_name for q in user.questions.all() if q.choices.exists()]
 
     def __str__(self):
         return f'Q{self.number}. {self.text}'
