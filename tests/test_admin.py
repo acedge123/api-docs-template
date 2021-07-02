@@ -4,7 +4,8 @@ from django import forms
 pytestmark = pytest.mark.django_db
 
 
-@pytest.mark.parametrize('model_admin', ['question_admin_and_model', 'rule_admin_and_model', 'lead_admin_and_model'])
+@pytest.mark.parametrize('model_admin', ['question_admin_and_model', 'recommendation_admin_and_model',
+                                         'lead_admin_and_model'])
 class TestCommonRestrictedAdminMethods:
 
     @pytest.mark.usefixtures('questions', 'leads')
@@ -78,15 +79,15 @@ class TestCommonRestrictedAdminMethods:
         assert queryset.get() == fake_request.user
 
 
-class TestRuleAdmin:
+class TestRecommendationAdmin:
 
     @pytest.mark.usefixtures('questions')
-    def test_get_formfield_for_foreignkey_restrict_question_options(self, rule_admin_and_model, db_field_mock, user,
-                                                                    user1, fake_request):
-        rule_admin, _ = rule_admin_and_model
+    def test_get_formfield_for_foreignkey_restrict_question_options(self, recommendation_admin_and_model, db_field_mock,
+                                                                    user, user1, fake_request):
+        recommendation_admin, _ = recommendation_admin_and_model
         question_db_field_mock = db_field_mock('question')
 
-        rule_admin.formfield_for_foreignkey(question_db_field_mock, fake_request)
+        recommendation_admin.formfield_for_foreignkey(question_db_field_mock, fake_request)
         queryset = question_db_field_mock.formfield.call_args.kwargs['queryset']
 
         questions = queryset.all()
@@ -98,43 +99,44 @@ class TestRuleAdmin:
             assert question not in questions
 
     @pytest.mark.usefixtures('questions')
-    def test_get_form_extend_help_text_of_rule_field(self, rule_admin_and_model, fake_request):
-        rule_admin, _ = rule_admin_and_model
-        form = rule_admin.get_form(fake_request)
+    def test_get_form_extend_help_text_of_rule_field(self, recommendation_admin_and_model, fake_request):
+        recommendation_admin, _ = recommendation_admin_and_model
+        form = recommendation_admin.get_form(fake_request)
 
         expected_help_text = '</br></br>Possible field names: <b>q1u, q2u, q3u</b>'
 
         assert form.base_fields['rule'].help_text.endswith(expected_help_text)
 
-    def test_get_form_extend_help_text_of_rule_field_no_questions(self, rule_admin_and_model, fake_request):
-        rule_admin, _ = rule_admin_and_model
+    def test_get_form_extend_help_text_of_rule_field_no_questions(self, recommendation_admin_and_model, fake_request):
+        recommendation_admin, _ = recommendation_admin_and_model
 
-        form = rule_admin.get_form(fake_request)
+        form = recommendation_admin.get_form(fake_request)
 
         expected_help_text = '</br></br>Possible field names: <b>No questions created yet</b>'
 
         assert form.base_fields['rule'].help_text.endswith(expected_help_text)
 
-    @pytest.mark.parametrize('rule_text', [
+    @pytest.mark.parametrize('rule', [
         'If {q1u} / {q2u} > 0.5',
         'If {q1u} > 99',
         'If {q3u}',
     ])
     @pytest.mark.usefixtures('questions')
-    def test_rule_validation_field_names_are_valid(self, rule_admin_and_model, fake_request, user, rule_text):
-        rule_admin, _ = rule_admin_and_model
-        form_class = rule_admin.get_form(fake_request)
+    def test_recommendation_validation_field_names_are_valid(self, recommendation_admin_and_model, fake_request, user,
+                                                             rule):
+        recommendation_admin, _ = recommendation_admin_and_model
+        form_class = recommendation_admin.get_form(fake_request)
 
         form = form_class({
             'question': user.questions.first(),
-            'rule': rule_text,
+            'rule': rule,
             'owner': user
         })
 
         assert form.is_valid()
         assert len(form.errors) == 0
 
-    @pytest.mark.parametrize('rule_text,error_message', [
+    @pytest.mark.parametrize('rule,error_message', [
         (
             'If {q1u} > 0 or {not_existing_field_name} > 0',
             ['Field name "not_existing_field_name" used in Rule is not valid']
@@ -150,14 +152,14 @@ class TestRuleAdmin:
         ),
     ])
     @pytest.mark.usefixtures('questions')
-    def test_rule_validation_field_names_are_not_valid(self, rule_admin_and_model, fake_request, user,
-                                                       rule_text, error_message):
-        rule_admin, _ = rule_admin_and_model
-        form_class = rule_admin.get_form(fake_request)
+    def test_recommendation_validation_field_names_are_not_valid(self, recommendation_admin_and_model, fake_request,
+                                                                 user, rule, error_message):
+        recommendation_admin, _ = recommendation_admin_and_model
+        form_class = recommendation_admin.get_form(fake_request)
 
         form = form_class({
             'question': user.questions.first(),
-            'rule': rule_text,
+            'rule': rule,
             'owner': user
         })
 

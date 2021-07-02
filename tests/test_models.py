@@ -3,43 +3,43 @@ import re
 import pytest
 from django.core.exceptions import ValidationError
 
-from scoringengine.models import Choice, Question, Lead, Answer, Rule
+from scoringengine.models import Choice, Question, Lead, Answer, Recommendation
 
 pytestmark = pytest.mark.django_db
 
 
-class TestRule:
+class TestRecommendation:
 
-    @pytest.mark.parametrize('rule_text', [
+    @pytest.mark.parametrize('rule', [
         '{Rent} / {Income} > 0.5',
         'If Rent > 99',
         'If {---} > 0 and {Income} < 0',
         'If {---} > 0 && {Income} < 0',
     ])
-    def test_rule_raise_validation_error_rule_invalid(self, rule_data, rule_text):
-        rule_data['rule'] = rule_text
+    def test_rule_raise_validation_error_rule_invalid(self, recommendation_data, rule):
+        recommendation_data['rule'] = rule
 
-        rule = Rule(**rule_data)
+        recommendation = Recommendation(**recommendation_data)
 
         with pytest.raises(ValidationError, match='Rule is invalid'):
-            rule.full_clean()
+            recommendation.full_clean()
 
-    @pytest.mark.parametrize('rule_text,error_message', [
+    @pytest.mark.parametrize('rule,error_message', [
         ('If {Rent} not > 99', 'Rule syntax invalid "If 1 not >>>here>>>> 99"'),
         ('If {Rent} > not 99', 'Rule syntax invalid "If 1 > >>>here>>>not 99"'),
         ('If {Rent} > 99 not', 'Rule syntax invalid "If 1 > 99 no>>>here>>>t"'),
         ('If {Rent} +/ 99', re.escape('Rule syntax invalid "If 1 +>>>here>>>/ 99"')),
         ('If {Rent} + 99.99.9 > 0', re.escape('Rule syntax invalid "If 1 + 99.99>>>here>>>.9 > 0"')),
     ])
-    def test_rule_raise_validation_error_rule_syntax_invalid(self, rule_data, rule_text, error_message):
-        rule_data['rule'] = rule_text
+    def test_rule_raise_validation_error_rule_syntax_invalid(self, recommendation_data, rule, error_message):
+        recommendation_data['rule'] = rule
 
-        rule = Rule(**rule_data)
+        recommendation = Recommendation(**recommendation_data)
 
         with pytest.raises(ValidationError, match=error_message):
-            rule.full_clean()
+            recommendation.full_clean()
 
-    @pytest.mark.parametrize('rule_text', [
+    @pytest.mark.parametrize('rule', [
         'If {Rent} / {Income} > 0.5',
         'If {Rent} > 99',
         'If {Rent} > 0 and {Income} < 0',
@@ -48,18 +48,18 @@ class TestRule:
         'If {A} and {B} or {C} and not {D} or not {E}',
         'If 0 + 12 + 0.99 + 2.222',
     ])
-    def test_rule_is_valid(self, rule_data, rule_text):
-        rule_data['rule'] = rule_text
+    def test_rule_is_valid(self, recommendation_data, rule):
+        recommendation_data['rule'] = rule
 
-        rule = Rule(**rule_data)
-        rule.full_clean()
+        recommendation = Recommendation(**recommendation_data)
+        recommendation.full_clean()
 
     def test_str(self, question):
-        rule_text = 'If {Test} == {Rule}'
+        rule = 'If {Test} == {Rule}'
 
-        rule = Rule(question=question, rule='If {Test} == {Rule}')
+        recommendation = Recommendation(question=question, rule='If {Test} == {Rule}')
 
-        assert str(rule) == f'Q{question.number}: {rule_text}'
+        assert str(recommendation) == f'Q{question.number}: {rule}'
 
 
 class TestQuestion:
@@ -96,8 +96,8 @@ class TestQuestion:
         with pytest.raises(SyntaxError):
             Question.eval_rule(rule, data)
 
-    def test_check_rule_question_with_no_rule(self, question_with_no_rule):
-        assert not question_with_no_rule.check_rule({})
+    def test_check_rule_question_with_no_rule(self, question_with_no_recommendation):
+        assert not question_with_no_recommendation.check_rule({})
 
     def test_check_rule_is_true(self, question):
         answers = {
@@ -115,27 +115,27 @@ class TestQuestion:
 
         assert not question.check_rule(answers)
 
-    def test_get_recommendation_dict_question_with_no_rule(self, question_with_no_rule):
-        assert question_with_no_rule.get_recommendation_dict() == {}
+    def test_get_recommendation_dict_question_with_no_rule(self, question_with_no_recommendation):
+        assert question_with_no_recommendation.get_recommendation_dict() == {}
 
     def test_get_recommendation_dict(self, question):
         expected_result = {
-            'response_text': f'Q{question.number}. {question.rule.response_text}',
-            'affiliate_name': question.rule.affiliate_name,
-            'affiliate_image': question.rule.affiliate_image,
-            'affiliate_link': question.rule.affiliate_link,
-            'redirect_url': question.rule.redirect_url
+            'response_text': f'Q{question.number}. {question.recommendation.response_text}',
+            'affiliate_name': question.recommendation.affiliate_name,
+            'affiliate_image': question.recommendation.affiliate_image,
+            'affiliate_link': question.recommendation.affiliate_link,
+            'redirect_url': question.recommendation.redirect_url
         }
 
         assert question.get_recommendation_dict() == expected_result
 
-        question.rule.response_text = ''
+        question.recommendation.response_text = ''
         expected_result = {
             'response_text': '',
-            'affiliate_name': question.rule.affiliate_name,
-            'affiliate_image': question.rule.affiliate_image,
-            'affiliate_link': question.rule.affiliate_link,
-            'redirect_url': question.rule.redirect_url
+            'affiliate_name': question.recommendation.affiliate_name,
+            'affiliate_image': question.recommendation.affiliate_image,
+            'affiliate_link': question.recommendation.affiliate_link,
+            'redirect_url': question.recommendation.redirect_url
         }
 
         assert question.get_recommendation_dict() == expected_result

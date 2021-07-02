@@ -5,51 +5,6 @@ from rest_framework import status
 pytestmark = pytest.mark.django_db
 
 
-class TestQuestionViewSet:
-
-    @pytest.mark.usefixtures('questions')
-    def test_get_questions(self, api_client):
-        url = reverse('api:v1:question-list')
-
-        expected_result = [
-            {
-                'number': 1,
-                'field_name': 'q1u',
-                'text': 'Question one user?',
-                'choices': [
-                    {'text': 'Below 1'},
-                    {'text': '2+'}
-                ]},
-            {
-                'number': 2,
-                'field_name': 'q2u',
-                'text': 'Question two user?',
-                'choices': [
-                    {'text': '1-2'}
-                ]
-            },
-            {
-                'number': 3,
-                'field_name': 'q3u',
-                'text': 'Question three user?',
-                'choices': [
-                    {'text': '1'}
-                ]
-            },
-            {
-                'number': 4,
-                'field_name': 'zc',
-                'text': 'Zip code',
-                'choices': []
-            }
-        ]
-
-        response = api_client.get(url)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() == expected_result
-
-
 class TestLeadViewSet:
 
     @pytest.mark.usefixtures('questions')
@@ -118,7 +73,7 @@ class TestLeadViewSet:
             'answers': [
                 {
                     'field_name': 'q1u',
-                    'response': '2+'
+                    'response': '2'
                 },
                 {
                     'field_name': 'q2u',
@@ -134,7 +89,7 @@ class TestLeadViewSet:
                 },
                 {
                     'field_name': 'non_existing_field_id',
-                    'response': '2+'
+                    'response': '2'
                 }
             ]
         }
@@ -157,11 +112,11 @@ class TestLeadViewSet:
             'answers': [
                 {
                     'field_name': 'q1u',
-                    'response': '2+'
+                    'response': '2'
                 },
                 {
                     'field_name': 'q2u',
-                    'response': 'wrong choice'
+                    'response': 'wrong-choice'
                 },
                 {
                     'field_name': 'q3u',
@@ -176,7 +131,7 @@ class TestLeadViewSet:
 
         expected_result = {
             'answers': {
-                'response': ["There are no question choice with 'wrong choice' response"]
+                'response': ["There are no question choice with 'wrong-choice' response"]
             }
         }
 
@@ -194,7 +149,7 @@ class TestLeadViewSet:
             'answers': [
                 {
                     'field_name': 'q1u',
-                    'response': '2+'
+                    'response': '2'
                 },
                 {
                     'field_name': 'q2u',
@@ -239,7 +194,7 @@ class TestLeadViewSet:
             'answers': [
                 {
                     'field_name': 'q1u',
-                    'response': 'Below 1'
+                    'response': 'below-1'
                 },
                 {
                     'field_name': 'q2u',
@@ -275,7 +230,7 @@ class TestLeadViewSet:
             'answers': [
                 {
                     'field_name': 'q1u',
-                    'response': '2+'
+                    'response': '2'
                 },
                 {
                     'field_name': 'q2u',
@@ -307,7 +262,7 @@ class TestLeadViewSet:
             'answers': [
                 {
                     'field_name': 'q1u1',
-                    'response': 'Below 1'
+                    'response': 'below-1'
                 }
             ]
         }

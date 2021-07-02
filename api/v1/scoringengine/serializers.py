@@ -6,15 +6,7 @@ from scoringengine.models import Question, Choice, Lead, Answer
 class ChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choice
-        fields = ['text']
-
-
-class QuestionSerializer(serializers.ModelSerializer):
-    choices = ChoiceSerializer(many=True)
-
-    class Meta:
-        model = Question
-        fields = ['number', 'field_name', 'text', 'choices']
+        fields = ['text', 'slug']
 
 
 class AnswerSerializerCreate(serializers.ModelSerializer):

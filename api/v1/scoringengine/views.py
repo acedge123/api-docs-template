@@ -1,16 +1,8 @@
 from rest_framework import viewsets, mixins, status, serializers
 from rest_framework.response import Response
 
-from api.v1.scoringengine.serializers import QuestionSerializer, LeadSerializerCreate, LeadSerializerView
-from scoringengine.models import Question, Lead
-
-
-class QuestionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
-
-    def get_queryset(self, *args, **kwargs):
-        return self.queryset.filter(owner=self.request.user)
+from api.v1.scoringengine.serializers import LeadSerializerCreate, LeadSerializerView
+from scoringengine.models import Lead
 
 
 class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -42,7 +34,7 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                     'answers': {'field_name': [f"There are no question with '{answer_data['field_name']}' field name"]}
                 })
 
-            choice = question.choices.filter(text=answer_data['response']).first()
+            choice = question.choices.filter(slug=answer_data['response']).first()
 
             if choice is None:
                 if question.choices.count() > 0:

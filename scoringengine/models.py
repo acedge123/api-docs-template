@@ -48,8 +48,8 @@ def validate_rule(value):
                               params={'rule': value}, code='invalid_rule')
 
 
-class Rule(models.Model):
-    question = models.OneToOneField('Question', on_delete=models.CASCADE, related_name='rule')
+class Recommendation(models.Model):
+    question = models.OneToOneField('Question', on_delete=models.CASCADE, related_name='recommendation')
 
     rule = models.CharField(
         max_length=200, validators=[validate_rule],
@@ -67,7 +67,7 @@ class Rule(models.Model):
 
     redirect_url = models.URLField(max_length=2048, blank=True)
 
-    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='rules')
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='recommendations')
 
     def __str__(self):
         return f'Q{self.question.number}: {self.rule}'
@@ -103,20 +103,20 @@ class Question(models.Model):
 
     def check_rule(self, answers):
         try:
-            return self.eval_rule(self.rule.rule, answers)
-        except Rule.DoesNotExist:
+            return self.eval_rule(self.recommendation.rule, answers)
+        except Recommendation.DoesNotExist:
             return False
 
     def get_recommendation_dict(self):
         try:
             return {
-                'response_text': f'Q{self.number}. {self.rule.response_text}' if self.rule.response_text else '',
-                'affiliate_name': self.rule.affiliate_name,
-                'affiliate_image': self.rule.affiliate_image,
-                'affiliate_link': self.rule.affiliate_link,
-                'redirect_url': self.rule.redirect_url
+                'response_text': f'Q{self.number}. {self.recommendation.response_text}' if self.recommendation.response_text else '',
+                'affiliate_name': self.recommendation.affiliate_name,
+                'affiliate_image': self.recommendation.affiliate_image,
+                'affiliate_link': self.recommendation.affiliate_link,
+                'redirect_url': self.recommendation.redirect_url
             }
-        except Rule.DoesNotExist:
+        except Recommendation.DoesNotExist:
             return {}
 
     @staticmethod
@@ -131,14 +131,16 @@ class Question(models.Model):
 class Choice(models.Model):
     question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name='choices')
     text = models.CharField(max_length=200)
+    slug = models.SlugField()
     value = models.DecimalField(
         max_digits=12, decimal_places=2, help_text='Value that will be used in rules calculation. For ranges it is '
                                                    'recommended to use highest number in the range.')
-    points = models.IntegerField()
+    points = models.IntegerField(help_text='Used for X-axis, Y-axis scores calculation')
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['question', 'text'], name='unique_choice'),
+            models.UniqueConstraint(fields=['question', 'slug'], name='unique_slug'),
         ]
 
     def __str__(self):

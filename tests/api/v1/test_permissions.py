@@ -2,7 +2,7 @@ import pytest
 from django.test import RequestFactory
 
 from api.v1.core.permissions import IsOwner
-from api.v1.scoringengine.views import QuestionViewSet
+from api.v1.scoringengine.views import LeadViewSet
 
 pytestmark = pytest.mark.django_db
 
@@ -11,7 +11,7 @@ class TestIsOwner:
     def test_has_object_permission(self, user, user1, question, rf: RequestFactory):
         permission = IsOwner()
         request = rf.get('/fake-url/')
-        view = QuestionViewSet()
+        view = LeadViewSet()
 
         # Same user in request and in object owner
         request.user = user

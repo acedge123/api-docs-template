@@ -1,6 +1,6 @@
 # Scoring Engine
 
-Customizable scoring and rules model
+Customizable scoring and recommendation model
 
 ## Scoring and rules logic
 
@@ -11,10 +11,10 @@ Customizable scoring and rules model
 
 Questions without choices do not affect X-axis or Y-axis scores.
 
-### Rules: Recommendations
+### Recommendations: Rules
 
-There may be a rule associated with the question. Questions can be used in rule (as question's field name in curly 
-brackets, e.g. {field_name}), in this case selected choice value for that question is used in rule calculation.
+There may be a recommendation associated with the question. Questions can be used in recommendation rule (as question's field name in curly 
+brackets, e.g. {field_name}), in this case selected choice value for that question is used in recommendation rule calculation.
 If rule is True, recommendation for associated question will be returned.
 
 Recommendation can contain some of or all of:
@@ -24,7 +24,7 @@ Recommendation can contain some of or all of:
 - affiliate link;
 - redirect url.
 
-Questions without choices may have rule associated with it, but can't be used in rule itself.
+Questions without choices may have recommendation associated with it, but can't be used in recommendation rule itself.
 
 ## Deployment
 
@@ -62,7 +62,7 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 ## Creating group for regular admin
 
 "Regular admin" group could be created manually or using script below. 
-It should allow full access for Question, Choice and Rule models, read access for Answer model and read and delete access for Lead model.
+It should allow full access for Question, Choice and Recommendation models, read access for Answer model and read and delete access for Lead model.
 
     docker-compose -f <envirovment>.yml run --rm django python manage.py shell
 
@@ -72,7 +72,7 @@ and execute following code:
 from django.contrib.auth.models import Group, Permission
 
 permissions = []
-for model in ['question', 'choice', 'rule']:
+for model in ['question', 'choice', 'recommendation']:
     for permission in ['add', 'change', 'delete', 'view']:
         permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
 
@@ -111,9 +111,6 @@ Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
 To obtain a token clients may POST given the username and password to ```/api/token-auth/``` api endpoint.
 
 ## Endpoints
-### /api/v1/questions/
-#### Allowed method: GET
-Return list of all client's questions with all choices.
 
 ### /api/v1/leads/
 #### Allowed method: POST

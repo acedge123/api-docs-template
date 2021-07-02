@@ -5,8 +5,8 @@ from django.contrib.admin import AdminSite
 from django.test import RequestFactory
 from rest_framework.authtoken.models import TokenProxy
 
-from scoringengine.admin import QuestionAdmin, RuleAdmin, LeadAdmin, TokenAdmin
-from scoringengine.models import Question, Rule, Choice, Lead, Answer
+from scoringengine.admin import QuestionAdmin, RecommendationAdmin, LeadAdmin, TokenAdmin
+from scoringengine.models import Question, Recommendation, Choice, Lead, Answer
 
 
 @pytest.fixture()
@@ -59,7 +59,7 @@ def question_data(user):
 
 
 @pytest.fixture()
-def question_with_no_rule(question_data):
+def question_with_no_recommendation(question_data):
     q = Question(pk=99, **question_data)
 
     q.save()
@@ -70,8 +70,8 @@ def question_with_no_rule(question_data):
 
 
 @pytest.fixture()
-def question(rule):
-    return rule.question
+def question(recommendation):
+    return recommendation.question
 
 
 @pytest.fixture()
@@ -126,6 +126,7 @@ def questions_for_user(user):
         pk=1,
         question=q1,
         text='Below 1',
+        slug='below-1',
         value=1,
         points=1,
     )
@@ -133,6 +134,7 @@ def questions_for_user(user):
         pk=2,
         question=q1,
         text='2+',
+        slug='2',
         value=2,
         points=2
     )
@@ -140,6 +142,7 @@ def questions_for_user(user):
         pk=3,
         question=q2,
         text='1-2',
+        slug='1-2',
         value=2,
         points=3
     )
@@ -147,6 +150,7 @@ def questions_for_user(user):
         pk=4,
         question=q3,
         text='1',
+        slug='1',
         value=1,
         points=3
     )
@@ -156,7 +160,7 @@ def questions_for_user(user):
     c3.save()
     c4.save()
 
-    r = Rule(
+    r = Recommendation(
         pk=1,
         question=q2,
         rule='If {q1u} == {q2u}',
@@ -195,6 +199,7 @@ def questions_for_user1(user1):
         pk=10,
         question=q1,
         text='Below 1',
+        slug='below-1',
         value=1,
         points=1
     )
@@ -202,6 +207,7 @@ def questions_for_user1(user1):
         pk=11,
         question=q1,
         text='2+',
+        slug='2',
         value=2,
         points=2
     )
@@ -209,7 +215,7 @@ def questions_for_user1(user1):
     c1.save()
     c2.save()
 
-    r = Rule(
+    r = Recommendation(
         pk=10,
         question=q1,
         rule='If {q1u1} == 1',
@@ -229,9 +235,9 @@ def questions(questions_for_user, questions_for_user1):
 
 
 @pytest.fixture()
-def rule_data(user, question_with_no_rule):
+def recommendation_data(user, question_with_no_recommendation):
     return {
-        'question': question_with_no_rule,
+        'question': question_with_no_recommendation,
         'rule': 'If {Rent} / {Income} > 0.5',
         'response_text': 'Rule is True',
         'affiliate_name': 'Example affiliate',
@@ -242,8 +248,8 @@ def rule_data(user, question_with_no_rule):
 
 
 @pytest.fixture()
-def rule(rule_data):
-    r = Rule(**rule_data)
+def recommendation(recommendation_data):
+    r = Recommendation(**recommendation_data)
 
     r.save()
 
@@ -367,8 +373,8 @@ def question_admin_and_model(admin_site):
 
 
 @pytest.fixture()
-def rule_admin_and_model(admin_site):
-    return RuleAdmin(model=Rule, admin_site=admin_site), Rule
+def recommendation_admin_and_model(admin_site):
+    return RecommendationAdmin(model=Recommendation, admin_site=admin_site), Recommendation
 
 
 @pytest.fixture()

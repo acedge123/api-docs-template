@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
 
-from scoringengine.models import Question, Choice, Rule, Lead, Answer
+from scoringengine.models import Question, Choice, Recommendation, Lead, Answer
 
 admin.site.site_title = 'Scoring engine site admin'
 admin.site.site_header = 'Scoring engine administration'
@@ -50,6 +50,7 @@ class RestrictedAdmin(admin.ModelAdmin):
 class ChoiceInline(admin.TabularInline):
     model = Choice
     extra = 0
+    prepopulated_fields = {'slug': ('text',)}
 
 
 class QuestionAdmin(RestrictedAdmin):
@@ -82,7 +83,7 @@ class RuleAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-class RuleAdmin(RestrictedAdmin):
+class RecommendationAdmin(RestrictedAdmin):
     form = RuleAdminForm
     list_display = ('__str__', 'response_text', 'affiliate_name', 'redirect_url')
     ordering = ['question__number']
@@ -142,7 +143,7 @@ class TokenAdmin(drf_admin.TokenAdmin):
 
 
 admin.site.register(Question, QuestionAdmin)
-admin.site.register(Rule, RuleAdmin)
+admin.site.register(Recommendation, RecommendationAdmin)
 admin.site.register(Lead, LeadAdmin)
 
 admin.site.unregister(TokenProxy)
