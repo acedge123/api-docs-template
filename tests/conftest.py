@@ -6,7 +6,7 @@ from django.test import RequestFactory
 from rest_framework.authtoken.models import TokenProxy
 
 from scoringengine.admin import QuestionAdmin, RecommendationAdmin, LeadAdmin, TokenAdmin
-from scoringengine.models import Question, Recommendation, Choice, Lead, Answer
+from scoringengine.models import Question, Recommendation, Choice, Lead, Answer, ScoringModel, ValueRange
 
 
 @pytest.fixture()
@@ -50,10 +50,9 @@ def user1(user_with_all_perms):
 def question_data(user):
     return {
         'number': 99,
+        'type': Question.OPEN,
         'text': 'Test question?',
         'field_name': 'test_question',
-        'x_axis': True,
-        'y_axis': False,
         'owner': user
     }
 
@@ -78,42 +77,36 @@ def question(recommendation):
 def questions_for_user(user):
     q1 = Question(
         pk=1,
+        type=Question.CHOICES,
         number=1,
-        text='Question one user?',
+        text='Question one - choices - with scoring model - user?',
         field_name='q1u',
-        x_axis=True,
-        y_axis=False,
         owner=user,
-        weight=1.1,
     )
     q2 = Question(
         pk=2,
+        type=Question.CHOICES,
         number=2,
-        text='Question two user?',
+        text='Question two - choices - without scoring model - user?',
         field_name='q2u',
-        weight=2.1,
-        x_axis=True,
-        y_axis=True,
         owner=user
     )
     q3 = Question(
         pk=3,
+        type=Question.SLIDER,
         number=3,
-        text='Question three user?',
+        text='Question three - slider - with scoring model - user?',
         field_name='q3u',
-        weight=0,
-        x_axis=False,
-        y_axis=False,
+        min_value=0,
+        max_value=10,
         owner=user
     )
     q4 = Question(
         pk=4,
+        type=Question.OPEN,
         number=4,
-        text='Zip code',
+        text='Zip code - open',
         field_name='zc',
-        weight=0,
-        x_axis=False,
-        y_axis=False,
         owner=user
     )
 
@@ -128,31 +121,27 @@ def questions_for_user(user):
         text='Below 1',
         slug='below-1',
         value=1,
-        points=1,
     )
     c2 = Choice(
         pk=2,
         question=q1,
-        text='2+',
-        slug='2',
+        text='1 - 2',
+        slug='1-2',
         value=2,
-        points=2
     )
     c3 = Choice(
         pk=3,
-        question=q2,
-        text='1-2',
-        slug='1-2',
-        value=2,
-        points=3
+        question=q1,
+        text='2+',
+        slug='2',
+        value=3,
     )
     c4 = Choice(
         pk=4,
-        question=q3,
+        question=q2,
         text='1',
         slug='1',
-        value=1,
-        points=3
+        value=2,
     )
 
     c1.save()
@@ -173,6 +162,57 @@ def questions_for_user(user):
 
     r.save()
 
+    sm = ScoringModel(
+        pk=1,
+        question=q1,
+        weight=1.1,
+        x_axis=True,
+        y_axis=True,
+        formula='{q1u} / {q3u}',
+        owner=user
+    )
+    sm1 = ScoringModel(
+        pk=2,
+        question=q3,
+        weight=1.3,
+        x_axis=True,
+        y_axis=False,
+        owner=user
+    )
+
+    sm.save()
+    sm1.save()
+
+    vr = ValueRange(
+        pk=1,
+        scoring_model=sm,
+        end=1,
+        points=1
+    )
+    vr1 = ValueRange(
+        pk=2,
+        scoring_model=sm,
+        start=1,
+        end=2,
+        points=2
+    )
+    vr2 = ValueRange(
+        pk=3,
+        scoring_model=sm,
+        start=2,
+        points=3
+    )
+    vr3 = ValueRange(
+        pk=4,
+        scoring_model=sm1,
+        points=9
+    )
+
+    vr.save()
+    vr1.save()
+    vr2.save()
+    vr3.save()
+
     yield [q1, q2, q3, q4]
 
     q1.delete()
@@ -185,11 +225,12 @@ def questions_for_user(user):
 def questions_for_user1(user1):
     q1 = Question(
         pk=10,
+        type=Question.CHOICES,
         number=1,
         text='Question one user1?',
         field_name='q1u1',
-        x_axis=False,
-        y_axis=False,
+        # x_axis=False,
+        # y_axis=False,
         owner=user1
     )
 
@@ -201,7 +242,7 @@ def questions_for_user1(user1):
         text='Below 1',
         slug='below-1',
         value=1,
-        points=1
+        # points=1
     )
     c2 = Choice(
         pk=11,
@@ -209,7 +250,7 @@ def questions_for_user1(user1):
         text='2+',
         slug='2',
         value=2,
-        points=2
+        # points=2
     )
 
     c1.save()
@@ -277,7 +318,7 @@ def lead(lead_data, questions_for_user):
         lead=l,
         field_name=questions_for_user[0].field_name,
         response=questions_for_user[0].choices.first().text,
-        points=questions_for_user[0].choices.first().points * questions_for_user[0].weight,
+        points=0,  # questions_for_user[0].choices.first().points * questions_for_user[0].weight,
         response_text='Response',
         affiliate_name='Example affiliate',
         affiliate_image='https://example.com/image.jpeg',
@@ -288,7 +329,7 @@ def lead(lead_data, questions_for_user):
         lead=l,
         field_name=questions_for_user[1].field_name,
         response=questions_for_user[1].choices.first().text,
-        points=questions_for_user[1].choices.first().points * questions_for_user[1].weight,
+        points=0  # questions_for_user[1].choices.first().points * questions_for_user[1].weight,
     )
 
     a1.save()

@@ -2,20 +2,42 @@
 
 Customizable scoring and recommendation model
 
-## Scoring and rules logic
+## Scoring and recommendation main components
 
-### Scoring: X-axis and Y-axis scores
+_**Warning:** After changing question's "Field name" afterwards require verification of all recommendations rules and 
+scoring models formula to be sure that they are still working as intended._
 
-- X-axis score equals sum of questions weight multiplied by selected choice points for all questions with x-axis equals True;
-- Y-axis score equals sum of questions weight multiplied by selected choice points for all questions with y-axis equals True;
+### Question
+
+Question could be one of three types:
+- __Open.__ Questions without specific expected answer. Has no associated value, so can not be used in recommendations 
+  rules and in scoring models formulas for X-axis, Y-axis score calculation.
+- __Choices.__ Question with predefined expected answers options. Answer can be any text. Each answer option has 
+  associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score 
+  calculation.
+- __Slider.__ Question with predefined range of possible values. Answer is a value. Can be used in recommendations 
+  rules and in scoring models formulas for X-axis, Y-axis score calculation.
+
+### Scoring Model
+
+There may be a scoring model associated with Choices and Slider questions. Points for that question will be determined
+by calculated via formula value and defined set of value ranges. Scoring model formula may contain questions 
+with values (as question's field name in curly brackets, e.g. {field_name}), in this case value for that 
+question is used in scoring model formula calculation.
+
+- X-axis score equals sum of scoring model weight multiplied by determined points for all questions with scoring model
+  with x-axis equals True;
+- Y-axis score equals sum of scoring model weight multiplied by determined points for all questions with scoring model
+  with y-axis equals True;
 
 Questions without choices do not affect X-axis or Y-axis scores.
 
-### Recommendations: Rules
+### Recommendations
 
-There may be a recommendation associated with the question. Questions can be used in recommendation rule (as question's field name in curly 
-brackets, e.g. {field_name}), in this case selected choice value for that question is used in recommendation rule calculation.
-If rule is True, recommendation for associated question will be returned.
+There may be a recommendation associated with Choices and Slider questions. Recommendation rule may contain questions 
+with values (as question's field name in curly brackets, e.g. {field_name}), in this case value for that 
+question is used in recommendation rule calculation. If rule is True, recommendation for associated question will be 
+returned.
 
 Recommendation can contain some of or all of:
 - response text;
@@ -24,7 +46,7 @@ Recommendation can contain some of or all of:
 - affiliate link;
 - redirect url.
 
-Questions without choices may have recommendation associated with it, but can't be used in recommendation rule itself.
+Open questions may have recommendation associated with it, but can't be used in recommendation rule itself.
 
 ## Deployment
 
@@ -62,7 +84,8 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 ## Creating group for regular admin
 
 "Regular admin" group could be created manually or using script below. 
-It should allow full access for Question, Choice and Recommendation models, read access for Answer model and read and delete access for Lead model.
+It should allow full access for Question, Choice, ScoringModel, ValueRange and Recommendation models, read access for 
+Answer model and read and delete access for Lead model.
 
     docker-compose -f <envirovment>.yml run --rm django python manage.py shell
 
@@ -72,7 +95,7 @@ and execute following code:
 from django.contrib.auth.models import Group, Permission
 
 permissions = []
-for model in ['question', 'choice', 'recommendation']:
+for model in ['question', 'choice', 'recommendation', 'scoringmodel', 'valuerange']:
     for permission in ['add', 'change', 'delete', 'view']:
         permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
 

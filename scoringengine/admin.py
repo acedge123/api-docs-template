@@ -7,13 +7,43 @@ from django.core.exceptions import ValidationError
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
 
-from scoringengine.models import Question, Choice, Recommendation, Lead, Answer
+from scoringengine.models import Question, Choice, Recommendation, ScoringModel, ValueRange, Lead, Answer
 
 admin.site.site_title = 'Scoring engine site admin'
 admin.site.site_header = 'Scoring engine administration'
 
 
+class ValidateFieldNameModelAdminForm(forms.ModelForm):
+    """ Check that field contain only valid field names """
+
+    field_to_validate = None
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if self.field_to_validate:
+            value = cleaned_data.get(self.field_to_validate)
+
+            if value:
+                user = cleaned_data.get('owner')
+
+                invalid_field_name_errors = []
+                for field_name in re.findall(r'{(\w*)}', value):
+                    if field_name not in Question.get_possible_field_names(user):
+                        invalid_field_name_errors.append(ValidationError(
+                            'Field name "%(value)s" used in %(field)s is not valid.',
+                            params={'value': field_name, 'field': self.field_to_validate.title()}
+                        ))
+
+                if invalid_field_name_errors:
+                    raise ValidationError(invalid_field_name_errors)
+
+        return cleaned_data
+
+
 class RestrictedAdmin(admin.ModelAdmin):
+    field_to_extend_help_text = None
+
     def get_queryset(self, request):
         query_set = super().get_queryset(request)
 
@@ -38,6 +68,16 @@ class RestrictedAdmin(admin.ModelAdmin):
         form.base_fields['owner'].widget = forms.HiddenInput()
         form.base_fields['owner'].initial = request.user
 
+        if self.field_to_extend_help_text:
+
+            possible_field_names = ', '.join(
+                Question.get_possible_field_names(request.user)) or 'No appropriate questions created yet'
+
+            # Extend model help_text to show possible field names
+            form.base_fields[self.field_to_extend_help_text].help_text += f'</br></br>Possible field names: <b>{possible_field_names}</b>'
+
+            return form
+
         return form
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -47,40 +87,75 @@ class RestrictedAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class ChoiceInlineFormset(forms.models.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+
+        # Require at least one Choice for Choices question type
+        if self.instance.type == Question.CHOICES:
+            count = 0
+            for form in self.forms:
+                try:
+                    if form.cleaned_data and not form.cleaned_data.get('DELETE'):
+                        count += 1
+                except AttributeError:
+                    # annoyingly, if a subform is invalid Django explicitly raises
+                    # an AttributeError for cleaned_data
+                    pass
+            if count < 1:
+                raise ValidationError('Question must have at least one choice')
+
+
 class ChoiceInline(admin.TabularInline):
     model = Choice
+    formset = ChoiceInlineFormset
     extra = 0
     prepopulated_fields = {'slug': ('text',)}
 
 
-class QuestionAdmin(RestrictedAdmin):
-    inlines = [ChoiceInline]
-    list_display = ('__str__', 'field_name', 'x_axis', 'y_axis')
-    ordering = ['owner__id', 'number']
-
-
-class RuleAdminForm(forms.ModelForm):
+class QuestionAdminForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        # Check that rule contain only valid field names
-        rule = cleaned_data.get('rule')
+        min_value = cleaned_data.get('min_value')
+        max_value = cleaned_data.get('max_value')
 
-        if rule:
-            user = cleaned_data.get('owner')
-
-            invalid_field_name_errors = []
-            for rule_field_name in re.findall(r'{(\w*)}', rule):
-                if rule_field_name not in Question.get_possible_field_names(user):
-                    invalid_field_name_errors.append(ValidationError(
-                        'Field name "%(value)s" used in Rule is not valid',
-                        params={'value': rule_field_name}
-                    ))
-
-            if invalid_field_name_errors:
-                raise ValidationError(invalid_field_name_errors)
+        if min_value is not None and max_value is not None and min_value >= max_value:
+            raise ValidationError('Min value must be less than Max value.')
 
         return cleaned_data
+
+    def clean_min_value(self):
+        question_type = self.cleaned_data.get('type')
+        min_value = self.cleaned_data.get('min_value')
+
+        if question_type == Question.SLIDER and min_value is None:
+            raise ValidationError('This field is required.')
+
+        return self.cleaned_data.get('min_value')
+
+    def clean_max_value(self):
+        question_type = self.cleaned_data.get('type')
+        max_value = self.cleaned_data.get('max_value')
+
+        if question_type == Question.SLIDER and max_value is None:
+            raise ValidationError('This field is required.')
+
+        return self.cleaned_data.get('max_value')
+
+
+class QuestionAdmin(RestrictedAdmin):
+    form = QuestionAdminForm
+    inlines = [ChoiceInline]
+    list_display = ('__str__', 'field_name', 'type')
+    ordering = ['owner__id', 'number']
+
+    class Media:
+        js = ('admin/js/question_admin.js',)
+
+
+class RuleAdminForm(ValidateFieldNameModelAdminForm):
+    field_to_validate = 'rule'
 
 
 class RecommendationAdmin(RestrictedAdmin):
@@ -88,27 +163,65 @@ class RecommendationAdmin(RestrictedAdmin):
     list_display = ('__str__', 'response_text', 'affiliate_name', 'redirect_url')
     ordering = ['question__number']
 
+    field_to_extend_help_text = 'rule'
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Ensure that user can select only questions he own
         if db_field.name == 'question':
             kwargs['queryset'] = Question.objects.filter(owner=request.user)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    def get_form(self, request, obj=None, change=False, **kwargs):
-        form = super().get_form(request, obj=None, change=False, **kwargs)
 
-        possible_field_names = ', '.join(Question.get_possible_field_names(request.user)) or 'No questions created yet'
+class ValueRangeInlineFormset(forms.models.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
 
-        # Extend rule help_text to show possible field names
-        form.base_fields['rule'].help_text += f'</br></br>Possible field names: <b>{possible_field_names}</b>'
+        for form in self.forms:
+            try:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE'):
+                    start = form.cleaned_data.get('start')
+                    end = form.cleaned_data.get('end')
 
-        return form
+                    if start is not None and end is not None and start > end:
+                        raise ValidationError('Start of range must be less than or equal to End')
+            except AttributeError:
+                # annoyingly, if a subform is invalid Django explicitly raises
+                # an AttributeError for cleaned_data
+                pass
+
+
+class ValueRangeInline(admin.TabularInline):
+    model = ValueRange
+    formset = ValueRangeInlineFormset
+    extra = 0
+    min_num = 1
+
+
+class ScoringModelAdminForm(ValidateFieldNameModelAdminForm):
+    field_to_validate = 'formula'
+
+
+class ScoringModelAdmin(RestrictedAdmin):
+    form = ScoringModelAdminForm
+    inlines = [ValueRangeInline]
+    list_display = ('__str__', 'weight', 'x_axis', 'y_axis')
+    ordering = ['question__number']
+
+    field_to_extend_help_text = 'formula'
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Ensure that user can select only available questions he own
+        if db_field.name == 'question':
+            kwargs['queryset'] = Question.objects.filter(
+                owner=request.user,
+                type__in=(Question.CHOICES, Question.SLIDER)
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class AnswerInline(admin.StackedInline):
     model = Answer
     extra = 0
-    readonly_fields = ()
 
 
 class LeadAdmin(RestrictedAdmin):
@@ -144,6 +257,7 @@ class TokenAdmin(drf_admin.TokenAdmin):
 
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Recommendation, RecommendationAdmin)
+admin.site.register(ScoringModel, ScoringModelAdmin)
 admin.site.register(Lead, LeadAdmin)
 
 admin.site.unregister(TokenProxy)

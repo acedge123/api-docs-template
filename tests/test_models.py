@@ -47,6 +47,7 @@ class TestRecommendation:
         'If {A} > {B} < {C} == {D} != {E} >= {F} <= {G}',
         'If {A} and {B} or {C} and not {D} or not {E}',
         'If 0 + 12 + 0.99 + 2.222',
+        'If 0 + 12 + (0.99 + 2.222)',
     ])
     def test_rule_is_valid(self, recommendation_data, rule):
         recommendation_data['rule'] = rule
@@ -158,7 +159,7 @@ class TestQuestion:
 class TestChoice:
     @pytest.mark.parametrize('text', ['Below 99', '100-299', '300+', '1'])
     def test_str(self, question, text):
-        choice = Choice(question=question, text=text, points=1)
+        choice = Choice(question=question, text=text)
         assert str(choice) == text
 
 

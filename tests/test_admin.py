@@ -112,7 +112,7 @@ class TestRecommendationAdmin:
 
         form = recommendation_admin.get_form(fake_request)
 
-        expected_help_text = '</br></br>Possible field names: <b>No questions created yet</b>'
+        expected_help_text = '</br></br>Possible field names: <b>No appropriate questions created yet</b>'
 
         assert form.base_fields['rule'].help_text.endswith(expected_help_text)
 
@@ -139,16 +139,16 @@ class TestRecommendationAdmin:
     @pytest.mark.parametrize('rule,error_message', [
         (
             'If {q1u} > 0 or {not_existing_field_name} > 0',
-            ['Field name "not_existing_field_name" used in Rule is not valid']
+            ['Field name "not_existing_field_name" used in Rule is not valid.']
         ),
         (
             'If {zc}',
-            ['Field name "zc" used in Rule is not valid']
+            ['Field name "zc" used in Rule is not valid.']
         ),
         (
             'If {not_existing_field_name} or {zc}',
-            ['Field name "not_existing_field_name" used in Rule is not valid',
-             'Field name "zc" used in Rule is not valid']
+            ['Field name "not_existing_field_name" used in Rule is not valid.',
+             'Field name "zc" used in Rule is not valid.']
         ),
     ])
     @pytest.mark.usefixtures('questions')

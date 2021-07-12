@@ -2,7 +2,7 @@ from rest_framework import viewsets, mixins, status, serializers
 from rest_framework.response import Response
 
 from api.v1.scoringengine.serializers import LeadSerializerCreate, LeadSerializerView
-from scoringengine.models import Lead
+from scoringengine.models import Lead, Question
 
 
 class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -20,11 +20,8 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
         else:
             return LeadSerializerView
 
-    def _calculate_answers_points(self, answers_data):
-        """  Calculate answer points for questions that have choices
-
-        Answer points = choice points * question weight
-        """
+    def _collect_answers_values(self, answers_data):
+        """  Collect answers values for questions with values """
 
         for answer_data in answers_data:
             question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
@@ -34,21 +31,44 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                     'answers': {'field_name': [f"There are no question with '{answer_data['field_name']}' field name"]}
                 })
 
-            choice = question.choices.filter(slug=answer_data['response']).first()
+            if question.type == Question.CHOICES:
+                choice = question.choices.filter(slug=answer_data['response']).first()
 
-            if choice is None:
-                if question.choices.count() > 0:
+                if choice is None:
                     raise serializers.ValidationError({
                         'answers': {
                             'response': [f"There are no question choice with '{answer_data['response']}' response"]
                         }
                     })
-            else:
-                answer_data['points'] = choice.points * question.weight
-                answer_data['value'] = choice.value
+                else:
+                    answer_data['response'] = choice.text
+                    answer_data['value'] = choice.value
+
+            elif question.type == Question.SLIDER:
+                try:
+                    value = float(answer_data['response'])
+                except ValueError:
+                    raise serializers.ValidationError({
+                        'answers': {
+                            'response': [f"Response '{answer_data['response']}' is invalid response for question with "
+                                         f"'{answer_data['field_name']}' field name"]
+                        }
+                    })
+
+                if not (question.min_value <= value <= question.max_value):
+                    raise serializers.ValidationError({
+                        'answers': {
+                            'response': [f"Response '{answer_data['response']}' should be within "
+                                         f"[{question.min_value}, {question.max_value}] range"]
+                        }
+                    })
+
+                answer_data['value'] = value
 
     def _calculate_x_and_y_scores(self, answers_data):
-        """ Calculate X-axis and Y-axis scores """
+        """ Calculate answer points and X-axis and Y-axis scores for questions with values """
+
+        answers = {a['field_name']: a['value'] for a in answers_data if a.get('value') is not None}
 
         x_axis = 0
         y_axis = 0
@@ -56,14 +76,16 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
         for answer_data in answers_data:
             question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
 
-            points = answer_data.get('points')
+            points = question.calculate_points(answers)
 
             if points is not None:
-                if question.x_axis:
+                if question.scoring_model.x_axis:
                     x_axis += points
 
-                if question.y_axis:
+                if question.scoring_model.y_axis:
                     y_axis += points
+
+            answer_data['points'] = points
 
         return x_axis, y_axis
 
@@ -90,7 +112,7 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                     'answers': ['Not all answers provided']
                 })
 
-        self._calculate_answers_points(answers_data)
+        self._collect_answers_values(answers_data)
 
         x_axis, y_axis = self._calculate_x_and_y_scores(answers_data)
 

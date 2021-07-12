@@ -77,7 +77,7 @@ class TestLeadViewSet:
                 },
                 {
                     'field_name': 'q2u',
-                    'response': '1-2'
+                    'response': '1'
                 },
                 {
                     'field_name': 'q3u',
@@ -149,15 +149,15 @@ class TestLeadViewSet:
             'answers': [
                 {
                     'field_name': 'q1u',
-                    'response': '2'
-                },
-                {
-                    'field_name': 'q2u',
                     'response': '1-2'
                 },
                 {
-                    'field_name': 'q3u',
+                    'field_name': 'q2u',
                     'response': '1'
+                },
+                {
+                    'field_name': 'q3u',
+                    'response': '5'
                 },
                 {
                     'field_name': 'zc',
@@ -168,8 +168,8 @@ class TestLeadViewSet:
 
         expected_result = {
             'lead_id': 'f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288',
-            'x_axis': '8.50',
-            'y_axis': '6.30',
+            'x_axis': '12.80',
+            'y_axis': '1.10',
             'recommendations': [{
                 'field_name': 'q2u',
                 'response_text': 'Q2. Rule is True',
@@ -198,11 +198,11 @@ class TestLeadViewSet:
                 },
                 {
                     'field_name': 'q2u',
-                    'response': '1-2'
+                    'response': '1'
                 },
                 {
                     'field_name': 'q3u',
-                    'response': '1'
+                    'response': '5'
                 },
                 {
                     'field_name': 'zc',
@@ -217,8 +217,8 @@ class TestLeadViewSet:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert result['lead_id']
-        assert result['x_axis'] == '7.40'
-        assert result['y_axis'] == '6.30'
+        assert result['x_axis'] == '12.80'
+        assert result['y_axis'] == '1.10'
 
     @pytest.mark.usefixtures('questions')
     def test_create_lead_check_owner(self, generate_lead_id, api_client_for_user, user, user1):
@@ -234,11 +234,11 @@ class TestLeadViewSet:
                 },
                 {
                     'field_name': 'q2u',
-                    'response': '1-2'
+                    'response': '1'
                 },
                 {
                     'field_name': 'q3u',
-                    'response': '1'
+                    'response': '5'
                 },
                 {
                     'field_name': 'zc',
