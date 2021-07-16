@@ -5,7 +5,7 @@ from django.contrib.admin import AdminSite
 from django.test import RequestFactory
 from rest_framework.authtoken.models import TokenProxy
 
-from scoringengine.admin import QuestionAdmin, RecommendationAdmin, LeadAdmin, TokenAdmin
+from scoringengine.admin import QuestionAdmin, RecommendationAdmin, LeadAdmin, TokenAdmin, ScoringModelAdmin
 from scoringengine.models import Question, Recommendation, Choice, Lead, Answer, ScoringModel, ValueRange
 
 
@@ -50,9 +50,11 @@ def user1(user_with_all_perms):
 def question_data(user):
     return {
         'number': 99,
-        'type': Question.OPEN,
+        'type': Question.SLIDER,
         'text': 'Test question?',
         'field_name': 'test_question',
+        'min_value': -1,
+        'max_value': 10,
         'owner': user
     }
 
@@ -229,8 +231,6 @@ def questions_for_user1(user1):
         number=1,
         text='Question one user1?',
         field_name='q1u1',
-        # x_axis=False,
-        # y_axis=False,
         owner=user1
     )
 
@@ -242,7 +242,6 @@ def questions_for_user1(user1):
         text='Below 1',
         slug='below-1',
         value=1,
-        # points=1
     )
     c2 = Choice(
         pk=11,
@@ -250,7 +249,6 @@ def questions_for_user1(user1):
         text='2+',
         slug='2',
         value=2,
-        # points=2
     )
 
     c1.save()
@@ -300,6 +298,60 @@ def recommendation(recommendation_data):
 
 
 @pytest.fixture()
+def scoring_model_data(user, question_with_no_recommendation):
+    return {
+        'question': question_with_no_recommendation,
+        'weight': 1,
+        'x_axis': True,
+        'y_axis': False,
+        'owner': user
+    }
+
+
+@pytest.fixture()
+def scoring_model(scoring_model_data):
+    sm = ScoringModel(**scoring_model_data)
+
+    sm.save()
+
+    vr = ValueRange(
+        pk=21,
+        end=0,
+        points=0,
+        scoring_model=sm
+    )
+    vr1 = ValueRange(
+        pk=22,
+        start=0,
+        end=3,
+        points=1,
+        scoring_model=sm
+    )
+    vr2 = ValueRange(
+        pk=23,
+        start=3,
+        end=5,
+        points=2,
+        scoring_model=sm
+    )
+    vr3 = ValueRange(
+        pk=24,
+        start=5,
+        points=3,
+        scoring_model=sm
+    )
+
+    vr.save()
+    vr1.save()
+    vr2.save()
+    vr3.save()
+
+    yield sm
+
+    sm.delete()
+
+
+@pytest.fixture()
 def lead_data(user):
     return {
         'x_axis': 1.1,
@@ -318,7 +370,6 @@ def lead(lead_data, questions_for_user):
         lead=l,
         field_name=questions_for_user[0].field_name,
         response=questions_for_user[0].choices.first().text,
-        points=0,  # questions_for_user[0].choices.first().points * questions_for_user[0].weight,
         response_text='Response',
         affiliate_name='Example affiliate',
         affiliate_image='https://example.com/image.jpeg',
@@ -329,7 +380,6 @@ def lead(lead_data, questions_for_user):
         lead=l,
         field_name=questions_for_user[1].field_name,
         response=questions_for_user[1].choices.first().text,
-        points=0  # questions_for_user[1].choices.first().points * questions_for_user[1].weight,
     )
 
     a1.save()
@@ -427,6 +477,15 @@ def lead_admin_and_model(admin_site):
 def token_admin_and_model(admin_site):
     return TokenAdmin(model=TokenProxy, admin_site=admin_site), TokenProxy
 
+
+@pytest.fixture()
+def scoring_model_admin_and_model(admin_site):
+    return ScoringModelAdmin(model=ScoringModel, admin_site=admin_site), ScoringModel
+
+
+@pytest.fixture()
+def choice_inline_formset():
+    pass
 
 @pytest.fixture()
 def fake_request(user, rf: RequestFactory):

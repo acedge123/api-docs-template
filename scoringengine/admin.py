@@ -227,7 +227,7 @@ class AnswerInline(admin.StackedInline):
 class LeadAdmin(RestrictedAdmin):
     inlines = [AnswerInline]
     list_display = ('lead_id', 'timestamp')
-    ordering = ['owner__id', 'lead_id']
+    ordering = ['owner__id', '-timestamp']
     readonly_fields = ('timestamp',)
 
     def has_add_permission(self, request, obj=None):

@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='scoringmodel',
             name='formula',
-            field=models.CharField(blank=True, help_text='Leave empty to select points based on direct value from associated question.</br>Add expression with "Field names" in curly braces (e.g. {field_name}), arithmetic (+, -, *, /) operations and parenthesesto select points based on expression result.', max_length=200, validators=[scoringengine.models.validate_formula]),
+            field=models.CharField(blank=True, help_text='Leave empty to select points based on direct value from associated question.</br>Add expression with "Field names" in curly braces (e.g. {field_name}), arithmetic (+, -, *, /) operations and parentheses to select points based on expression result.', max_length=200, validators=[scoringengine.models.validate_formula]),
         ),
         migrations.AlterField(
             model_name='valuerange',

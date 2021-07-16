@@ -44,7 +44,7 @@ def validate_rule(value):
     if not re.fullmatch(RULE_REGEX, value):
         raise ValidationError('Rule is invalid', code='invalid_rule')
 
-    mocked_data = {k: 1 for k in re.findall(fr'{{({FIELD_NAME_REGEX})}}', value)}
+    mocked_data = {k: f'{{{k}}}' for k in re.findall(fr'{{({FIELD_NAME_REGEX})}}', value)}
 
     try:
         Question.eval_rule(value, data=mocked_data)
@@ -53,6 +53,9 @@ def validate_rule(value):
             f'Rule syntax invalid "{RULE_PREFIX} {ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
             code='invalid_rule'
         )
+    except NameError:
+        # No syntax errors in rule
+        pass
 
 
 def validate_formula(value):
@@ -61,7 +64,7 @@ def validate_formula(value):
     if not re.fullmatch(FORMULA_REGEX, value):
         raise ValidationError('Formula is invalid', code='invalid_formula')
 
-    mocked_data = {k: 1 for k in re.findall(fr'{{({FIELD_NAME_REGEX})}}', value)}
+    mocked_data = {k: f'{{{k}}}' for k in re.findall(fr'{{({FIELD_NAME_REGEX})}}', value)}
 
     try:
         ScoringModel.eval_formula(value, data=mocked_data)
@@ -70,6 +73,9 @@ def validate_formula(value):
             f'Formula syntax invalid "{ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
             code='invalid_formula'
         )
+    except NameError:
+        # No syntax errors in formula
+        pass
 
 
 class Recommendation(models.Model):
@@ -111,7 +117,7 @@ class ScoringModel(models.Model):
         help_text=f'Leave empty to select points based on direct value from associated question.</br>'
                   f'Add expression with "Field names" in curly braces (e.g. {{field_name}}), '
                   f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}) operations '
-                  f'and parentheses'
+                  f'and parentheses '
                   f'to select points based on expression result.')
 
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='scoring_models')
@@ -120,7 +126,7 @@ class ScoringModel(models.Model):
     def eval_formula(formula, data):
         """ Eval formula for provided data and return rounded result """
         try:
-            return round(eval(formula.format(**data)), 2)
+            return eval(formula.format(**data))
         except ZeroDivisionError:
             return None
 
@@ -131,14 +137,14 @@ class ScoringModel(models.Model):
         else:
             value = self.eval_formula(self.formula, answers)
 
-        if value:
+        if value is not None:
             # Get points based on calculated value
             for value_range in self.ranges.order_by('pk').all():
                 start = value_range.start if value_range.start is not None else -math.inf
                 end = value_range.end if value_range.end is not None else math.inf
 
                 if start <= value < end:
-                    return value_range.points * self.weight
+                    return round(value_range.points * self.weight, 2)
 
         return None
 
@@ -225,7 +231,7 @@ class Question(models.Model):
     def get_recommendation_dict(self):
         try:
             return {
-                'response_text': f'Q{self.number}. {self.recommendation.response_text}' if self.recommendation.response_text else '',
+                'response_text': self.recommendation.response_text,
                 'affiliate_name': self.recommendation.affiliate_name,
                 'affiliate_image': self.recommendation.affiliate_image,
                 'affiliate_link': self.recommendation.affiliate_link,

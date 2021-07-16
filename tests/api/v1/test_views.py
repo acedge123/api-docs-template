@@ -106,7 +106,7 @@ class TestLeadViewSet:
         assert response.json() == expected_result
 
     @pytest.mark.usefixtures('questions')
-    def test_create_lead_bad_request_non_existing_question_choice(self, api_client):
+    def test_create_lead_bad_request_for_choice_question_non_existing_question_choice(self, api_client):
         url = reverse('api:v1:lead-list')
         data = {
             'answers': [
@@ -131,7 +131,78 @@ class TestLeadViewSet:
 
         expected_result = {
             'answers': {
-                'response': ["There are no question choice with 'wrong-choice' response"]
+                'response': ["There are no choice with 'wrong-choice' response in question with 'q2u' field name"]
+            }
+        }
+
+        response = api_client.post(url, data=data, format='json')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == expected_result
+
+    @pytest.mark.usefixtures('questions')
+    def test_create_lead_bad_request_response_for_slider_question_invalid(self, api_client):
+        url = reverse('api:v1:lead-list')
+        data = {
+            'answers': [
+                {
+                    'field_name': 'q1u',
+                    'response': '2'
+                },
+                {
+                    'field_name': 'q2u',
+                    'response': '1'
+                },
+                {
+                    'field_name': 'q3u',
+                    'response': 'invalid-value'
+                },
+                {
+                    'field_name': 'zc',
+                    'response': 'ZC29076'
+                }
+            ]
+        }
+
+        expected_result = {
+            'answers': {
+                'response': ["Response 'invalid-value' is invalid response for question with 'q3u' field name"]
+            }
+        }
+
+        response = api_client.post(url, data=data, format='json')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == expected_result
+
+    @pytest.mark.usefixtures('questions')
+    @pytest.mark.parametrize('value', ['-100', '100'])
+    def test_create_lead_bad_request_response_for_slider_question_value_not_in_allowed_range(self, api_client, value):
+        url = reverse('api:v1:lead-list')
+        data = {
+            'answers': [
+                {
+                    'field_name': 'q1u',
+                    'response': '2'
+                },
+                {
+                    'field_name': 'q2u',
+                    'response': '1'
+                },
+                {
+                    'field_name': 'q3u',
+                    'response': value
+                },
+                {
+                    'field_name': 'zc',
+                    'response': 'ZC29076'
+                }
+            ]
+        }
+
+        expected_result = {
+            'answers': {
+                'response': ["Response for question with 'q3u' field name should be within [0, 10] range"]
             }
         }
 
@@ -172,7 +243,7 @@ class TestLeadViewSet:
             'y_axis': '1.10',
             'recommendations': [{
                 'field_name': 'q2u',
-                'response_text': 'Q2. Rule is True',
+                'response_text': 'Rule is True',
                 'affiliate_name': 'Example affiliate',
                 'affiliate_image': 'https://example.com/image.jpeg',
                 'affiliate_link': 'https://example.com/',

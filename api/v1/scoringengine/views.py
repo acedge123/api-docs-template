@@ -37,7 +37,8 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                 if choice is None:
                     raise serializers.ValidationError({
                         'answers': {
-                            'response': [f"There are no question choice with '{answer_data['response']}' response"]
+                            'response': [f"There are no choice with '{answer_data['response']}' response in "
+                                         f"question with '{answer_data['field_name']}' field name"]
                         }
                     })
                 else:
@@ -58,8 +59,8 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                 if not (question.min_value <= value <= question.max_value):
                     raise serializers.ValidationError({
                         'answers': {
-                            'response': [f"Response '{answer_data['response']}' should be within "
-                                         f"[{question.min_value}, {question.max_value}] range"]
+                            'response': [f"Response for question with '{answer_data['field_name']}' field name "
+                                         f"should be within [{question.min_value}, {question.max_value}] range"]
                         }
                     })
 

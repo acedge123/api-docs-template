@@ -85,7 +85,7 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 
 "Regular admin" group could be created manually or using script below. 
 It should allow full access for Question, Choice, ScoringModel, ValueRange and Recommendation models, read access for 
-Answer model and read and delete access for Lead model.
+Answer and TokenProxy models and read and delete access for Lead model.
 
     docker-compose -f <envirovment>.yml run --rm django python manage.py shell
 
@@ -103,7 +103,7 @@ for model in ['lead']:
     for permission in ['delete', 'view']:
         permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
         
-for model in ['answer']:
+for model in ['answer', 'tokenproxy']:
     for permission in ['view']:
         permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
 
@@ -138,7 +138,7 @@ To obtain a token clients may POST given the username and password to ```/api/to
 ### /api/v1/leads/
 #### Allowed method: POST
 Using provided answers, calculate X-axis, Y-axis values and return it with recommendations according to rules.
-"lead_id" is optional, if not provided it will be generated automatically.
+"lead_id" is optional, if not provided it will be generated automatically, if provided it should be valid UUID4.
 
 ##### Request example
 ```json
@@ -147,19 +147,19 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
     "answers": [
         {
             "field_name": "Credit_Score",
-            "response": "581 - 620"
+            "response": "581-620"
         },
         {
             "field_name": "Income",
-            "response": "3000 - 4999"
+            "response": "5000"
         },
         {
             "field_name": "Rent",
-            "response": "3000 - 3999"
+            "response": "1500"
         },
         {
             "field_name": "Car_Payment",
-            "response": "300 - 399"
+            "response": "300"
         }
     ]
 }
