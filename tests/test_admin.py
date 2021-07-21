@@ -562,11 +562,11 @@ class TestQuestionAdmin:
         assert formset.non_form_errors() == ['Question must have at least one choice']
 
     def test_request_template_url(self):
-        assert reverse('admin:request_template') == '/admin/scoringengine/question/request_template/'
-        assert resolve('/admin/scoringengine/question/request_template/').view_name == 'admin:request_template'
+        assert reverse('admin:api_request_template') == '/admin/scoringengine/question/api_request_template/'
+        assert resolve('/admin/scoringengine/question/api_request_template/').view_name == 'admin:api_request_template'
 
     def test_request_template_require_login(self, django_client):
-        url = reverse('admin:request_template')
+        url = reverse('admin:api_request_template')
 
         django_client.logout()
 
@@ -577,25 +577,26 @@ class TestQuestionAdmin:
 
     @pytest.mark.usefixtures('questions')
     def test_request_template(self, django_client, user):
-        url = reverse('admin:request_template')
+        url = reverse('admin:api_request_template')
 
         expected_headers = [
             f'Authorization: Token {user.auth_token}',
             'Content-Type: application/json'
         ]
         expected_payload = {
-            'lead_id': '(optional) uuid4 lead identifier',
+            'lead_id': '(optional) uuid4 lead identifier, if not used just remove whole line',
             'answers': [
                 {'field_name': 'q1u', 'response': "put response for 'q1u' question here"},
                 {'field_name': 'q2u', 'response': "put response for 'q2u' question here"},
-                {'field_name': 'q3u', 'response': "put response for 'q3u' question here"}
+                {'field_name': 'q3u', 'response': "put response for 'q3u' question here"},
+                {'field_name': 'zc', 'response': "put response for 'zc' question here"}
             ]
         }
 
         response = django_client.get(url)
 
         assert response.status_code == 200
-        assert response.template_name == 'admin/scoringengine/question/request_template.html'
+        assert response.template_name == 'admin/scoringengine/question/api_request_template.html'
 
         assert 'site_title' in response.context_data
         assert 'site_header' in response.context_data
@@ -607,6 +608,6 @@ class TestQuestionAdmin:
         assert 'opts' in response.context_data
         assert 'has_view_permission' in response.context_data
 
-        assert response.context_data['title'] == 'Request template'
+        assert response.context_data['title'] == 'API request template'
         assert response.context_data['headers'] == expected_headers
         assert response.context_data['payload'] == expected_payload

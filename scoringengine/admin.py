@@ -156,12 +156,12 @@ class QuestionAdmin(RestrictedAdmin):
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('request_template/', self.admin_site.admin_view(self.request_template), name='request_template'),
+            path('api_request_template/', self.admin_site.admin_view(self.api_request_template), name='api_request_template'),
         ]
         return my_urls + urls
 
-    def request_template(self, request):
-        questions = request.user.questions.filter(type__in=(Question.CHOICES, Question.SLIDER)).order_by('pk')
+    def api_request_template(self, request):
+        questions = request.user.questions.order_by('pk')
 
         headers = [
             f'Authorization: Token {request.user.auth_token}',
@@ -169,7 +169,7 @@ class QuestionAdmin(RestrictedAdmin):
         ]
 
         payload = {
-            'lead_id': '(optional) uuid4 lead identifier',
+            'lead_id': '(optional) uuid4 lead identifier, if not used just remove whole line',
             'answers': [{
                 'field_name': q.field_name,
                 'response': f"put response for '{q.field_name}' question here"
@@ -180,12 +180,12 @@ class QuestionAdmin(RestrictedAdmin):
             **self.admin_site.each_context(request),
             'opts': self.model._meta,
             'has_view_permission': self.has_view_permission(request),
-            'title': 'Request template',
+            'title': 'API request template',
             'headers': headers,
             'payload': payload
         }
 
-        return TemplateResponse(request, 'admin/scoringengine/question/request_template.html', context)
+        return TemplateResponse(request, 'admin/scoringengine/question/api_request_template.html', context)
 
     class Media:
         js = ('admin/js/question_admin.js',)
