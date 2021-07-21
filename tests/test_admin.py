@@ -1,5 +1,6 @@
 import pytest
 from django import forms
+from django.urls import resolve, reverse
 
 from scoringengine.models import Question
 
@@ -559,3 +560,53 @@ class TestQuestionAdmin:
 
         assert not formset.is_valid()
         assert formset.non_form_errors() == ['Question must have at least one choice']
+
+    def test_request_template_url(self):
+        assert reverse('admin:request_template') == '/admin/scoringengine/question/request_template/'
+        assert resolve('/admin/scoringengine/question/request_template/').view_name == 'admin:request_template'
+
+    def test_request_template_require_login(self, django_client):
+        url = reverse('admin:request_template')
+
+        django_client.logout()
+
+        response = django_client.get(url)
+
+        assert response.status_code == 302
+        assert response.url == f'/admin/login/?next={url}'
+
+    @pytest.mark.usefixtures('questions')
+    def test_request_template(self, django_client, user):
+        url = reverse('admin:request_template')
+
+        expected_headers = [
+            f'Authorization: Token {user.auth_token}',
+            'Content-Type: application/json'
+        ]
+        expected_payload = {
+            'lead_id': '(optional) uuid4 lead identifier',
+            'answers': [
+                {'field_name': 'q1u', 'response': "put response for 'q1u' question here"},
+                {'field_name': 'q2u', 'response': "put response for 'q2u' question here"},
+                {'field_name': 'q3u', 'response': "put response for 'q3u' question here"}
+            ]
+        }
+
+        response = django_client.get(url)
+
+        assert response.status_code == 200
+        assert response.template_name == 'admin/scoringengine/question/request_template.html'
+
+        assert 'site_title' in response.context_data
+        assert 'site_header' in response.context_data
+        assert 'site_url' in response.context_data
+        assert 'has_permission' in response.context_data
+        assert 'available_apps' in response.context_data
+        assert 'is_popup' in response.context_data
+        assert 'is_nav_sidebar_enabled' in response.context_data
+        assert 'opts' in response.context_data
+        assert 'has_view_permission' in response.context_data
+
+        assert response.context_data['title'] == 'Request template'
+        assert response.context_data['headers'] == expected_headers
+        assert response.context_data['payload'] == expected_payload

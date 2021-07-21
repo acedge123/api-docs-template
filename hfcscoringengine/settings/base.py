@@ -7,7 +7,7 @@ import environ
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # scoringengine/
-APPS_DIR = ROOT_DIR / "scoringengine"
+APPS_DIR = ROOT_DIR
 env = environ.Env()
 
 READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)

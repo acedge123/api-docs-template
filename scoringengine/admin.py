@@ -1,9 +1,12 @@
+import json
 import re
 
 from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.template.response import TemplateResponse
+from django.urls import path
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
 
@@ -149,6 +152,40 @@ class QuestionAdmin(RestrictedAdmin):
     inlines = [ChoiceInline]
     list_display = ('__str__', 'field_name', 'type')
     ordering = ['owner__id', 'number']
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('request_template/', self.admin_site.admin_view(self.request_template), name='request_template'),
+        ]
+        return my_urls + urls
+
+    def request_template(self, request):
+        questions = request.user.questions.filter(type__in=(Question.CHOICES, Question.SLIDER)).order_by('pk')
+
+        headers = [
+            f'Authorization: Token {request.user.auth_token}',
+            'Content-Type: application/json'
+        ]
+
+        payload = {
+            'lead_id': '(optional) uuid4 lead identifier',
+            'answers': [{
+                'field_name': q.field_name,
+                'response': f"put response for '{q.field_name}' question here"
+            } for q in questions]
+        }
+
+        context = {
+            **self.admin_site.each_context(request),
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request),
+            'title': 'Request template',
+            'headers': headers,
+            'payload': payload
+        }
+
+        return TemplateResponse(request, 'admin/scoringengine/question/request_template.html', context)
 
     class Media:
         js = ('admin/js/question_admin.js',)

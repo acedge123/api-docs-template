@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 from django.contrib.admin import AdminSite
-from django.test import RequestFactory
+from django.test import RequestFactory, Client
 from rest_framework.authtoken.models import TokenProxy
 
 from scoringengine.admin import QuestionAdmin, RecommendationAdmin, LeadAdmin, TokenAdmin, ScoringModelAdmin
@@ -504,3 +504,12 @@ def db_field_mock(mocker):
         return mock
 
     return get_mock
+
+
+@pytest.fixture()
+def django_client(user):
+    client = Client()
+
+    client.force_login(user)
+
+    return client
