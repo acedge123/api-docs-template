@@ -170,10 +170,7 @@ class QuestionAdmin(RestrictedAdmin):
 
         payload = {
             'lead_id': '(optional) uuid4 lead identifier, if not used just remove whole line',
-            'answers': [{
-                'field_name': q.field_name,
-                'response': f"put response for '{q.field_name}' question here"
-            } for q in questions]
+            'answers': {q.field_name: f"put response for '{q.field_name}' question here" for q in questions}
         }
 
         context = {

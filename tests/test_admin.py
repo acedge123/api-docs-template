@@ -576,7 +576,7 @@ class TestQuestionAdmin:
         assert response.url == f'/admin/login/?next={url}'
 
     @pytest.mark.usefixtures('questions')
-    def test_request_template(self, django_client, user):
+    def test_api_request_template(self, django_client, user):
         url = reverse('admin:api_request_template')
 
         expected_headers = [
@@ -585,12 +585,12 @@ class TestQuestionAdmin:
         ]
         expected_payload = {
             'lead_id': '(optional) uuid4 lead identifier, if not used just remove whole line',
-            'answers': [
-                {'field_name': 'q1u', 'response': "put response for 'q1u' question here"},
-                {'field_name': 'q2u', 'response': "put response for 'q2u' question here"},
-                {'field_name': 'q3u', 'response': "put response for 'q3u' question here"},
-                {'field_name': 'zc', 'response': "put response for 'zc' question here"}
-            ]
+            'answers': {
+                'q1u': "put response for 'q1u' question here",
+                'q2u': "put response for 'q2u' question here",
+                'q3u': "put response for 'q3u' question here",
+                'zc': "put response for 'zc' question here"
+            }
         }
 
         response = django_client.get(url)

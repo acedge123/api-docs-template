@@ -15,16 +15,15 @@ class TestLeadViewSet:
             'lead_id': str(lead.lead_id),
             'x_axis': '1.10',
             'y_axis': '2.30',
-            'recommendations': [
-                {
-                    'field_name': 'q1u',
+            'recommendations': {
+                'q1u': {
                     'response_text': 'Response',
                     'affiliate_name': 'Example affiliate',
                     'affiliate_image': 'https://example.com/image.jpeg',
                     'affiliate_link': 'https://example.com/',
                     'redirect_url': 'https://example.com/redirect'
                 }
-            ]
+            }
         }
 
         response = api_client.get(url)
@@ -49,12 +48,9 @@ class TestLeadViewSet:
     def test_create_lead_bad_request_not_all_answers_provided(self, api_client):
         url = reverse('api:v1:lead-list')
         data = {
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': '2+'
-                }
-            ]
+            'answers': {
+                'q1u': '2+'
+            }
         }
 
         expected_result = {
@@ -70,28 +66,13 @@ class TestLeadViewSet:
     def test_create_lead_bad_request_not_existing_question(self, api_client):
         url = reverse('api:v1:lead-list')
         data = {
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': '2'
-                },
-                {
-                    'field_name': 'q2u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'q3u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'zc',
-                    'response': 'ZC29076'
-                },
-                {
-                    'field_name': 'non_existing_field_id',
-                    'response': '2'
-                }
-            ]
+            'answers': {
+                'q1u': '2',
+                'q2u': '1',
+                'q3u': '1',
+                'zc': 'ZC29076',
+                'non_existing_field_id': '2'
+            }
         }
 
         expected_result = {
@@ -109,24 +90,12 @@ class TestLeadViewSet:
     def test_create_lead_bad_request_for_choice_question_non_existing_question_choice(self, api_client):
         url = reverse('api:v1:lead-list')
         data = {
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': '2'
-                },
-                {
-                    'field_name': 'q2u',
-                    'response': 'wrong-choice'
-                },
-                {
-                    'field_name': 'q3u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'zc',
-                    'response': 'ZC29076'
-                }
-            ]
+            'answers': {
+                'q1u': '2',
+                'q2u': 'wrong-choice',
+                'q3u': '1',
+                'zc': 'ZC29076'
+            }
         }
 
         expected_result = {
@@ -144,24 +113,12 @@ class TestLeadViewSet:
     def test_create_lead_bad_request_response_for_slider_question_invalid(self, api_client):
         url = reverse('api:v1:lead-list')
         data = {
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': '2'
-                },
-                {
-                    'field_name': 'q2u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'q3u',
-                    'response': 'invalid-value'
-                },
-                {
-                    'field_name': 'zc',
-                    'response': 'ZC29076'
-                }
-            ]
+            'answers': {
+                'q1u': '2',
+                'q2u': '1',
+                'q3u': 'invalid-value',
+                'zc': 'ZC29076'
+            }
         }
 
         expected_result = {
@@ -180,24 +137,12 @@ class TestLeadViewSet:
     def test_create_lead_bad_request_response_for_slider_question_value_not_in_allowed_range(self, api_client, value):
         url = reverse('api:v1:lead-list')
         data = {
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': '2'
-                },
-                {
-                    'field_name': 'q2u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'q3u',
-                    'response': value
-                },
-                {
-                    'field_name': 'zc',
-                    'response': 'ZC29076'
-                }
-            ]
+            'answers': {
+                'q1u': '2',
+                'q2u': '1',
+                'q3u': value,
+                'zc': 'ZC29076'
+            }
         }
 
         expected_result = {
@@ -217,38 +162,27 @@ class TestLeadViewSet:
 
         data = {
             'lead_id': 'f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288',
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': '1-2'
-                },
-                {
-                    'field_name': 'q2u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'q3u',
-                    'response': '5'
-                },
-                {
-                    'field_name': 'zc',
-                    'response': 'ZC29076'
-                }
-            ]
+            'answers': {
+                'q1u': '1-2',
+                'q2u': '1',
+                'q3u': '5',
+                'zc': 'ZC29076'
+            }
         }
 
         expected_result = {
             'lead_id': 'f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288',
             'x_axis': '12.80',
             'y_axis': '1.10',
-            'recommendations': [{
-                'field_name': 'q2u',
-                'response_text': 'Rule is True',
-                'affiliate_name': 'Example affiliate',
-                'affiliate_image': 'https://example.com/image.jpeg',
-                'affiliate_link': 'https://example.com/',
-                'redirect_url': ''
-            }]
+            'recommendations': {
+                'q2u': {
+                    'response_text': 'Rule is True',
+                    'affiliate_name': 'Example affiliate',
+                    'affiliate_image': 'https://example.com/image.jpeg',
+                    'affiliate_link': 'https://example.com/',
+                    'redirect_url': ''
+                }
+            }
         }
 
         response = api_client.post(url, data=data, format='json')
@@ -262,24 +196,12 @@ class TestLeadViewSet:
 
         # Do not pass lead_id
         data = {
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': 'below-1'
-                },
-                {
-                    'field_name': 'q2u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'q3u',
-                    'response': '5'
-                },
-                {
-                    'field_name': 'zc',
-                    'response': 'ZC29076'
-                }
-            ]
+            'answers': {
+                'q1u': 'below-1',
+                'q2u': '1',
+                'q3u': '5',
+                'zc': 'ZC29076'
+            }
         }
 
         response = api_client.post(url, data=data, format='json')
@@ -298,24 +220,12 @@ class TestLeadViewSet:
         lead_id = generate_lead_id()
         data = {
             'lead_id': lead_id,
-            'answers': [
-                {
-                    'field_name': 'q1u',
-                    'response': '2'
-                },
-                {
-                    'field_name': 'q2u',
-                    'response': '1'
-                },
-                {
-                    'field_name': 'q3u',
-                    'response': '5'
-                },
-                {
-                    'field_name': 'zc',
-                    'response': 'ZC29076'
-                }
-            ]
+            'answers': {
+                'q1u': '2',
+                'q2u': '1',
+                'q3u': '5',
+                'zc': 'ZC29076'
+            }
         }
 
         # Create lead for user
@@ -330,12 +240,9 @@ class TestLeadViewSet:
         lead_id = generate_lead_id()
         data = {
             'lead_id': lead_id,
-            'answers': [
-                {
-                    'field_name': 'q1u1',
-                    'response': 'below-1'
-                }
-            ]
+            'answers': {
+                'q1u1': 'below-1'
+            }
         }
 
         # Create lead for user1

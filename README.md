@@ -144,24 +144,12 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
 ```json
 {
     "lead_id": "f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288",
-    "answers": [
-        {
-            "field_name": "Credit_Score",
-            "response": "581-620"
-        },
-        {
-            "field_name": "Income",
-            "response": "5000"
-        },
-        {
-            "field_name": "Rent",
-            "response": "1500"
-        },
-        {
-            "field_name": "Car_Payment",
-            "response": "300"
-        }
-    ]
+    "answers": {
+        "Credit_Score": "581-620",
+        "Income": "5000",
+        "Rent": "1500",
+        "Car_Payment": "300"
+    }
 }
 ```
 
@@ -171,16 +159,15 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
     "lead_id": "f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288",
     "x_axis": "18.00",
     "y_axis": "5.00",
-    "recommendations": [
-        {
-            "field_name": "Rent",
+    "recommendations": {
+        "Rent": {
             "response_text": "Q3. Your rent is too high",
             "affiliate_name": "Vendor A",
             "affiliate_image": "img src = 1",
             "affiliate_link": "https://www.vendora.com/?affiliate_id+1234",
             "redirect_url": ""
         }
-    ]
+    }
 }
 ```
 

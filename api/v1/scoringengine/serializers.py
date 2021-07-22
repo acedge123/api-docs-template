@@ -1,12 +1,6 @@
 from rest_framework import serializers
 
-from scoringengine.models import Question, Choice, Lead, Answer
-
-
-class ChoiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Choice
-        fields = ['text', 'slug']
+from scoringengine.models import Lead, Answer
 
 
 class AnswerSerializerCreate(serializers.ModelSerializer):
@@ -21,6 +15,12 @@ class LeadSerializerCreate(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = ['lead_id', 'answers']
+
+    def to_internal_value(self, data):
+        # Reformat answers dict to list
+        data['answers'] = [{'field_name': fn, 'response': r} for fn, r in data['answers'].items()]
+
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
         answers_data = validated_data.pop('answers')
@@ -50,8 +50,10 @@ class LeadSerializerView(serializers.ModelSerializer):
 
         fields_to_check = ['response_text', 'affiliate_name', 'affiliate_image', 'affiliate_link', 'redirect_url']
 
-        # Clean-up empty recommendations
-        non_empty_recommendations = [r for r in result['recommendations'] if any([r[f] for f in fields_to_check])]
+        # Clean-up empty recommendations, reformat recommendations list to dict
+        non_empty_recommendations = {
+            r.pop('field_name'): r for r in result['recommendations'] if any([r[f] for f in fields_to_check])
+        }
         result['recommendations'] = non_empty_recommendations
 
         return result
