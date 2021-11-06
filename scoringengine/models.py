@@ -3,6 +3,7 @@ import re
 import uuid
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -88,7 +89,7 @@ class Recommendation(models.Model):
                   f'combined with '
                   f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}), '
                   f'comparison ({", ".join(COMPARISON_OPERATORS)}), '
-                  f'logical operations ({", ".join(LOGICAL_OPERATORS)})'
+                  f'logical operations ({", ".join(LOGICAL_OPERATORS)}) '
                   f'and parentheses')
     response_text = models.CharField(max_length=200, blank=True)
 
@@ -131,20 +132,39 @@ class ScoringModel(models.Model):
             return None
 
     def calculate_points(self, answers):
-        # Calculate value
-        if not self.formula:
-            value = answers.get(self.question.field_name)
-        else:
-            value = self.eval_formula(self.formula, answers)
+        """ Calculate points based on calculated value.
+            For Question.MULTIPLE_CHOICES points determined as sum of separate points for each provided value.
+        """
 
-        if value is not None:
-            # Get points based on calculated value
+        def calculate_points_for_value(val):
+            """ Return points based on calculated value """
+
             for value_range in self.ranges.order_by('pk').all():
                 start = value_range.start if value_range.start is not None else -math.inf
                 end = value_range.end if value_range.end is not None else math.inf
 
-                if start <= value < end:
+                if start <= val < end:
                     return round(value_range.points * self.weight, 2)
+
+            return None
+
+        # Calculate value
+        if not self.formula:
+            value = answers.get(self.question.field_name)
+
+            if self.question.type == Question.MULTIPLE_CHOICES:
+                points = [calculate_points_for_value(v) for v in value]
+                points = [p for p in points if p is not None]
+
+                if points:
+                    return sum(points)
+
+                return None
+        else:
+            value = self.eval_formula(self.formula, answers)
+
+        if value is not None:
+            return calculate_points_for_value(value)
 
         return None
 
@@ -174,11 +194,13 @@ class ValueRange(models.Model):
 class Question(models.Model):
     OPEN = 'O'
     CHOICES = 'CH'
+    MULTIPLE_CHOICES = 'MC'
     SLIDER = 'S'
 
     TYPE_CHOICES = (
         (OPEN, 'Open'),
         (CHOICES, 'Choices'),
+        (MULTIPLE_CHOICES, 'Multiple choices'),
         (SLIDER, 'Slider'),
     )
 
@@ -196,6 +218,10 @@ class Question(models.Model):
                   '<b>Choices</b> question with predefined expected answers options. Answer can be any text. '
                   'Each answer option has associated value. Can be used in recommendations rules and in scoring models '
                   'formulas for X-axis, Y-axis score calculation. </br>'
+                  '<b>Multiple choices</b> question with predefined expected answers options. Answer can be any text. '
+                  'Multiple answers selection allowed. Each answer option has associated value. Can be used in scoring '
+                  'model for X-axis, Y-axis score calculation but not in recommendations rules and in scoring models '
+                  'formulas. </br>'
                   '<b>Slider</b> question with predefined range of possible values. Answer is a value. '
                   'Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score '
                   'calculation. </br>'
@@ -242,7 +268,7 @@ class Question(models.Model):
 
     @staticmethod
     def get_possible_field_names(user):
-        """ Return field names of questions that has values """
+        """ Return field names of questions that can be used in recommendation rule and scoring model formula """
         return [q.field_name for q in user.questions.all() if q.type in (Question.SLIDER, Question.CHOICES)]
 
     def calculate_points(self, answers):
@@ -301,6 +327,7 @@ class Answer(models.Model):
     response = models.CharField(max_length=200)
 
     value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    values = ArrayField(models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True), null=True)
     points = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
     response_text = models.CharField(max_length=200, blank=True)

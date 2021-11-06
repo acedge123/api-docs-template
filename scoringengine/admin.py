@@ -1,4 +1,3 @@
-import json
 import re
 
 from django import forms
@@ -95,7 +94,7 @@ class ChoiceInlineFormset(forms.models.BaseInlineFormSet):
         super().clean()
 
         # Require at least one Choice for Choices question type
-        if self.instance.type == Question.CHOICES:
+        if self.instance.type in (Question.CHOICES, Question.MULTIPLE_CHOICES):
             count = 0
             for form in self.forms:
                 try:
@@ -168,9 +167,16 @@ class QuestionAdmin(RestrictedAdmin):
             'Content-Type: application/json'
         ]
 
+        answers = {}
+        for q in questions:
+            if q.type == Question.MULTIPLE_CHOICES:
+                answers[q.field_name] = f"put one or multiple responses separated by commas for '{q.field_name}' question here"
+            else:
+                answers[q.field_name] = f"put response for '{q.field_name}' question here"
+
         payload = {
             'lead_id': '(optional) uuid4 lead identifier, if not used just remove whole line',
-            'answers': {q.field_name: f"put response for '{q.field_name}' question here" for q in questions}
+            'answers': answers
         }
 
         context = {
@@ -248,7 +254,7 @@ class ScoringModelAdmin(RestrictedAdmin):
         if db_field.name == 'question':
             kwargs['queryset'] = Question.objects.filter(
                 owner=request.user,
-                type__in=(Question.CHOICES, Question.SLIDER)
+                type__in=(Question.CHOICES, Question.MULTIPLE_CHOICES, Question.SLIDER)
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

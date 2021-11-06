@@ -71,6 +71,8 @@ class TestLeadViewSet:
                 'q2u': '1',
                 'q3u': '1',
                 'zc': 'ZC29076',
+                'q5u': '1,3',
+                'q6u': 'one',
                 'non_existing_field_id': '2'
             }
         }
@@ -94,13 +96,40 @@ class TestLeadViewSet:
                 'q1u': '2',
                 'q2u': 'wrong-choice',
                 'q3u': '1',
-                'zc': 'ZC29076'
+                'zc': 'ZC29076',
+                'q5u': '1, 3',
+                'q6u': 'one'
             }
         }
 
         expected_result = {
             'answers': {
                 'response': ["There are no choice with 'wrong-choice' response in question with 'q2u' field name"]
+            }
+        }
+
+        response = api_client.post(url, data=data, format='json')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == expected_result
+
+    @pytest.mark.usefixtures('questions')
+    def test_create_lead_bad_request_for_multiple_choice_question_non_existing_question_choice(self, api_client):
+        url = reverse('api:v1:lead-list')
+        data = {
+            'answers': {
+                'q1u': '2',
+                'q2u': '1',
+                'q3u': '1',
+                'zc': 'ZC29076',
+                'q5u': '1, 3, wrong-choice',
+                'q6u': 'one'
+            }
+        }
+
+        expected_result = {
+            'answers': {
+                'response': ["There are no choice with 'wrong-choice' response in question with 'q5u' field name"]
             }
         }
 
@@ -117,7 +146,9 @@ class TestLeadViewSet:
                 'q1u': '2',
                 'q2u': '1',
                 'q3u': 'invalid-value',
-                'zc': 'ZC29076'
+                'zc': 'ZC29076',
+                'q5u': '1',
+                'q6u': 'one'
             }
         }
 
@@ -141,7 +172,9 @@ class TestLeadViewSet:
                 'q1u': '2',
                 'q2u': '1',
                 'q3u': value,
-                'zc': 'ZC29076'
+                'zc': 'ZC29076',
+                'q5u': '1,3',
+                'q6u': 'one'
             }
         }
 
@@ -166,13 +199,15 @@ class TestLeadViewSet:
                 'q1u': '1-2',
                 'q2u': '1',
                 'q3u': '5',
-                'zc': 'ZC29076'
+                'zc': 'ZC29076',
+                'q5u': '1,3',
+                'q6u': 'one'
             }
         }
 
         expected_result = {
             'lead_id': 'f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288',
-            'x_axis': '12.80',
+            'x_axis': '15.83',
             'y_axis': '1.10',
             'recommendations': {
                 'q2u': {
@@ -200,7 +235,9 @@ class TestLeadViewSet:
                 'q1u': 'below-1',
                 'q2u': '1',
                 'q3u': '5',
-                'zc': 'ZC29076'
+                'zc': 'ZC29076',
+                'q5u': '1,3',
+                'q6u': 'one'
             }
         }
 
@@ -210,7 +247,7 @@ class TestLeadViewSet:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert result['lead_id']
-        assert result['x_axis'] == '12.80'
+        assert result['x_axis'] == '15.83'
         assert result['y_axis'] == '1.10'
 
     @pytest.mark.usefixtures('questions')
@@ -224,7 +261,9 @@ class TestLeadViewSet:
                 'q1u': '2',
                 'q2u': '1',
                 'q3u': '5',
-                'zc': 'ZC29076'
+                'zc': 'ZC29076',
+                'q5u': '1,3',
+                'q6u': 'one'
             }
         }
 

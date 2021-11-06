@@ -15,15 +15,21 @@ Question could be one of three types:
 - __Choices.__ Question with predefined expected answers options. Answer can be any text. Each answer option has 
   associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score 
   calculation.
+- __Multiple choices.__ Question with predefined expected answers options. Answer can be any text. Multiple answers 
+  selection allowed. Each answer option has associated value. Can be used in scoring model for X-axis, Y-axis score 
+  calculation but not in recommendations rules and in scoring models formulas.
 - __Slider.__ Question with predefined range of possible values. Answer is a value. Can be used in recommendations 
   rules and in scoring models formulas for X-axis, Y-axis score calculation.
 
 ### Scoring Model
 
-There may be a scoring model associated with Choices and Slider questions. Points for that question will be determined
-by calculated via formula value and defined set of value ranges. Scoring model formula may contain questions 
-with values (as question's field name in curly brackets, e.g. {field_name}), in this case value for that 
-question is used in scoring model formula calculation.
+There may be a scoring model associated with Choices, Multiple choices and Slider questions. 
+Points for that question will be determined by value calculated via formula, 
+if it exists, or by question value directly and defined set of value ranges. 
+For Multiple choices type question without formula, points will be determined as sum of separate points 
+for each provided value. 
+Scoring model formula may contain questions of Choices and Slider types (as question's field name in curly brackets, 
+e.g. {field_name}), in this case value for that question is used in scoring model formula calculation.
 
 - X-axis score equals sum of scoring model weight multiplied by determined points for all questions with scoring model
   with x-axis equals True;
@@ -161,7 +167,7 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
     "y_axis": "5.00",
     "recommendations": {
         "Rent": {
-            "response_text": "Q3. Your rent is too high",
+            "response_text": "Your rent is too high",
             "affiliate_name": "Vendor A",
             "affiliate_image": "img src = 1",
             "affiliate_link": "https://www.vendora.com/?affiliate_id+1234",

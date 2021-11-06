@@ -111,11 +111,29 @@ def questions_for_user(user):
         field_name='zc',
         owner=user
     )
+    q5 = Question(
+        pk=5,
+        type=Question.MULTIPLE_CHOICES,
+        number=5,
+        text='Question five - multiple choices - with scoring model - user?',
+        field_name='q5u',
+        owner=user
+    )
+    q6 = Question(
+        pk=6,
+        type=Question.MULTIPLE_CHOICES,
+        number=6,
+        text='Question six - multiple choices - with scoring model - user?',
+        field_name='q6u',
+        owner=user
+    )
 
     q1.save()
     q2.save()
     q3.save()
     q4.save()
+    q5.save()
+    q6.save()
 
     c1 = Choice(
         pk=1,
@@ -145,11 +163,43 @@ def questions_for_user(user):
         slug='1',
         value=2,
     )
+    c5 = Choice(
+        pk=5,
+        question=q5,
+        text='1',
+        slug='1',
+        value=1,
+    )
+    c6 = Choice(
+        pk=6,
+        question=q5,
+        text='2',
+        slug='2',
+        value=2,
+    )
+    c7 = Choice(
+        pk=7,
+        question=q5,
+        text='3',
+        slug='3',
+        value=3,
+    )
+    c8 = Choice(
+        pk=8,
+        question=q6,
+        text='one',
+        slug='one',
+        value=100,
+    )
 
     c1.save()
     c2.save()
     c3.save()
     c4.save()
+    c5.save()
+    c6.save()
+    c7.save()
+    c8.save()
 
     r = Recommendation(
         pk=1,
@@ -181,9 +231,27 @@ def questions_for_user(user):
         y_axis=False,
         owner=user
     )
+    sm2 = ScoringModel(
+        pk=3,
+        question=q5,
+        weight=1.01,
+        x_axis=True,
+        y_axis=False,
+        owner=user
+    )
+    sm3 = ScoringModel(
+        pk=4,
+        question=q6,
+        weight=1,
+        x_axis=True,
+        y_axis=True,
+        owner=user
+    )
 
     sm.save()
     sm1.save()
+    sm2.save()
+    sm3.save()
 
     vr = ValueRange(
         pk=1,
@@ -209,18 +277,40 @@ def questions_for_user(user):
         scoring_model=sm1,
         points=9
     )
+    vr4 = ValueRange(
+        pk=5,
+        scoring_model=sm2,
+        end=2,
+        points=1
+    )
+    vr5 = ValueRange(
+        pk=6,
+        scoring_model=sm2,
+        start=3,
+        points=2
+    )
+    vr6 = ValueRange(
+        pk=7,
+        scoring_model=sm3,
+        end=1,
+        points=10
+    )
 
     vr.save()
     vr1.save()
     vr2.save()
     vr3.save()
+    vr4.save()
+    vr5.save()
+    vr6.save()
 
-    yield [q1, q2, q3, q4]
+    yield [q1, q2, q3, q4, q5]
 
     q1.delete()
     q2.delete()
     q3.delete()
     q4.delete()
+    q5.delete()
 
 
 @pytest.fixture()
@@ -482,10 +572,6 @@ def token_admin_and_model(admin_site):
 def scoring_model_admin_and_model(admin_site):
     return ScoringModelAdmin(model=ScoringModel, admin_site=admin_site), ScoringModel
 
-
-@pytest.fixture()
-def choice_inline_formset():
-    pass
 
 @pytest.fixture()
 def fake_request(user, rf: RequestFactory):

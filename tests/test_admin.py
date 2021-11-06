@@ -589,7 +589,9 @@ class TestQuestionAdmin:
                 'q1u': "put response for 'q1u' question here",
                 'q2u': "put response for 'q2u' question here",
                 'q3u': "put response for 'q3u' question here",
-                'zc': "put response for 'zc' question here"
+                'zc': "put response for 'zc' question here",
+                'q5u': "put one or multiple responses separated by commas for 'q5u' question here",
+                'q6u': "put one or multiple responses separated by commas for 'q6u' question here"
             }
         }
 

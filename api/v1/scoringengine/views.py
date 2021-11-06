@@ -45,6 +45,26 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                     answer_data['response'] = choice.text
                     answer_data['value'] = choice.value
 
+            elif question.type == Question.MULTIPLE_CHOICES:
+                texts = []
+                values = []
+                for slug in answer_data['response'].split(','):
+                    choice = question.choices.filter(slug=slug.strip()).first()
+
+                    if choice is None:
+                        raise serializers.ValidationError({
+                            'answers': {
+                                'response': [f"There are no choice with '{slug.strip()}' response in "
+                                             f"question with '{answer_data['field_name']}' field name"]
+                            }
+                        })
+                    else:
+                        texts.append(choice.text)
+                        values.append(choice.value)
+
+                answer_data['response'] = ', '.join(texts)
+                answer_data['values'] = values
+
             elif question.type == Question.SLIDER:
                 try:
                     value = float(answer_data['response'])
@@ -69,7 +89,15 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
     def _calculate_x_and_y_scores(self, answers_data):
         """ Calculate answer points and X-axis and Y-axis scores for questions with values """
 
-        answers = {a['field_name']: a['value'] for a in answers_data if a.get('value') is not None}
+        answers = {}
+        for answer in answers_data:
+            field_name = answer['field_name']
+
+            if answer.get('value') is not None:
+                answers[field_name] = answer['value']
+
+            elif answer.get('values') is not None:
+                answers[field_name] = answer['values']
 
         x_axis = 0
         y_axis = 0

@@ -4,21 +4,22 @@ jQuery(document).ready(function($) {
     let choicesGroup = $('#choices-group');
 
     function configureForQuestionType (){
-        minMaxValueFields.addClass('required')
+        minMaxValueFields.addClass('required');
 
         switch (questionTypeSelect.val()) {
             case 'CH':
+            case 'MC':
                 minMaxValueFields.hide();
                 choicesGroup.show();
-                break
+                break;
             case 'S':
                 minMaxValueFields.show();
                 choicesGroup.hide();
-                break
+                break;
             case 'O':
                 minMaxValueFields.hide();
                 choicesGroup.hide();
-                break
+                break;
             default:
                 minMaxValueFields.hide();
                 choicesGroup.hide();
