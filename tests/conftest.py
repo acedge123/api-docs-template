@@ -107,7 +107,7 @@ def questions_for_user(user):
         pk=4,
         type=Question.OPEN,
         number=4,
-        text='Zip code - open',
+        text='Zip code - open - without scoring model - user',
         field_name='zc',
         owner=user
     )
@@ -121,9 +121,9 @@ def questions_for_user(user):
     )
     q6 = Question(
         pk=6,
-        type=Question.MULTIPLE_CHOICES,
+        type=Question.OPEN,
         number=6,
-        text='Question six - multiple choices - with scoring model - user?',
+        text='Question six - open - with scoring model - user',
         field_name='q6u',
         owner=user
     )
@@ -173,9 +173,9 @@ def questions_for_user(user):
     c6 = Choice(
         pk=6,
         question=q5,
-        text='2',
-        slug='2',
-        value=2,
+        text='-10',
+        slug='out-of-ranges',
+        value=-10,
     )
     c7 = Choice(
         pk=7,
@@ -183,13 +183,6 @@ def questions_for_user(user):
         text='3',
         slug='3',
         value=3,
-    )
-    c8 = Choice(
-        pk=8,
-        question=q6,
-        text='one',
-        slug='one',
-        value=100,
     )
 
     c1.save()
@@ -199,7 +192,6 @@ def questions_for_user(user):
     c5.save()
     c6.save()
     c7.save()
-    c8.save()
 
     r = Recommendation(
         pk=1,
@@ -242,7 +234,7 @@ def questions_for_user(user):
     sm3 = ScoringModel(
         pk=4,
         question=q6,
-        weight=1,
+        weight=1.02,
         x_axis=True,
         y_axis=True,
         owner=user
@@ -280,6 +272,7 @@ def questions_for_user(user):
     vr4 = ValueRange(
         pk=5,
         scoring_model=sm2,
+        start=0,
         end=2,
         points=1
     )
@@ -293,7 +286,13 @@ def questions_for_user(user):
         pk=7,
         scoring_model=sm3,
         end=1,
-        points=10
+        points=0
+    )
+    vr7 = ValueRange(
+        pk=8,
+        scoring_model=sm3,
+        start=1,
+        points=3
     )
 
     vr.save()
@@ -303,14 +302,16 @@ def questions_for_user(user):
     vr4.save()
     vr5.save()
     vr6.save()
+    vr7.save()
 
-    yield [q1, q2, q3, q4, q5]
+    yield [q1, q2, q3, q4, q5, q6]
 
     q1.delete()
     q2.delete()
     q3.delete()
     q4.delete()
     q5.delete()
+    q6.delete()
 
 
 @pytest.fixture()

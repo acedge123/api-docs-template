@@ -77,7 +77,7 @@ class TestCommonRestrictedAdminMethods:
 
         form = model_admin.get_form(fake_request)
 
-        expected_help_text = '</br></br>Possible field names: <b>q1u, q2u, q3u</b>'
+        expected_help_text = '</br></br>Possible field names: <b>q1u, q2u, q3u, zc, q6u</b>'
 
         if model_admin.field_to_extend_help_text:
             assert form.base_fields[model_admin.field_to_extend_help_text].help_text.endswith(expected_help_text)
@@ -149,13 +149,13 @@ class TestRecommendationAdmin:
             ['Field name "not_existing_field_name" used in Rule is not valid.']
         ),
         (
-            'If {zc}',
-            ['Field name "zc" used in Rule is not valid.']
+            'If {q5u}',
+            ['Field name "q5u" used in Rule is not valid.']
         ),
         (
-            'If {not_existing_field_name} or {zc}',
+            'If {not_existing_field_name} or {q5u}',
             ['Field name "not_existing_field_name" used in Rule is not valid.',
-             'Field name "zc" used in Rule is not valid.']
+             'Field name "q5u" used in Rule is not valid.']
         ),
     ])
     @pytest.mark.usefixtures('questions')
@@ -273,11 +273,8 @@ class TestScoringModelAdmin:
 
         questions = queryset.all()
 
-        for question in user.questions.filter(type__in=(Question.CHOICES, Question.SLIDER)):
+        for question in user.questions.all():
             assert question in questions
-
-        for question in user.questions.filter(type__in=(Question.OPEN,)):
-            assert question not in questions
 
         for question in user1.questions.all():
             assert question not in questions
@@ -309,13 +306,13 @@ class TestScoringModelAdmin:
             ['Field name "not_existing_field_name" used in Formula is not valid.']
         ),
         (
-            '{zc}',
-            ['Field name "zc" used in Formula is not valid.']
+            '{q5u}',
+            ['Field name "q5u" used in Formula is not valid.']
         ),
         (
-            '{not_existing_field_name} + {zc}',
+            '{not_existing_field_name} + {q5u}',
             ['Field name "not_existing_field_name" used in Formula is not valid.',
-             'Field name "zc" used in Formula is not valid.']
+             'Field name "q5u" used in Formula is not valid.']
         ),
     ])
     @pytest.mark.usefixtures('questions')
@@ -591,7 +588,7 @@ class TestQuestionAdmin:
                 'q3u': "put response for 'q3u' question here",
                 'zc': "put response for 'zc' question here",
                 'q5u': "put one or multiple responses separated by commas for 'q5u' question here",
-                'q6u': "put one or multiple responses separated by commas for 'q6u' question here"
+                'q6u': "put response for 'q6u' question here"
             }
         }
 

@@ -72,7 +72,7 @@ class TestLeadViewSet:
                 'q3u': '1',
                 'zc': 'ZC29076',
                 'q5u': '1,3',
-                'q6u': 'one',
+                'q6u': 'text',
                 'non_existing_field_id': '2'
             }
         }
@@ -201,14 +201,14 @@ class TestLeadViewSet:
                 'q3u': '5',
                 'zc': 'ZC29076',
                 'q5u': '1,3',
-                'q6u': 'one'
+                'q6u': 'text'
             }
         }
 
         expected_result = {
             'lead_id': 'f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288',
-            'x_axis': '15.83',
-            'y_axis': '1.10',
+            'x_axis': '18.89',
+            'y_axis': '4.16',
             'recommendations': {
                 'q2u': {
                     'response_text': 'Rule is True',
@@ -237,7 +237,79 @@ class TestLeadViewSet:
                 'q3u': '5',
                 'zc': 'ZC29076',
                 'q5u': '1,3',
-                'q6u': 'one'
+                'q6u': 'text'
+            }
+        }
+
+        response = api_client.post(url, data=data, format='json')
+
+        result = response.json()
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert result['lead_id']
+        assert result['x_axis'] == '18.89'
+        assert result['y_axis'] == '4.16'
+
+    @pytest.mark.usefixtures('questions')
+    def test_create_lead_multiple_choices_question_with_only_one_choice_provided(self, api_client):
+        url = reverse('api:v1:lead-list')
+
+        data = {
+            'answers': {
+                'q1u': 'below-1',
+                'q2u': '1',
+                'q3u': '5',
+                'zc': 'ZC29076',
+                'q5u': '1',
+                'q6u': 'text'
+            }
+        }
+
+        response = api_client.post(url, data=data, format='json')
+
+        result = response.json()
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert result['lead_id']
+        assert result['x_axis'] == '16.87'
+        assert result['y_axis'] == '4.16'
+
+    @pytest.mark.usefixtures('questions')
+    def test_create_lead_multiple_choices_question_with_all_choices_out_of_scoring_model_ranges(self, api_client):
+        url = reverse('api:v1:lead-list')
+
+        data = {
+            'answers': {
+                'q1u': 'below-1',
+                'q2u': '1',
+                'q3u': '5',
+                'zc': 'ZC29076',
+                'q5u': 'out-of-ranges',
+                'q6u': 'text'
+            }
+        }
+
+        response = api_client.post(url, data=data, format='json')
+
+        result = response.json()
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert result['lead_id']
+        assert result['x_axis'] == '15.86'
+        assert result['y_axis'] == '4.16'
+
+    @pytest.mark.usefixtures('questions')
+    def test_create_lead_open_question_no_answer_provided(self, api_client):
+        url = reverse('api:v1:lead-list')
+
+        data = {
+            'answers': {
+                'q1u': 'below-1',
+                'q2u': '1',
+                'q3u': '5',
+                'zc': 'ZC29076',
+                'q5u': '1, 3',
+                'q6u': ''
             }
         }
 
@@ -263,7 +335,7 @@ class TestLeadViewSet:
                 'q3u': '5',
                 'zc': 'ZC29076',
                 'q5u': '1,3',
-                'q6u': 'one'
+                'q6u': 'text'
             }
         }
 

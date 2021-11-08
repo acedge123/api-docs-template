@@ -149,29 +149,19 @@ class TestQuestion:
         assert str(question) == f'Q{question_data["number"]}. {question_data["text"]}'
 
     @pytest.mark.usefixtures('questions')
-    def test_get_possible_field_names_exclude_field_name_of_questions_without_choices(self, user):
+    def test_get_possible_field_names_exclude_field_name_of_questions_that_can_not_be_used_in_rules_and_scoring_model_formula(self, user):
         expected_result = Question.get_possible_field_names(user)
 
-        # Check that user has question without choices
-        assert any([True for q in user.questions.all() if not q.choices.exists()])
-        # Check that that question field name is absent in possible field names
-        assert expected_result == ['q1u', 'q2u', 'q3u']
+        assert expected_result == ['q1u', 'q2u', 'q3u', 'zc', 'q6u']
 
     def test_types(self):
         assert Question.OPEN == 'O'
         assert Question.CHOICES == 'CH'
+        assert Question.MULTIPLE_CHOICES == 'MC'
         assert Question.SLIDER == 'S'
 
     def test_calculate_points_question_with_no_scoring_model(self, question_with_no_recommendation):
         assert question_with_no_recommendation.calculate_points({}) is None
-
-    def test_calculate_points_for_open_question_type_return_none(self, questions_for_user):
-        # Choice
-        assert questions_for_user[0].calculate_points({'q1u': 1, 'q3u': 3}) is not None
-        # Slider
-        assert questions_for_user[2].calculate_points({'q3u': 3}) is not None
-        # Open
-        assert questions_for_user[3].calculate_points({'q4u': 4}) is None
 
 
 class TestChoice:

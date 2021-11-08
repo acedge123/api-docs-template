@@ -253,8 +253,7 @@ class ScoringModelAdmin(RestrictedAdmin):
         # Ensure that user can select only available questions he own
         if db_field.name == 'question':
             kwargs['queryset'] = Question.objects.filter(
-                owner=request.user,
-                type__in=(Question.CHOICES, Question.MULTIPLE_CHOICES, Question.SLIDER)
+                owner=request.user
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

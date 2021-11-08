@@ -212,19 +212,21 @@ class Question(models.Model):
         help_text='Field name should contain only letters, numbers and underscore')
     type = models.CharField(
         max_length=2, choices=TYPE_CHOICES,
-        help_text='<b>Open</b> questions without specific expected answer. Has no associated value, '
-                  'so can not be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score '
-                  'calculation. </br> '
-                  '<b>Choices</b> question with predefined expected answers options. Answer can be any text. '
-                  'Each answer option has associated value. Can be used in recommendations rules and in scoring models '
-                  'formulas for X-axis, Y-axis score calculation. </br>'
-                  '<b>Multiple choices</b> question with predefined expected answers options. Answer can be any text. '
-                  'Multiple answers selection allowed. Each answer option has associated value. Can be used in scoring '
-                  'model for X-axis, Y-axis score calculation but not in recommendations rules and in scoring models '
-                  'formulas. </br>'
-                  '<b>Slider</b> question with predefined range of possible values. Answer is a value. '
-                  'Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score '
-                  'calculation. </br>'
+        help_text='<b>Open</b> questions without specific expected answer. '
+                  'Has associated value "1" if answer provided and "0" otherwise. '
+                  'Can be used in recommendations rules and in scoring models formulas for X-axis, '
+                  'Y-axis score calculation. </br> '
+                  '<b>Choices</b> question with predefined expected answers options. '
+                  'Answer can be any text. Each answer option has associated value. '
+                  'Can be used in recommendations rules and in scoring models formulas for X-axis, '
+                  'Y-axis score calculation. </br>'
+                  '<b>Multiple choices</b> question with predefined expected answers options. '
+                  'Answer can be any text. Multiple answers selection allowed. '
+                  'Each answer option has associated value. Can be used in scoring model for X-axis, '
+                  'Y-axis score calculation but not in recommendations rules and in scoring models formulas. </br>'
+                  '<b>Slider</b> question with predefined range of possible values. '
+                  'Answer is a value. Can be used in recommendations rules and in scoring models formulas for X-axis, '
+                  'Y-axis score calculation. </br>'
     )
 
     # For SLIDER type question
@@ -269,15 +271,10 @@ class Question(models.Model):
     @staticmethod
     def get_possible_field_names(user):
         """ Return field names of questions that can be used in recommendation rule and scoring model formula """
-        return [q.field_name for q in user.questions.all() if q.type in (Question.SLIDER, Question.CHOICES)]
+        return [q.field_name for q in user.questions.all() if q.type in (Question.SLIDER, Question.CHOICES, Question.OPEN)]
 
     def calculate_points(self, answers):
-        """ Calculate question points using scoring model if question type is appropriate
-            and question has assigned scoring model
-        """
-
-        if self.type == Question.OPEN:
-            return None
+        """ Calculate question points using scoring model if question has assigned scoring model """
 
         try:
             return self.scoring_model.calculate_points(answers)
@@ -324,7 +321,7 @@ class Answer(models.Model):
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='answers')
 
     field_name = models.CharField(max_length=200)
-    response = models.CharField(max_length=200)
+    response = models.CharField(max_length=200, blank=True)
 
     value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     values = ArrayField(models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True), null=True)

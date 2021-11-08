@@ -21,7 +21,7 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
             return LeadSerializerView
 
     def _collect_answers_values(self, answers_data):
-        """  Collect answers values for questions with values """
+        """  Collect answers values for questions """
 
         for answer_data in answers_data:
             question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
@@ -86,8 +86,11 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
 
                 answer_data['value'] = value
 
+            elif question.type == Question.OPEN:
+                answer_data['value'] = 1 if answer_data['response'] else 0
+
     def _calculate_x_and_y_scores(self, answers_data):
-        """ Calculate answer points and X-axis and Y-axis scores for questions with values """
+        """ Calculate answer points and X-axis and Y-axis scores for questions """
 
         answers = {}
         for answer in answers_data:

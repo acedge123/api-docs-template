@@ -10,8 +10,8 @@ scoring models formula to be sure that they are still working as intended._
 ### Question
 
 Question could be one of three types:
-- __Open.__ Questions without specific expected answer. Has no associated value, so can not be used in recommendations 
-  rules and in scoring models formulas for X-axis, Y-axis score calculation.
+- __Open.__ Questions without specific expected answer. Has associated value "1" if answer provided and "0" otherwise. 
+  Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation.
 - __Choices.__ Question with predefined expected answers options. Answer can be any text. Each answer option has 
   associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score 
   calculation.
@@ -23,13 +23,14 @@ Question could be one of three types:
 
 ### Scoring Model
 
-There may be a scoring model associated with Choices, Multiple choices and Slider questions. 
+There may be a scoring model associated with Open, Choices, Multiple choices and Slider questions. 
 Points for that question will be determined by value calculated via formula, 
 if it exists, or by question value directly and defined set of value ranges. 
 For Multiple choices type question without formula, points will be determined as sum of separate points 
 for each provided value. 
-Scoring model formula may contain questions of Choices and Slider types (as question's field name in curly brackets, 
-e.g. {field_name}), in this case value for that question is used in scoring model formula calculation.
+Scoring model formula may contain questions of Open, Choices and Slider types 
+(as question's field name in curly brackets, e.g. {field_name}), 
+in this case value for that question is used in scoring model formula calculation.
 
 - X-axis score equals sum of scoring model weight multiplied by determined points for all questions with scoring model
   with x-axis equals True;
@@ -40,10 +41,11 @@ Questions without choices do not affect X-axis or Y-axis scores.
 
 ### Recommendations
 
-There may be a recommendation associated with Choices and Slider questions. Recommendation rule may contain questions 
-with values (as question's field name in curly brackets, e.g. {field_name}), in this case value for that 
-question is used in recommendation rule calculation. If rule is True, recommendation for associated question will be 
-returned.
+There may be a recommendation associated with Open, Choices and Slider questions. 
+Recommendation rule may contain questions of Open, Choices and Slider types
+(as question's field name in curly brackets, e.g. {field_name}), 
+in this case value for that question is used in recommendation rule calculation. 
+If rule is True, recommendation for associated question will be returned.
 
 Recommendation can contain some of or all of:
 - response text;
@@ -151,10 +153,11 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
 {
     "lead_id": "f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288",
     "answers": {
-        "Credit_Score": "581-620",
-        "Income": "5000",
-        "Rent": "1500",
-        "Car_Payment": "300"
+        "credit_score": "581-620",
+        "income": "5000",
+        "rent": "1500",
+        "car_payment": "300",
+        "multiple_choices": "one, two"
     }
 }
 ```
@@ -166,7 +169,7 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
     "x_axis": "18.00",
     "y_axis": "5.00",
     "recommendations": {
-        "Rent": {
+        "rent": {
             "response_text": "Your rent is too high",
             "affiliate_name": "Vendor A",
             "affiliate_image": "img src = 1",
