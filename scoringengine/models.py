@@ -91,7 +91,7 @@ class Recommendation(models.Model):
                   f'comparison ({", ".join(COMPARISON_OPERATORS)}), '
                   f'logical operations ({", ".join(LOGICAL_OPERATORS)}) '
                   f'and parentheses')
-    response_text = models.CharField(max_length=200, blank=True)
+    response_text = models.TextField(blank=True)
 
     affiliate_name = models.CharField(max_length=200, blank=True)
     affiliate_image = models.URLField(max_length=2048, blank=True)
@@ -212,7 +212,7 @@ class Question(models.Model):
         help_text='Field name should contain only letters, numbers and underscore')
     type = models.CharField(
         max_length=2, choices=TYPE_CHOICES,
-        help_text='<b>Open</b> questions without specific expected answer. '
+        help_text='<b>Open</b> question without specific expected answer. '
                   'Has associated value "1" if answer provided and "0" otherwise. '
                   'Can be used in recommendations rules and in scoring models formulas for X-axis, '
                   'Y-axis score calculation. </br> '

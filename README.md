@@ -10,7 +10,7 @@ scoring models formula to be sure that they are still working as intended._
 ### Question
 
 Question could be one of three types:
-- __Open.__ Questions without specific expected answer. Has associated value "1" if answer provided and "0" otherwise. 
+- __Open.__ Question without specific expected answer. Has associated value "1" if answer provided and "0" otherwise. 
   Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation.
 - __Choices.__ Question with predefined expected answers options. Answer can be any text. Each answer option has 
   associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score 
