@@ -15,6 +15,7 @@ class TestLeadViewSet:
             'lead_id': str(lead.lead_id),
             'x_axis': '1.10',
             'y_axis': '2.30',
+            'total_score': '3.40',
             'recommendations': {
                 'q1u': {
                     'response_text': 'Response',
@@ -209,6 +210,7 @@ class TestLeadViewSet:
             'lead_id': 'f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288',
             'x_axis': '18.89',
             'y_axis': '4.16',
+            'total_score': '23.05',
             'recommendations': {
                 'q2u': {
                     'response_text': 'Rule is True',
@@ -249,6 +251,7 @@ class TestLeadViewSet:
         assert result['lead_id']
         assert result['x_axis'] == '18.89'
         assert result['y_axis'] == '4.16'
+        assert result['total_score'] == '23.05'
 
     @pytest.mark.usefixtures('questions')
     def test_create_lead_multiple_choices_question_with_only_one_choice_provided(self, api_client):
@@ -273,6 +276,7 @@ class TestLeadViewSet:
         assert result['lead_id']
         assert result['x_axis'] == '16.87'
         assert result['y_axis'] == '4.16'
+        assert result['total_score'] == '21.03'
 
     @pytest.mark.usefixtures('questions')
     def test_create_lead_multiple_choices_question_with_all_choices_out_of_scoring_model_ranges(self, api_client):
@@ -297,6 +301,7 @@ class TestLeadViewSet:
         assert result['lead_id']
         assert result['x_axis'] == '15.86'
         assert result['y_axis'] == '4.16'
+        assert result['total_score'] == '20.02'
 
     @pytest.mark.usefixtures('questions')
     def test_create_lead_open_question_no_answer_provided(self, api_client):
@@ -321,6 +326,7 @@ class TestLeadViewSet:
         assert result['lead_id']
         assert result['x_axis'] == '15.83'
         assert result['y_axis'] == '1.10'
+        assert result['total_score'] == '16.93'
 
     @pytest.mark.usefixtures('questions')
     def test_create_lead_check_owner(self, generate_lead_id, api_client_for_user, user, user1):

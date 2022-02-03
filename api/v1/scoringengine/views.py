@@ -148,12 +148,15 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
 
         x_axis, y_axis = self._calculate_x_and_y_scores(answers_data)
 
+        total_score = x_axis + y_axis
+
         self._collect_recommendations(answers_data)
 
         data = {
             'owner': self.request.user,
             'x_axis': x_axis,
             'y_axis': y_axis,
+            'total_score': total_score,
             'answers': answers_data
         }
 

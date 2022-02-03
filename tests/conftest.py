@@ -447,6 +447,7 @@ def lead_data(user):
     return {
         'x_axis': 1.1,
         'y_axis': 2.3,
+        'total_score': 3.4,
         'owner': user
     }
 
@@ -495,6 +496,7 @@ def leads_for_user(user):
         pk=1,
         x_axis=1,
         y_axis=2.3,
+        total_score=3.3,
         owner=user
     )
 
@@ -520,6 +522,7 @@ def leads_for_user1(user1):
         pk=10,
         x_axis=1,
         y_axis=2.3,
+        total_score=3.3,
         owner=user1
     )
 

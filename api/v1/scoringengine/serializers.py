@@ -43,7 +43,7 @@ class LeadSerializerView(serializers.ModelSerializer):
 
     class Meta:
         model = Lead
-        fields = ['lead_id', 'x_axis', 'y_axis', 'recommendations']
+        fields = ['lead_id', 'x_axis', 'y_axis', 'total_score', 'recommendations']
 
     def to_representation(self, instance):
         result = super().to_representation(instance)

@@ -17,7 +17,7 @@ Question could be one of three types:
   calculation.
 - __Multiple choices.__ Question with predefined expected answers options. Answer can be any text. Multiple answers 
   selection allowed. Each answer option has associated value. Can be used in scoring model for X-axis, Y-axis score 
-  calculation but not in recommendations rules and in scoring models formulas.
+  calculation but not in recommendations rules and not in scoring models formulas.
 - __Slider.__ Question with predefined range of possible values. Answer is a value. Can be used in recommendations 
   rules and in scoring models formulas for X-axis, Y-axis score calculation.
 

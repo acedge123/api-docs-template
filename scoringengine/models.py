@@ -223,7 +223,7 @@ class Question(models.Model):
                   '<b>Multiple choices</b> question with predefined expected answers options. '
                   'Answer can be any text. Multiple answers selection allowed. '
                   'Each answer option has associated value. Can be used in scoring model for X-axis, '
-                  'Y-axis score calculation but not in recommendations rules and in scoring models formulas. </br>'
+                  'Y-axis score calculation but not in recommendations rules and not in scoring models formulas. </br>'
                   '<b>Slider</b> question with predefined range of possible values. '
                   'Answer is a value. Can be used in recommendations rules and in scoring models formulas for X-axis, '
                   'Y-axis score calculation. </br>'
@@ -308,8 +308,9 @@ class Lead(models.Model):
     lead_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    x_axis = models.DecimalField(max_digits=5, decimal_places=2)
-    y_axis = models.DecimalField(max_digits=5, decimal_places=2)
+    x_axis = models.DecimalField(max_digits=12, decimal_places=2)
+    y_axis = models.DecimalField(max_digits=12, decimal_places=2)
+    total_score = models.DecimalField(max_digits=12, decimal_places=2)
 
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='leads')
 
@@ -325,7 +326,7 @@ class Answer(models.Model):
 
     value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     values = ArrayField(models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True), null=True)
-    points = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    points = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
 
     response_text = models.CharField(max_length=200, blank=True)
     affiliate_name = models.CharField(max_length=200, blank=True)
