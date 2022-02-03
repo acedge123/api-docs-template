@@ -32,10 +32,11 @@ Scoring model formula may contain questions of Open, Choices and Slider types
 (as question's field name in curly brackets, e.g. {field_name}), 
 in this case value for that question is used in scoring model formula calculation.
 
-- X-axis score equals sum of scoring model weight multiplied by determined points for all questions with scoring model
-  with x-axis equals True;
-- Y-axis score equals sum of scoring model weight multiplied by determined points for all questions with scoring model
-  with y-axis equals True;
+- __X-axis__ score equals sum of determined points for all questions with scoring model
+  with x-axis equals True multiplied by scoring model weight;
+- __Y-axis__ score equals sum of determined points for all questions with scoring model
+  with y-axis equals True multiplied by scoring model weight;
+- __Total score__ equals sum of X-axis score and Y-axis score;
 
 Questions without choices do not affect X-axis or Y-axis scores.
 
@@ -168,6 +169,7 @@ Using provided answers, calculate X-axis, Y-axis values and return it with recom
     "lead_id": "f6aaf29c-deb9-42db-b8d0-b2dcc1bb3288",
     "x_axis": "18.00",
     "y_axis": "5.00",
+    "total_score": "23.0",
     "recommendations": {
         "rent": {
             "response_text": "Your rent is too high",
