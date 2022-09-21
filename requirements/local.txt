@@ -11,3 +11,8 @@ pytest-mock==3.6.1  # https://github.com/pytest-dev/pytest-mock
 # Code quality
 # ------------------------------------------------------------------------------
 coverage==5.5  # https://github.com/nedbat/coveragepy
+
+
+# Code formatter
+# ------------------------------------------------------------------------------
+black==22.8.0  # https://github.com/psf/black
