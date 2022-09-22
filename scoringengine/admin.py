@@ -355,10 +355,6 @@ class CloneUserForm(forms.Form):
     copy_scoring_model = forms.BooleanField(label="Copy scoring model", required=False)
     copy_leads = forms.BooleanField(label="Copy leads and answers", required=False)
 
-    def __init__(self, *args, **kwargs):
-        self.source_user = kwargs.pop("source_user")
-        super().__init__(*args, **kwargs)
-
     def clean_username(self):
         if User.objects.filter(username=self.cleaned_data["username"]).exists():
             raise forms.ValidationError("User with this username already exists.")
@@ -392,15 +388,18 @@ class CloneUserForm(forms.Form):
 
         return self.cleaned_data["copy_leads"]
 
-    def create_user(self):
+    def clone_user(self, source_user: User):
         user = User.objects.create(
             username=self.cleaned_data["username"], is_staff=True, is_active=True
         )
         user.set_password(self.cleaned_data["password1"])
         user.save()
 
+        user.user_permissions.set(source_user.user_permissions.all())
+        user.groups.set(source_user.groups.all())
+
         clone_account(
-            self.source_user,
+            source_user,
             user,
             self.cleaned_data.get("copy_quiz_structure", False),
             self.cleaned_data.get("copy_scoring_model", False),
@@ -427,15 +426,15 @@ class UserOwnAdmin(UserAdmin):
             obj = User.objects.get(pk=object_id)
 
             if request.method == "POST":
-                form = CloneUserForm(data=request.POST, source_user=obj)
+                form = CloneUserForm(data=request.POST)
 
                 if form.is_valid():
-                    form.create_user()
+                    form.clone_user(obj)
                     messages.add_message(request, messages.SUCCESS, "User cloned.")
                     return redirect(reverse("admin:auth_user_changelist"))
 
             else:
-                form = CloneUserForm(source_user=obj)
+                form = CloneUserForm()
 
             opts = self.model._meta
             app_label = opts.app_label

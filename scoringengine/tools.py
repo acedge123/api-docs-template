@@ -110,4 +110,4 @@ def clone_account(
             clone_scoring_model(source_user, target_user)
 
             if leads_and_answers:
-                clone_scoring_model(source_user, target_user)
+                clone_leads_and_answers(source_user, target_user)
