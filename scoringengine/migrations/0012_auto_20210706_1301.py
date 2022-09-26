@@ -10,48 +10,120 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('scoringengine', '0011_question_type'),
+        ("scoringengine", "0011_question_type"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ScoringModel',
+            name="ScoringModel",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('weight', models.DecimalField(decimal_places=2, default=1, max_digits=5, validators=[django.core.validators.MinValueValidator(limit_value=0)])),
-                ('x_axis', models.BooleanField()),
-                ('y_axis', models.BooleanField()),
-                ('formula', models.CharField(blank=True, help_text='Leave empty to select points based on direct value from associated question.</br>Add expression with "Field names" in curly braces (e.g. {field_name}) and arithmetic (+, -, *, /) operations to select points based on expression result.', max_length=200)),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='scoring_models', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "weight",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=1,
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(limit_value=0)
+                        ],
+                    ),
+                ),
+                ("x_axis", models.BooleanField()),
+                ("y_axis", models.BooleanField()),
+                (
+                    "formula",
+                    models.CharField(
+                        blank=True,
+                        help_text='Leave empty to select points based on direct value from associated question.</br>Add expression with "Field names" in curly braces (e.g. {field_name}) and arithmetic (+, -, *, /) operations to select points based on expression result.',
+                        max_length=200,
+                    ),
+                ),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="scoring_models",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='question',
-            name='max_value',
+            model_name="question",
+            name="max_value",
             field=models.IntegerField(null=True, blank=True),
         ),
         migrations.AddField(
-            model_name='question',
-            name='min_value',
+            model_name="question",
+            name="min_value",
             field=models.IntegerField(null=True, blank=True),
         ),
         migrations.CreateModel(
-            name='ValueRange',
+            name="ValueRange",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.IntegerField(blank=True, help_text='Left empty for right-closed range', null=True)),
-                ('end', models.IntegerField(blank=True, help_text='Left empty for left-closed range', null=True)),
-                ('points', models.IntegerField(help_text='Used for X-axis, Y-axis scores calculation')),
-                ('scoring_model', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ranges', to='scoringengine.scoringmodel')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "start",
+                    models.IntegerField(
+                        blank=True,
+                        help_text="Left empty for right-closed range",
+                        null=True,
+                    ),
+                ),
+                (
+                    "end",
+                    models.IntegerField(
+                        blank=True,
+                        help_text="Left empty for left-closed range",
+                        null=True,
+                    ),
+                ),
+                (
+                    "points",
+                    models.IntegerField(
+                        help_text="Used for X-axis, Y-axis scores calculation"
+                    ),
+                ),
+                (
+                    "scoring_model",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="ranges",
+                        to="scoringengine.scoringmodel",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='scoringmodel',
-            name='question',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='scoring_model', to='scoringengine.question'),
+            model_name="scoringmodel",
+            name="question",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="scoring_model",
+                to="scoringengine.question",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='valuerange',
-            constraint=models.UniqueConstraint(fields=('scoring_model', 'start', 'end'), name='unique_range'),
+            model_name="valuerange",
+            constraint=models.UniqueConstraint(
+                fields=("scoring_model", "start", "end"), name="unique_range"
+            ),
         ),
     ]

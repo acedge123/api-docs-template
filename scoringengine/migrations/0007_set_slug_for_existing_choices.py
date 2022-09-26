@@ -6,7 +6,7 @@ from django.template.defaultfilters import slugify
 
 def forwards_func(apps, schema_editor):
     # Update default value for existing questions
-    Choice = apps.get_model('scoringengine', 'Choice')
+    Choice = apps.get_model("scoringengine", "Choice")
     db_alias = schema_editor.connection.alias
 
     choices = Choice.objects.using(db_alias).all()
@@ -24,7 +24,7 @@ def reverse_func(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0006_auto_20210629_1526'),
+        ("scoringengine", "0006_auto_20210629_1526"),
     ]
 
     operations = [

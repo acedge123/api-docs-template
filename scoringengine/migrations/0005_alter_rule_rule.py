@@ -7,13 +7,17 @@ import scoringengine.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0004_auto_20210601_1354'),
+        ("scoringengine", "0004_auto_20210601_1354"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='rule',
-            name='rule',
-            field=models.CharField(help_text='Rule should start with "If" and may contain only valid numbers, questions with choices "Field names" in curly braces (e.g. {field_name}) combined with arithmetic (+, -, *, /), comparison (>, <, ==, !=, >=, <=) and logical operations (and, or, not)', max_length=200, validators=[scoringengine.models.validate_rule]),
+            model_name="rule",
+            name="rule",
+            field=models.CharField(
+                help_text='Rule should start with "If" and may contain only valid numbers, questions with choices "Field names" in curly braces (e.g. {field_name}) combined with arithmetic (+, -, *, /), comparison (>, <, ==, !=, >=, <=) and logical operations (and, or, not)',
+                max_length=200,
+                validators=[scoringengine.models.validate_rule],
+            ),
         ),
     ]

@@ -5,108 +5,137 @@ from api.v1.scoringengine.serializers import LeadSerializerCreate, LeadSerialize
 from scoringengine.models import Lead, Question
 
 
-class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class LeadViewSet(
+    mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     """
     API endpoint that allows lead to be created.
     """
+
     queryset = Lead.objects.all()
 
     def get_queryset(self, *args, **kwargs):
         return self.queryset.filter(owner=self.request.user)
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return LeadSerializerCreate
         else:
             return LeadSerializerView
 
     def _collect_answers_values(self, answers_data):
-        """  Collect answers values for questions """
+        """Collect answers values for questions"""
 
         for answer_data in answers_data:
-            question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
+            question = self.request.user.questions.filter(
+                field_name=answer_data["field_name"]
+            ).first()
 
             if question is None:
-                raise serializers.ValidationError({
-                    'answers': {'field_name': [f"There are no question with '{answer_data['field_name']}' field name"]}
-                })
+                raise serializers.ValidationError(
+                    {
+                        "answers": {
+                            "field_name": [
+                                f"There are no question with '{answer_data['field_name']}' field name"
+                            ]
+                        }
+                    }
+                )
 
             if question.type == Question.CHOICES:
-                choice = question.choices.filter(slug=answer_data['response']).first()
+                choice = question.choices.filter(slug=answer_data["response"]).first()
 
                 if choice is None:
-                    raise serializers.ValidationError({
-                        'answers': {
-                            'response': [f"There are no choice with '{answer_data['response']}' response in "
-                                         f"question with '{answer_data['field_name']}' field name"]
+                    raise serializers.ValidationError(
+                        {
+                            "answers": {
+                                "response": [
+                                    f"There are no choice with '{answer_data['response']}' response in "
+                                    f"question with '{answer_data['field_name']}' field name"
+                                ]
+                            }
                         }
-                    })
+                    )
                 else:
-                    answer_data['response'] = choice.text
-                    answer_data['value'] = choice.value
+                    answer_data["response"] = choice.text
+                    answer_data["value"] = choice.value
 
             elif question.type == Question.MULTIPLE_CHOICES:
                 texts = []
                 values = []
-                for slug in answer_data['response'].split(','):
+                for slug in answer_data["response"].split(","):
                     choice = question.choices.filter(slug=slug.strip()).first()
 
                     if choice is None:
-                        raise serializers.ValidationError({
-                            'answers': {
-                                'response': [f"There are no choice with '{slug.strip()}' response in "
-                                             f"question with '{answer_data['field_name']}' field name"]
+                        raise serializers.ValidationError(
+                            {
+                                "answers": {
+                                    "response": [
+                                        f"There are no choice with '{slug.strip()}' response in "
+                                        f"question with '{answer_data['field_name']}' field name"
+                                    ]
+                                }
                             }
-                        })
+                        )
                     else:
                         texts.append(choice.text)
                         values.append(choice.value)
 
-                answer_data['response'] = ', '.join(texts)
-                answer_data['values'] = values
+                answer_data["response"] = ", ".join(texts)
+                answer_data["values"] = values
 
             elif question.type == Question.SLIDER:
                 try:
-                    value = float(answer_data['response'])
+                    value = float(answer_data["response"])
                 except ValueError:
-                    raise serializers.ValidationError({
-                        'answers': {
-                            'response': [f"Response '{answer_data['response']}' is invalid response for question with "
-                                         f"'{answer_data['field_name']}' field name"]
+                    raise serializers.ValidationError(
+                        {
+                            "answers": {
+                                "response": [
+                                    f"Response '{answer_data['response']}' is invalid response for question with "
+                                    f"'{answer_data['field_name']}' field name"
+                                ]
+                            }
                         }
-                    })
+                    )
 
                 if not (question.min_value <= value <= question.max_value):
-                    raise serializers.ValidationError({
-                        'answers': {
-                            'response': [f"Response for question with '{answer_data['field_name']}' field name "
-                                         f"should be within [{question.min_value}, {question.max_value}] range"]
+                    raise serializers.ValidationError(
+                        {
+                            "answers": {
+                                "response": [
+                                    f"Response for question with '{answer_data['field_name']}' field name "
+                                    f"should be within [{question.min_value}, {question.max_value}] range"
+                                ]
+                            }
                         }
-                    })
+                    )
 
-                answer_data['value'] = value
+                answer_data["value"] = value
 
             elif question.type == Question.OPEN:
-                answer_data['value'] = 1 if answer_data['response'] else 0
+                answer_data["value"] = 1 if answer_data["response"] else 0
 
     def _calculate_x_and_y_scores(self, answers_data):
-        """ Calculate answer points and X-axis and Y-axis scores for questions """
+        """Calculate answer points and X-axis and Y-axis scores for questions"""
 
         answers = {}
         for answer in answers_data:
-            field_name = answer['field_name']
+            field_name = answer["field_name"]
 
-            if answer.get('value') is not None:
-                answers[field_name] = answer['value']
+            if answer.get("value") is not None:
+                answers[field_name] = answer["value"]
 
-            elif answer.get('values') is not None:
-                answers[field_name] = answer['values']
+            elif answer.get("values") is not None:
+                answers[field_name] = answer["values"]
 
         x_axis = 0
         y_axis = 0
 
         for answer_data in answers_data:
-            question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
+            question = self.request.user.questions.filter(
+                field_name=answer_data["field_name"]
+            ).first()
 
             points = question.calculate_points(answers)
 
@@ -117,32 +146,38 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
                 if question.scoring_model.y_axis:
                     y_axis += points
 
-            answer_data['points'] = points
+            answer_data["points"] = points
 
         return x_axis, y_axis
 
     def _collect_recommendations(self, answers_data):
-        """  Collect recommendations by checking each question rule against provided answers """
+        """Collect recommendations by checking each question rule against provided answers"""
 
-        answers = {a['field_name']: a['value'] for a in answers_data if a.get('value') is not None}
+        answers = {
+            a["field_name"]: a["value"]
+            for a in answers_data
+            if a.get("value") is not None
+        }
 
         for answer_data in answers_data:
-            question = self.request.user.questions.filter(field_name=answer_data['field_name']).first()
+            question = self.request.user.questions.filter(
+                field_name=answer_data["field_name"]
+            ).first()
 
             if question.check_rule(answers):
                 answer_data.update(question.get_recommendation_dict())
 
     def perform_create(self, serializer):
-        answers_data = serializer.validated_data['answers']
+        answers_data = serializer.validated_data["answers"]
 
-        provided_answers_field_names = [a['field_name'] for a in answers_data]
+        provided_answers_field_names = [a["field_name"] for a in answers_data]
 
         # Check that answers for all question provided
         for question in self.request.user.questions.all():
             if question.field_name not in provided_answers_field_names:
-                raise serializers.ValidationError({
-                    'answers': ['Not all answers provided']
-                })
+                raise serializers.ValidationError(
+                    {"answers": ["Not all answers provided"]}
+                )
 
         self._collect_answers_values(answers_data)
 
@@ -153,11 +188,11 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
         self._collect_recommendations(answers_data)
 
         data = {
-            'owner': self.request.user,
-            'x_axis': x_axis,
-            'y_axis': y_axis,
-            'total_score': total_score,
-            'answers': answers_data
+            "owner": self.request.user,
+            "x_axis": x_axis,
+            "y_axis": y_axis,
+            "total_score": total_score,
+            "answers": answers_data,
         }
 
         return serializer.save(**data)
@@ -169,6 +204,8 @@ class LeadViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.G
         obj = self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
 
-        view_serializer = LeadSerializerView(obj, context={'request': request})
+        view_serializer = LeadSerializerView(obj, context={"request": request})
 
-        return Response(view_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            view_serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )

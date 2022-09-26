@@ -11,7 +11,7 @@ pytest-mock==3.6.1  # https://github.com/pytest-dev/pytest-mock
 # Code quality
 # ------------------------------------------------------------------------------
 coverage==5.5  # https://github.com/nedbat/coveragepy
-
+pre-commit==2.20.0  # https://github.com/pre-commit/pre-commit
 
 # Code formatter
 # ------------------------------------------------------------------------------

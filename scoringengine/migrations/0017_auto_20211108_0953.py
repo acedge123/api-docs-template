@@ -6,18 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0016_auto_20211106_1738'),
+        ("scoringengine", "0016_auto_20211106_1738"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='answer',
-            name='response',
+            model_name="answer",
+            name="response",
             field=models.CharField(blank=True, max_length=200),
         ),
         migrations.AlterField(
-            model_name='question',
-            name='type',
-            field=models.CharField(choices=[('O', 'Open'), ('CH', 'Choices'), ('MC', 'Multiple choices'), ('S', 'Slider')], help_text='<b>Open</b> question without specific expected answer. Has associated value "1" if answer provided and "0" otherwise. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation. </br> <b>Choices</b> question with predefined expected answers options. Answer can be any text. Each answer option has associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation. </br><b>Multiple choices</b> question with predefined expected answers options. Answer can be any text. Multiple answers selection allowed. Each answer option has associated value. Can be used in scoring model for X-axis, Y-axis score calculation but not in recommendations rules and in scoring models formulas. </br><b>Slider</b> question with predefined range of possible values. Answer is a value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation. </br>', max_length=2),
+            model_name="question",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("O", "Open"),
+                    ("CH", "Choices"),
+                    ("MC", "Multiple choices"),
+                    ("S", "Slider"),
+                ],
+                help_text='<b>Open</b> question without specific expected answer. Has associated value "1" if answer provided and "0" otherwise. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation. </br> <b>Choices</b> question with predefined expected answers options. Answer can be any text. Each answer option has associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation. </br><b>Multiple choices</b> question with predefined expected answers options. Answer can be any text. Multiple answers selection allowed. Each answer option has associated value. Can be used in scoring model for X-axis, Y-axis score calculation but not in recommendations rules and in scoring models formulas. </br><b>Slider</b> question with predefined range of possible values. Answer is a value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation. </br>',
+                max_length=2,
+            ),
         ),
     ]

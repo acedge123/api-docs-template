@@ -5,10 +5,15 @@ from django.db import migrations
 
 def forwards_func(apps, schema_editor):
     # Update default value for existing leads
-    Lead = apps.get_model('scoringengine', 'Lead')
+    Lead = apps.get_model("scoringengine", "Lead")
     db_alias = schema_editor.connection.alias
 
-    leads = Lead.objects.using(db_alias).order_by('pk').filter(total_score__isnull=True).all()
+    leads = (
+        Lead.objects.using(db_alias)
+        .order_by("pk")
+        .filter(total_score__isnull=True)
+        .all()
+    )
 
     for lead in leads:
         lead.total_score = lead.x_axis + lead.y_axis
@@ -23,7 +28,7 @@ def reverse_func(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0019_auto_20220203_1114'),
+        ("scoringengine", "0019_auto_20220203_1114"),
     ]
 
     operations = [

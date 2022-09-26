@@ -4,32 +4,32 @@ Customizable scoring and recommendation model
 
 ## Scoring and recommendation main components
 
-_**Warning:** After changing question's "Field name" afterwards require verification of all recommendations rules and 
+_**Warning:** After changing question's "Field name" afterwards require verification of all recommendations rules and
 scoring models formula to be sure that they are still working as intended._
 
 ### Question
 
 Question could be one of three types:
-- __Open.__ Question without specific expected answer. Has associated value "1" if answer provided and "0" otherwise. 
+- __Open.__ Question without specific expected answer. Has associated value "1" if answer provided and "0" otherwise.
   Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score calculation.
-- __Choices.__ Question with predefined expected answers options. Answer can be any text. Each answer option has 
-  associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score 
+- __Choices.__ Question with predefined expected answers options. Answer can be any text. Each answer option has
+  associated value. Can be used in recommendations rules and in scoring models formulas for X-axis, Y-axis score
   calculation.
-- __Multiple choices.__ Question with predefined expected answers options. Answer can be any text. Multiple answers 
-  selection allowed. Each answer option has associated value. Can be used in scoring model for X-axis, Y-axis score 
+- __Multiple choices.__ Question with predefined expected answers options. Answer can be any text. Multiple answers
+  selection allowed. Each answer option has associated value. Can be used in scoring model for X-axis, Y-axis score
   calculation but not in recommendations rules and not in scoring models formulas.
-- __Slider.__ Question with predefined range of possible values. Answer is a value. Can be used in recommendations 
+- __Slider.__ Question with predefined range of possible values. Answer is a value. Can be used in recommendations
   rules and in scoring models formulas for X-axis, Y-axis score calculation.
 
 ### Scoring Model
 
-There may be a scoring model associated with Open, Choices, Multiple choices and Slider questions. 
-Points for that question will be determined by value calculated via formula, 
-if it exists, or by question value directly and defined set of value ranges. 
-For Multiple choices type question without formula, points will be determined as sum of separate points 
-for each provided value. 
-Scoring model formula may contain questions of Open, Choices and Slider types 
-(as question's field name in curly brackets, e.g. {field_name}), 
+There may be a scoring model associated with Open, Choices, Multiple choices and Slider questions.
+Points for that question will be determined by value calculated via formula,
+if it exists, or by question value directly and defined set of value ranges.
+For Multiple choices type question without formula, points will be determined as sum of separate points
+for each provided value.
+Scoring model formula may contain questions of Open, Choices and Slider types
+(as question's field name in curly brackets, e.g. {field_name}),
 in this case value for that question is used in scoring model formula calculation.
 
 - __X-axis__ score equals sum of determined points for all questions with scoring model
@@ -42,10 +42,10 @@ Questions without choices do not affect X-axis or Y-axis scores.
 
 ### Recommendations
 
-There may be a recommendation associated with Open, Choices and Slider questions. 
+There may be a recommendation associated with Open, Choices and Slider questions.
 Recommendation rule may contain questions of Open, Choices and Slider types
-(as question's field name in curly brackets, e.g. {field_name}), 
-in this case value for that question is used in recommendation rule calculation. 
+(as question's field name in curly brackets, e.g. {field_name}),
+in this case value for that question is used in recommendation rule calculation.
 If rule is True, recommendation for associated question will be returned.
 
 Recommendation can contain some of or all of:
@@ -68,6 +68,13 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 #### Build the Stack
 
     docker-compose -f local.yml build
+
+Before doing any git commit, pre-commit should be installed globally on your local machine, and then:
+
+    $ git init
+    $ pre-commit install
+
+Failing to do so will result with a bunch of CI and Linter errors that can be avoided with pre-commit.
 
 #### Run the Stack
 
@@ -92,8 +99,8 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 
 ## Creating group for regular admin
 
-"Regular admin" group could be created manually or using script below. 
-It should allow full access for Question, Choice, ScoringModel, ValueRange and Recommendation models, read access for 
+"Regular admin" group could be created manually or using script below.
+It should allow full access for Question, Choice, ScoringModel, ValueRange and Recommendation models, read access for
 Answer and TokenProxy models and read and delete access for Lead model.
 
     docker-compose -f <envirovment>.yml run --rm django python manage.py shell
@@ -111,7 +118,7 @@ for model in ['question', 'choice', 'recommendation', 'scoringmodel', 'valuerang
 for model in ['lead']:
     for permission in ['delete', 'view']:
         permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
-        
+
 for model in ['answer', 'tokenproxy']:
     for permission in ['view']:
         permissions.append(Permission.objects.get_by_natural_key(f'{permission}_{model}', 'scoringengine', model))
@@ -135,7 +142,7 @@ API Auth token should be created automatically. Optionally auth token related pe
 
 # Scoring engine API
 ## Auth
-For clients to authenticate, the token key should be included in the Authorization HTTP header. 
+For clients to authenticate, the token key should be included in the Authorization HTTP header.
 The key should be prefixed by the string literal "Token", with whitespace separating the two strings. For example:
 ```
 Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b

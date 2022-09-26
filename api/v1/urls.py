@@ -9,7 +9,7 @@ if settings.DEBUG:
 else:
     router = SimpleRouter()
 
-router.register(r'leads', LeadViewSet)
+router.register(r"leads", LeadViewSet)
 
-app_name = 'v1'
+app_name = "v1"
 urlpatterns = router.urls

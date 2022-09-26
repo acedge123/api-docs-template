@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0020_calculate_total_score_retrospectively'),
+        ("scoringengine", "0020_calculate_total_score_retrospectively"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='lead',
-            name='total_score',
+            model_name="lead",
+            name="total_score",
             field=models.DecimalField(decimal_places=2, max_digits=12),
         ),
     ]

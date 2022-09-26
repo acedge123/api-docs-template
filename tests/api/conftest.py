@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 def api_client_for_user():
     def get_api_client(user):
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION=f'Token {user.auth_token}')
+        client.credentials(HTTP_AUTHORIZATION=f"Token {user.auth_token}")
 
         return client
 

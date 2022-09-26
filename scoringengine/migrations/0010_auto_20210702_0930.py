@@ -9,18 +9,26 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('scoringengine', '0009_rename_rule_recommendation'),
+        ("scoringengine", "0009_rename_rule_recommendation"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recommendation',
-            name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recommendations', to=settings.AUTH_USER_MODEL),
+            model_name="recommendation",
+            name="owner",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="recommendations",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='recommendation',
-            name='question',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='recommendation', to='scoringengine.question'),
+            model_name="recommendation",
+            name="question",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="recommendation",
+                to="scoringengine.question",
+            ),
         ),
     ]

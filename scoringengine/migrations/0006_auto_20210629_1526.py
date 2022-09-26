@@ -6,18 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0005_alter_rule_rule'),
+        ("scoringengine", "0005_alter_rule_rule"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='choice',
-            name='slug',
+            model_name="choice",
+            name="slug",
             field=models.SlugField(blank=True),
         ),
         migrations.AlterField(
-            model_name='choice',
-            name='points',
-            field=models.IntegerField(help_text='Used for X-axis, Y-axis scores calculation'),
+            model_name="choice",
+            name="points",
+            field=models.IntegerField(
+                help_text="Used for X-axis, Y-axis scores calculation"
+            ),
         ),
     ]

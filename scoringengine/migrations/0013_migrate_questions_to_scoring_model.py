@@ -5,12 +5,12 @@ from django.db import migrations
 
 def forwards_func(apps, schema_editor):
     # Update default value for existing questions
-    Question = apps.get_model('scoringengine', 'Question')
-    ScoringModel = apps.get_model('scoringengine', 'ScoringModel')
-    ValueRange = apps.get_model('scoringengine', 'ValueRange')
+    Question = apps.get_model("scoringengine", "Question")
+    ScoringModel = apps.get_model("scoringengine", "ScoringModel")
+    ValueRange = apps.get_model("scoringengine", "ValueRange")
     db_alias = schema_editor.connection.alias
 
-    questions = Question.objects.using(db_alias).order_by('pk').all()
+    questions = Question.objects.using(db_alias).order_by("pk").all()
 
     for question in questions:
 
@@ -20,7 +20,7 @@ def forwards_func(apps, schema_editor):
                 weight=question.weight,
                 x_axis=question.x_axis,
                 y_axis=question.y_axis,
-                owner=question.owner
+                owner=question.owner,
             )
 
             sm.save()
@@ -28,9 +28,7 @@ def forwards_func(apps, schema_editor):
             if question.choices.count() > 0:
                 for choice in question.choices.all():
                     vr = ValueRange(
-                        scoring_model=sm,
-                        start=int(choice.value),
-                        points=choice.points
+                        scoring_model=sm, start=int(choice.value), points=choice.points
                     )
 
                     vr.save()
@@ -43,7 +41,7 @@ def reverse_func(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0012_auto_20210706_1301'),
+        ("scoringengine", "0012_auto_20210706_1301"),
     ]
 
     operations = [
