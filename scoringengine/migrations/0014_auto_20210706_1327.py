@@ -6,24 +6,24 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0013_migrate_questions_to_scoring_model'),
+        ("scoringengine", "0013_migrate_questions_to_scoring_model"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='choice',
-            name='points',
+            model_name="choice",
+            name="points",
         ),
         migrations.RemoveField(
-            model_name='question',
-            name='weight',
+            model_name="question",
+            name="weight",
         ),
         migrations.RemoveField(
-            model_name='question',
-            name='x_axis',
+            model_name="question",
+            name="x_axis",
         ),
         migrations.RemoveField(
-            model_name='question',
-            name='y_axis',
+            model_name="question",
+            name="y_axis",
         ),
     ]

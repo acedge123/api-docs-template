@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0017_auto_20211108_0953'),
+        ("scoringengine", "0017_auto_20211108_0953"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recommendation',
-            name='response_text',
+            model_name="recommendation",
+            name="response_text",
             field=models.TextField(blank=True),
         ),
     ]

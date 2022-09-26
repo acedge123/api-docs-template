@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 class TestIsOwner:
     def test_has_object_permission(self, user, user1, question, rf: RequestFactory):
         permission = IsOwner()
-        request = rf.get('/fake-url/')
+        request = rf.get("/fake-url/")
         view = LeadViewSet()
 
         # Same user in request and in object owner

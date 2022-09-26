@@ -6,24 +6,31 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0001_initial'),
+        ("scoringengine", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='answer',
-            name='value',
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=12, null=True),
+            model_name="answer",
+            name="value",
+            field=models.DecimalField(
+                blank=True, decimal_places=2, max_digits=12, null=True
+            ),
         ),
         migrations.AddField(
-            model_name='choice',
-            name='value',
-            field=models.DecimalField(decimal_places=2, default=1, help_text='Value that will be used in rules calculation. For ranges it is recommended to use highest number in the range.', max_digits=12),
+            model_name="choice",
+            name="value",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=1,
+                help_text="Value that will be used in rules calculation. For ranges it is recommended to use highest number in the range.",
+                max_digits=12,
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='choice',
-            name='text',
+            model_name="choice",
+            name="text",
             field=models.CharField(max_length=200),
         ),
     ]

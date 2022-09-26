@@ -6,17 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0007_set_slug_for_existing_choices'),
+        ("scoringengine", "0007_set_slug_for_existing_choices"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='choice',
-            name='slug',
+            model_name="choice",
+            name="slug",
             field=models.SlugField(),
         ),
         migrations.AddConstraint(
-            model_name='choice',
-            constraint=models.UniqueConstraint(fields=('question', 'slug'), name='unique_slug'),
+            model_name="choice",
+            constraint=models.UniqueConstraint(
+                fields=("question", "slug"), name="unique_slug"
+            ),
         ),
     ]

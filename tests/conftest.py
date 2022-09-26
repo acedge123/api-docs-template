@@ -5,13 +5,27 @@ from django.contrib.admin import AdminSite
 from django.test import RequestFactory, Client
 from rest_framework.authtoken.models import TokenProxy
 
-from scoringengine.admin import QuestionAdmin, RecommendationAdmin, LeadAdmin, TokenAdmin, ScoringModelAdmin
-from scoringengine.models import Question, Recommendation, Choice, Lead, Answer, ScoringModel, ValueRange
+from scoringengine.admin import (
+    QuestionAdmin,
+    RecommendationAdmin,
+    LeadAdmin,
+    TokenAdmin,
+    ScoringModelAdmin,
+)
+from scoringengine.models import (
+    Question,
+    Recommendation,
+    Choice,
+    Lead,
+    Answer,
+    ScoringModel,
+    ValueRange,
+)
 
 
 @pytest.fixture()
 def user_with_all_perms(django_user_model):
-    """ Monkeypatch User model to "have all permissions" """
+    """Monkeypatch User model to "have all permissions" """
     UserModel = django_user_model
 
     def has_perm(self, *args, **kwargs):
@@ -27,8 +41,7 @@ def user(user_with_all_perms):
     User = user_with_all_perms
 
     u, _ = User.objects.get_or_create(
-        username='test-admin',
-        defaults={'is_staff': True}
+        username="test-admin", defaults={"is_staff": True}
     )
 
     return u
@@ -39,8 +52,7 @@ def user1(user_with_all_perms):
     User = user_with_all_perms
 
     u, _ = User.objects.get_or_create(
-        username='test1-admin',
-        defaults={'is_staff': True}
+        username="test1-admin", defaults={"is_staff": True}
     )
 
     return u
@@ -49,13 +61,13 @@ def user1(user_with_all_perms):
 @pytest.fixture()
 def question_data(user):
     return {
-        'number': 99,
-        'type': Question.SLIDER,
-        'text': 'Test question?',
-        'field_name': 'test_question',
-        'min_value': -1,
-        'max_value': 10,
-        'owner': user
+        "number": 99,
+        "type": Question.SLIDER,
+        "text": "Test question?",
+        "field_name": "test_question",
+        "min_value": -1,
+        "max_value": 10,
+        "owner": user,
     }
 
 
@@ -81,51 +93,51 @@ def questions_for_user(user):
         pk=1,
         type=Question.CHOICES,
         number=1,
-        text='Question one - choices - with scoring model - user?',
-        field_name='q1u',
+        text="Question one - choices - with scoring model - user?",
+        field_name="q1u",
         owner=user,
     )
     q2 = Question(
         pk=2,
         type=Question.CHOICES,
         number=2,
-        text='Question two - choices - without scoring model - user?',
-        field_name='q2u',
-        owner=user
+        text="Question two - choices - without scoring model - user?",
+        field_name="q2u",
+        owner=user,
     )
     q3 = Question(
         pk=3,
         type=Question.SLIDER,
         number=3,
-        text='Question three - slider - with scoring model - user?',
-        field_name='q3u',
+        text="Question three - slider - with scoring model - user?",
+        field_name="q3u",
         min_value=0,
         max_value=10,
-        owner=user
+        owner=user,
     )
     q4 = Question(
         pk=4,
         type=Question.OPEN,
         number=4,
-        text='Zip code - open - without scoring model - user',
-        field_name='zc',
-        owner=user
+        text="Zip code - open - without scoring model - user",
+        field_name="zc",
+        owner=user,
     )
     q5 = Question(
         pk=5,
         type=Question.MULTIPLE_CHOICES,
         number=5,
-        text='Question five - multiple choices - with scoring model - user?',
-        field_name='q5u',
-        owner=user
+        text="Question five - multiple choices - with scoring model - user?",
+        field_name="q5u",
+        owner=user,
     )
     q6 = Question(
         pk=6,
         type=Question.OPEN,
         number=6,
-        text='Question six - open - with scoring model - user',
-        field_name='q6u',
-        owner=user
+        text="Question six - open - with scoring model - user",
+        field_name="q6u",
+        owner=user,
     )
 
     q1.save()
@@ -138,50 +150,50 @@ def questions_for_user(user):
     c1 = Choice(
         pk=1,
         question=q1,
-        text='Below 1',
-        slug='below-1',
+        text="Below 1",
+        slug="below-1",
         value=1,
     )
     c2 = Choice(
         pk=2,
         question=q1,
-        text='1 - 2',
-        slug='1-2',
+        text="1 - 2",
+        slug="1-2",
         value=2,
     )
     c3 = Choice(
         pk=3,
         question=q1,
-        text='2+',
-        slug='2',
+        text="2+",
+        slug="2",
         value=3,
     )
     c4 = Choice(
         pk=4,
         question=q2,
-        text='1',
-        slug='1',
+        text="1",
+        slug="1",
         value=2,
     )
     c5 = Choice(
         pk=5,
         question=q5,
-        text='1',
-        slug='1',
+        text="1",
+        slug="1",
         value=1,
     )
     c6 = Choice(
         pk=6,
         question=q5,
-        text='-10',
-        slug='out-of-ranges',
+        text="-10",
+        slug="out-of-ranges",
         value=-10,
     )
     c7 = Choice(
         pk=7,
         question=q5,
-        text='3',
-        slug='3',
+        text="3",
+        slug="3",
         value=3,
     )
 
@@ -196,12 +208,12 @@ def questions_for_user(user):
     r = Recommendation(
         pk=1,
         question=q2,
-        rule='If {q1u} == {q2u}',
-        response_text='Rule is True',
-        affiliate_name='Example affiliate',
-        affiliate_image='https://example.com/image.jpeg',
-        affiliate_link='https://example.com/',
-        owner=user
+        rule="If {q1u} == {q2u}",
+        response_text="Rule is True",
+        affiliate_name="Example affiliate",
+        affiliate_image="https://example.com/image.jpeg",
+        affiliate_link="https://example.com/",
+        owner=user,
     )
 
     r.save()
@@ -212,32 +224,17 @@ def questions_for_user(user):
         weight=1.1,
         x_axis=True,
         y_axis=True,
-        formula='{q1u} / {q3u}',
-        owner=user
+        formula="{q1u} / {q3u}",
+        owner=user,
     )
     sm1 = ScoringModel(
-        pk=2,
-        question=q3,
-        weight=1.3,
-        x_axis=True,
-        y_axis=False,
-        owner=user
+        pk=2, question=q3, weight=1.3, x_axis=True, y_axis=False, owner=user
     )
     sm2 = ScoringModel(
-        pk=3,
-        question=q5,
-        weight=1.01,
-        x_axis=True,
-        y_axis=False,
-        owner=user
+        pk=3, question=q5, weight=1.01, x_axis=True, y_axis=False, owner=user
     )
     sm3 = ScoringModel(
-        pk=4,
-        question=q6,
-        weight=1.02,
-        x_axis=True,
-        y_axis=True,
-        owner=user
+        pk=4, question=q6, weight=1.02, x_axis=True, y_axis=True, owner=user
     )
 
     sm.save()
@@ -245,55 +242,14 @@ def questions_for_user(user):
     sm2.save()
     sm3.save()
 
-    vr = ValueRange(
-        pk=1,
-        scoring_model=sm,
-        end=1,
-        points=1
-    )
-    vr1 = ValueRange(
-        pk=2,
-        scoring_model=sm,
-        start=1,
-        end=2,
-        points=2
-    )
-    vr2 = ValueRange(
-        pk=3,
-        scoring_model=sm,
-        start=2,
-        points=3
-    )
-    vr3 = ValueRange(
-        pk=4,
-        scoring_model=sm1,
-        points=9
-    )
-    vr4 = ValueRange(
-        pk=5,
-        scoring_model=sm2,
-        start=0,
-        end=2,
-        points=1
-    )
-    vr5 = ValueRange(
-        pk=6,
-        scoring_model=sm2,
-        start=3,
-        points=2
-    )
-    vr6 = ValueRange(
-        pk=7,
-        scoring_model=sm3,
-        end=1,
-        points=0
-    )
-    vr7 = ValueRange(
-        pk=8,
-        scoring_model=sm3,
-        start=1,
-        points=3
-    )
+    vr = ValueRange(pk=1, scoring_model=sm, end=1, points=1)
+    vr1 = ValueRange(pk=2, scoring_model=sm, start=1, end=2, points=2)
+    vr2 = ValueRange(pk=3, scoring_model=sm, start=2, points=3)
+    vr3 = ValueRange(pk=4, scoring_model=sm1, points=9)
+    vr4 = ValueRange(pk=5, scoring_model=sm2, start=0, end=2, points=1)
+    vr5 = ValueRange(pk=6, scoring_model=sm2, start=3, points=2)
+    vr6 = ValueRange(pk=7, scoring_model=sm3, end=1, points=0)
+    vr7 = ValueRange(pk=8, scoring_model=sm3, start=1, points=3)
 
     vr.save()
     vr1.save()
@@ -320,9 +276,9 @@ def questions_for_user1(user1):
         pk=10,
         type=Question.CHOICES,
         number=1,
-        text='Question one user1?',
-        field_name='q1u1',
-        owner=user1
+        text="Question one user1?",
+        field_name="q1u1",
+        owner=user1,
     )
 
     q1.save()
@@ -330,27 +286,22 @@ def questions_for_user1(user1):
     c1 = Choice(
         pk=10,
         question=q1,
-        text='Below 1',
-        slug='below-1',
+        text="Below 1",
+        slug="below-1",
         value=1,
     )
     c2 = Choice(
         pk=11,
         question=q1,
-        text='2+',
-        slug='2',
+        text="2+",
+        slug="2",
         value=2,
     )
 
     c1.save()
     c2.save()
 
-    r = Recommendation(
-        pk=10,
-        question=q1,
-        rule='If {q1u1} == 1',
-        owner=user1
-    )
+    r = Recommendation(pk=10, question=q1, rule="If {q1u1} == 1", owner=user1)
 
     r.save()
 
@@ -367,13 +318,13 @@ def questions(questions_for_user, questions_for_user1):
 @pytest.fixture()
 def recommendation_data(user, question_with_no_recommendation):
     return {
-        'question': question_with_no_recommendation,
-        'rule': 'If {Rent} / {Income} > 0.5',
-        'response_text': 'Rule is True',
-        'affiliate_name': 'Example affiliate',
-        'affiliate_image': 'https://example.com/image.jpeg',
-        'affiliate_link': 'https://example.com/',
-        'owner': user
+        "question": question_with_no_recommendation,
+        "rule": "If {Rent} / {Income} > 0.5",
+        "response_text": "Rule is True",
+        "affiliate_name": "Example affiliate",
+        "affiliate_image": "https://example.com/image.jpeg",
+        "affiliate_link": "https://example.com/",
+        "owner": user,
     }
 
 
@@ -391,11 +342,11 @@ def recommendation(recommendation_data):
 @pytest.fixture()
 def scoring_model_data(user, question_with_no_recommendation):
     return {
-        'question': question_with_no_recommendation,
-        'weight': 1,
-        'x_axis': True,
-        'y_axis': False,
-        'owner': user
+        "question": question_with_no_recommendation,
+        "weight": 1,
+        "x_axis": True,
+        "y_axis": False,
+        "owner": user,
     }
 
 
@@ -405,32 +356,10 @@ def scoring_model(scoring_model_data):
 
     sm.save()
 
-    vr = ValueRange(
-        pk=21,
-        end=0,
-        points=0,
-        scoring_model=sm
-    )
-    vr1 = ValueRange(
-        pk=22,
-        start=0,
-        end=3,
-        points=1,
-        scoring_model=sm
-    )
-    vr2 = ValueRange(
-        pk=23,
-        start=3,
-        end=5,
-        points=2,
-        scoring_model=sm
-    )
-    vr3 = ValueRange(
-        pk=24,
-        start=5,
-        points=3,
-        scoring_model=sm
-    )
+    vr = ValueRange(pk=21, end=0, points=0, scoring_model=sm)
+    vr1 = ValueRange(pk=22, start=0, end=3, points=1, scoring_model=sm)
+    vr2 = ValueRange(pk=23, start=3, end=5, points=2, scoring_model=sm)
+    vr3 = ValueRange(pk=24, start=5, points=3, scoring_model=sm)
 
     vr.save()
     vr1.save()
@@ -444,12 +373,7 @@ def scoring_model(scoring_model_data):
 
 @pytest.fixture()
 def lead_data(user):
-    return {
-        'x_axis': 1.1,
-        'y_axis': 2.3,
-        'total_score': 3.4,
-        'owner': user
-    }
+    return {"x_axis": 1.1, "y_axis": 2.3, "total_score": 3.4, "owner": user}
 
 
 @pytest.fixture()
@@ -462,11 +386,11 @@ def lead(lead_data, questions_for_user):
         lead=l,
         field_name=questions_for_user[0].field_name,
         response=questions_for_user[0].choices.first().text,
-        response_text='Response',
-        affiliate_name='Example affiliate',
-        affiliate_image='https://example.com/image.jpeg',
-        affiliate_link='https://example.com/',
-        redirect_url='https://example.com/redirect'
+        response_text="Response",
+        affiliate_name="Example affiliate",
+        affiliate_image="https://example.com/image.jpeg",
+        affiliate_link="https://example.com/",
+        redirect_url="https://example.com/redirect",
     )
     a2 = Answer(
         lead=l,
@@ -492,21 +416,15 @@ def generate_lead_id():
 
 @pytest.fixture()
 def leads_for_user(user):
-    l = Lead(
-        pk=1,
-        x_axis=1,
-        y_axis=2.3,
-        total_score=3.3,
-        owner=user
-    )
+    l = Lead(pk=1, x_axis=1, y_axis=2.3, total_score=3.3, owner=user)
 
     l.save()
 
     a1 = Answer(
         pk=1,
         lead=l,
-        field_name='fn1u',
-        response='response user',
+        field_name="fn1u",
+        response="response user",
     )
 
     a1.save()
@@ -518,21 +436,15 @@ def leads_for_user(user):
 
 @pytest.fixture()
 def leads_for_user1(user1):
-    l = Lead(
-        pk=10,
-        x_axis=1,
-        y_axis=2.3,
-        total_score=3.3,
-        owner=user1
-    )
+    l = Lead(pk=10, x_axis=1, y_axis=2.3, total_score=3.3, owner=user1)
 
     l.save()
 
     a1 = Answer(
         pk=10,
         lead=l,
-        field_name='fn1u1',
-        response='response user1',
+        field_name="fn1u1",
+        response="response user1",
     )
 
     a1.save()
@@ -559,7 +471,10 @@ def question_admin_and_model(admin_site):
 
 @pytest.fixture()
 def recommendation_admin_and_model(admin_site):
-    return RecommendationAdmin(model=Recommendation, admin_site=admin_site), Recommendation
+    return (
+        RecommendationAdmin(model=Recommendation, admin_site=admin_site),
+        Recommendation,
+    )
 
 
 @pytest.fixture()

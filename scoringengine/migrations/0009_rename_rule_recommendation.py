@@ -8,12 +8,12 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('scoringengine', '0008_auto_20210629_1528'),
+        ("scoringengine", "0008_auto_20210629_1528"),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='Rule',
-            new_name='Recommendation',
+            old_name="Rule",
+            new_name="Recommendation",
         ),
     ]

@@ -7,23 +7,33 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0003_set_choice_values_for_existing_questions'),
+        ("scoringengine", "0003_set_choice_values_for_existing_questions"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='question',
-            name='weight',
-            field=models.DecimalField(decimal_places=2, default=1, help_text='<b>Note:</b> Used only for question with choices', max_digits=5, validators=[django.core.validators.MinValueValidator(limit_value=0)]),
+            model_name="question",
+            name="weight",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=1,
+                help_text="<b>Note:</b> Used only for question with choices",
+                max_digits=5,
+                validators=[django.core.validators.MinValueValidator(limit_value=0)],
+            ),
         ),
         migrations.AlterField(
-            model_name='question',
-            name='x_axis',
-            field=models.BooleanField(help_text='<b>Note:</b> Used only for question with choices'),
+            model_name="question",
+            name="x_axis",
+            field=models.BooleanField(
+                help_text="<b>Note:</b> Used only for question with choices"
+            ),
         ),
         migrations.AlterField(
-            model_name='question',
-            name='y_axis',
-            field=models.BooleanField(help_text='<b>Note:</b> Used only for question with choices'),
+            model_name="question",
+            name="y_axis",
+            field=models.BooleanField(
+                help_text="<b>Note:</b> Used only for question with choices"
+            ),
         ),
     ]
