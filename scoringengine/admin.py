@@ -21,6 +21,7 @@ from scoringengine.models import (
     ValueRange,
     Lead,
     Answer,
+    RecommendationFieldsMixin,
 )
 from scoringengine.tools import clone_account
 
@@ -31,7 +32,7 @@ admin.site.site_header = "Scoring engine administration"
 
 
 class ValidateFieldNameModelAdminForm(forms.ModelForm):
-    """Check that field contain only valid field names"""
+    """Check that field contains only valid field names"""
 
     field_to_validate = None
 
@@ -234,7 +235,22 @@ class RuleAdminForm(ValidateFieldNameModelAdminForm):
     field_to_validate = "rule"
 
 
-class RecommendationAdmin(RestrictedAdmin):
+class RecommendationFieldsAdminMixin:
+    """Rearrange fields to put fields from RecommendationFieldsMixin at last place"""
+
+    def get_fields(self, request, obj=None):
+        last_fields = RecommendationFieldsMixin.fields
+        fields = super().get_fields(request, obj)
+
+        for field in last_fields:
+            if field in fields:
+                fields.remove(field)
+                fields.append(field)
+
+        return fields
+
+
+class RecommendationAdmin(RecommendationFieldsAdminMixin, RestrictedAdmin):
     form = RuleAdminForm
     list_display = ("__str__", "response_text", "affiliate_name", "redirect_url")
     ordering = ["question__number"]
@@ -294,7 +310,7 @@ class ScoringModelAdmin(RestrictedAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class AnswerInline(admin.StackedInline):
+class AnswerInline(RecommendationFieldsAdminMixin, admin.StackedInline):
     model = Answer
     extra = 0
 

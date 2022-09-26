@@ -87,7 +87,28 @@ def validate_formula(value):
         pass
 
 
-class Recommendation(models.Model):
+class RecommendationFieldsMixin(models.Model):
+    response_text = models.TextField(blank=True)
+
+    affiliate_name = models.CharField(max_length=200, blank=True)
+    affiliate_image = models.URLField(max_length=2048, blank=True)
+    affiliate_link = models.URLField(max_length=2048, blank=True)
+
+    redirect_url = models.URLField(max_length=2048, blank=True)
+
+    fields = (
+        "response_text",
+        "affiliate_name",
+        "affiliate_image",
+        "affiliate_link",
+        "redirect_url",
+    )
+
+    class Meta:
+        abstract = True
+
+
+class Recommendation(RecommendationFieldsMixin):
     question = models.OneToOneField(
         "Question", on_delete=models.CASCADE, related_name="recommendation"
     )
@@ -103,13 +124,6 @@ class Recommendation(models.Model):
         f'logical operations ({", ".join(LOGICAL_OPERATORS)}) '
         f"and parentheses",
     )
-    response_text = models.TextField(blank=True)
-
-    affiliate_name = models.CharField(max_length=200, blank=True)
-    affiliate_image = models.URLField(max_length=2048, blank=True)
-    affiliate_link = models.URLField(max_length=2048, blank=True)
-
-    redirect_url = models.URLField(max_length=2048, blank=True)
 
     owner = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, related_name="recommendations"
@@ -380,7 +394,7 @@ class Lead(models.Model):
         return str(self.lead_id)
 
 
-class Answer(models.Model):
+class Answer(RecommendationFieldsMixin):
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name="answers")
 
     field_name = models.CharField(max_length=200)
@@ -392,12 +406,6 @@ class Answer(models.Model):
         null=True,
     )
     points = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-
-    response_text = models.CharField(max_length=200, blank=True)
-    affiliate_name = models.CharField(max_length=200, blank=True)
-    affiliate_image = models.URLField(max_length=2048, blank=True)
-    affiliate_link = models.URLField(max_length=2048, blank=True)
-    redirect_url = models.URLField(max_length=2048, blank=True)
 
     def __str__(self):
         return f"{self.field_name}: {self.response}"

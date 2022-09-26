@@ -71,8 +71,8 @@ See detailed [cookiecutter-django Docker documentation](http://cookiecutter-djan
 
 Before doing any git commit, pre-commit should be installed globally on your local machine, and then:
 
-    $ git init
-    $ pre-commit install
+    git init
+    pre-commit install
 
 Failing to do so will result with a bunch of CI and Linter errors that can be avoided with pre-commit.
 

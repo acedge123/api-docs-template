@@ -202,6 +202,23 @@ class TestRecommendationAdmin:
         assert "__all__" in form.errors
         assert form.errors["__all__"] == error_message
 
+    def test_fields_order(self, recommendation_admin_and_model, fake_request):
+        recommendation_admin, _ = recommendation_admin_and_model
+
+        expected_fields_order = [
+            "question",
+            "rule",
+            "owner",
+            "response_text",
+            "affiliate_name",
+            "affiliate_image",
+            "affiliate_link",
+            "redirect_url",
+        ]
+        fields = recommendation_admin.get_fields(fake_request)
+
+        assert fields == expected_fields_order
+
 
 class TestLeadAdmin:
     def test_has_add_permission_false_regular_user(
@@ -233,6 +250,28 @@ class TestLeadAdmin:
         fake_request.user = admin_user
 
         assert not lead_admin.has_change_permission(fake_request)
+
+
+class TestAnswerInline:
+    def test_fields_order(self, answer_inline_and_model, fake_request):
+        answer_inline, _ = answer_inline_and_model
+
+        expected_fields_order = [
+            "lead",
+            "field_name",
+            "response",
+            "value",
+            "values",
+            "points",
+            "response_text",
+            "affiliate_name",
+            "affiliate_image",
+            "affiliate_link",
+            "redirect_url",
+        ]
+        fields = answer_inline.get_fields(fake_request)
+
+        assert fields == expected_fields_order
 
 
 class TestTokenAdmin:
