@@ -11,6 +11,7 @@ from scoringengine.admin import (
     LeadAdmin,
     TokenAdmin,
     ScoringModelAdmin,
+    AnswerInline,
 )
 from scoringengine.models import (
     Question,
@@ -480,6 +481,11 @@ def recommendation_admin_and_model(admin_site):
 @pytest.fixture()
 def lead_admin_and_model(admin_site):
     return LeadAdmin(model=Lead, admin_site=admin_site), Lead
+
+
+@pytest.fixture()
+def answer_inline_and_model(admin_site):
+    return AnswerInline(parent_model=Lead, admin_site=admin_site), Answer
 
 
 @pytest.fixture()
