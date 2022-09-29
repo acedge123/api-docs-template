@@ -59,7 +59,7 @@ def clone_scoring_model(source_user: User, target_user: User):
         Recommendation.objects.create(
             owner=target_user,
             question=Question.objects.get(
-                field_name=sm_old.question.field_name, owner=target_user
+                field_name=recommendation.question.field_name, owner=target_user
             ),
             rule=recommendation.rule,
             response_text=recommendation.response_text,
