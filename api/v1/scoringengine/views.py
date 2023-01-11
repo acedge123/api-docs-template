@@ -198,7 +198,18 @@ class LeadViewSet(
         return serializer.save(**data)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        data = request.data.copy()
+
+        # remove duplicate prior adding the new record
+        allow_duplicates = data.pop("allow_duplicates", False)
+        if allow_duplicates is True and data.get("lead_id"):
+            try:
+                Lead.objects.filter(lead_id__iexact=data["lead_id"]).delete()
+            except:
+                # this part of the process is not crucial, so not worth acknowledging
+                pass
+        
+        serializer = self.get_serializer(data=data)
 
         serializer.is_valid(raise_exception=True)
         obj = self.perform_create(serializer)
