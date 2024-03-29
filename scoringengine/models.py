@@ -247,15 +247,19 @@ class ValueRange(models.Model):
 
 
 class Question(models.Model):
-    OPEN = "O"
+    DATE = "D"
     CHOICES = "CH"
+    INTEGER = "I"
     MULTIPLE_CHOICES = "MC"
+    OPEN = "O"
     SLIDER = "S"
 
     TYPE_CHOICES = (
-        (OPEN, "Open"),
+        (DATE, "Date"),
         (CHOICES, "Choices"),
+        (INTEGER, "Integer"),
         (MULTIPLE_CHOICES, "Multiple choices"),
+        (OPEN, "Open"),
         (SLIDER, "Slider"),
     )
 
@@ -270,7 +274,8 @@ class Question(models.Model):
     type = models.CharField(
         max_length=2,
         choices=TYPE_CHOICES,
-        help_text="<b>Open</b> question without specific expected answer. "
+        help_text=
+        "<b>Open</b> question without specific expected answer. "
         'Has associated value "1" if answer provided and "0" otherwise. '
         "Can be used in recommendations rules and in scoring models formulas for X-axis, "
         "Y-axis score calculation. </br> "

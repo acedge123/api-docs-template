@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import viewsets, mixins, status, serializers
 from rest_framework.response import Response
 
@@ -42,7 +44,22 @@ class LeadViewSet(
                     }
                 )
 
-            if question.type == Question.CHOICES:
+            if question.type == Question.DATE:
+                if not re.match(r"^\d{4}-\d{2}-\d{2}$", answer_data["response"]):
+                    raise serializers.ValidationError(
+                        {
+                            "answers": {
+                                "response": [
+                                    f"Date '{answer_data['response']}' is not in format YYYY-MM-DD for question with "
+                                    f"question with '{answer_data['field_name']}' field name"
+                                ]
+                            }
+                        }
+                    )
+
+                answer_data["value"] = answer_data["response"]
+
+            elif question.type == Question.CHOICES:
                 choice = question.choices.filter(slug=answer_data["response"]).first()
 
                 if choice is None:
@@ -59,6 +76,23 @@ class LeadViewSet(
                 else:
                     answer_data["response"] = choice.text
                     answer_data["value"] = choice.value
+
+            elif question.type == Question.INTEGER:
+                try:
+                    value = int(answer_data["response"])
+                    answer_data["value"] = value
+
+                except ValueError:
+                    raise serializers.ValidationError(
+                        {
+                            "answers": {
+                                "response": [
+                                    f"Response '{answer_data['response']}' is invalid response for question with "
+                                    f"'{answer_data['field_name']}' field name"
+                                ]
+                            }
+                        }
+                    )
 
             elif question.type == Question.MULTIPLE_CHOICES:
                 texts = []
