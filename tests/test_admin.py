@@ -261,6 +261,7 @@ class TestAnswerInline:
             "field_name",
             "response",
             "value",
+            "date_value",
             "values",
             "points",
             "response_text",
