@@ -193,7 +193,9 @@ class ScoringModel(models.Model):
             else:
                 for value_range in self.ranges.order_by("pk").all():
                     start = (
-                        value_range.start if value_range.start is not None else -math.inf
+                        value_range.start
+                        if value_range.start is not None
+                        else -math.inf
                     )
                     end = value_range.end if value_range.end is not None else math.inf
 
@@ -316,8 +318,7 @@ class Question(models.Model):
     type = models.CharField(
         max_length=2,
         choices=TYPE_CHOICES,
-        help_text=
-        "<b>Open</b> question without specific expected answer. "
+        help_text="<b>Open</b> question without specific expected answer. "
         'Has associated value "1" if answer provided and "0" otherwise. '
         "Can be used in recommendations rules and in scoring models formulas for X-axis, "
         "Y-axis score calculation. </br> "
@@ -386,7 +387,8 @@ class Question(models.Model):
         return [
             q.field_name
             for q in user.questions.all()
-            if q.type in (Question.SLIDER, Question.INTEGER, Question.CHOICES, Question.OPEN)
+            if q.type
+            in (Question.SLIDER, Question.INTEGER, Question.CHOICES, Question.OPEN)
         ]
 
     def calculate_points(self, answers):

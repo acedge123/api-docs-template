@@ -59,7 +59,9 @@ class LeadViewSet(
                         }
                     )
 
-                answer_data["date_value"] = datetime.strptime(answer_data["response"], "%Y-%m-%d").date()
+                answer_data["date_value"] = datetime.strptime(
+                    answer_data["response"], "%Y-%m-%d"
+                ).date()
 
             elif question.type == Question.CHOICES:
                 choice = question.choices.filter(slug=answer_data["response"]).first()
@@ -247,7 +249,7 @@ class LeadViewSet(
             except:
                 # this part of the process is not crucial, so not worth acknowledging
                 pass
-        
+
         serializer = self.get_serializer(data=data)
 
         serializer.is_valid(raise_exception=True)
