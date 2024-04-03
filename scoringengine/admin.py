@@ -19,6 +19,7 @@ from scoringengine.models import (
     Recommendation,
     ScoringModel,
     ValueRange,
+    DatesRange,
     Lead,
     Answer,
     RecommendationFieldsMixin,
@@ -288,7 +289,14 @@ class ValueRangeInline(admin.TabularInline):
     model = ValueRange
     formset = ValueRangeInlineFormset
     extra = 0
-    min_num = 1
+    min_num = 0
+
+
+class DatesRangeInline(admin.TabularInline):
+    model = DatesRange
+    formset = ValueRangeInlineFormset
+    extra = 0
+    min_num = 0
 
 
 class ScoringModelAdminForm(ValidateFieldNameModelAdminForm):
@@ -297,7 +305,7 @@ class ScoringModelAdminForm(ValidateFieldNameModelAdminForm):
 
 class ScoringModelAdmin(RestrictedAdmin):
     form = ScoringModelAdminForm
-    inlines = [ValueRangeInline]
+    inlines = [ValueRangeInline, DatesRangeInline]
     list_display = ("__str__", "weight", "x_axis", "y_axis")
     ordering = ["question__number"]
 

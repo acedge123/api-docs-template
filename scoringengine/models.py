@@ -2,6 +2,8 @@ import math
 import re
 import uuid
 
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -178,14 +180,25 @@ class ScoringModel(models.Model):
         def calculate_points_for_value(val):
             """Return points based on calculated value"""
 
-            for value_range in self.ranges.order_by("pk").all():
-                start = (
-                    value_range.start if value_range.start is not None else -math.inf
-                )
-                end = value_range.end if value_range.end is not None else math.inf
+            if self.question.type == Question.DATE:
+                for value_range in self.dates_ranges.order_by("pk").all():
+                    start = (
+                        value_range.start if value_range.start is not None else date.min
+                    )
+                    end = value_range.end if value_range.end is not None else date.max
 
-                if start <= val < end:
-                    return round(value_range.points * self.weight, 2)
+                    if start <= val < end:
+                        return round(value_range.points * self.weight, 2)
+
+            else:
+                for value_range in self.ranges.order_by("pk").all():
+                    start = (
+                        value_range.start if value_range.start is not None else -math.inf
+                    )
+                    end = value_range.end if value_range.end is not None else math.inf
+
+                    if start <= val < end:
+                        return round(value_range.points * self.weight, 2)
 
             return None
 
@@ -239,6 +252,35 @@ class ValueRange(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["scoring_model", "start", "end"], name="unique_range"
+            ),
+        ]
+
+    def __str__(self):
+        return f'[{self.start if self.start is not None else "-inf"}, {self.end if self.end is not None else "+inf"})'
+
+
+class DatesRange(models.Model):
+    scoring_model = models.ForeignKey(
+        "ScoringModel", on_delete=models.CASCADE, related_name="dates_ranges"
+    )
+
+    start = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Left empty for right-closed range",
+    )
+    end = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Left empty for left-closed range",
+    )
+
+    points = models.IntegerField(help_text="Used for X-axis, Y-axis scores calculation")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["scoring_model", "start", "end"], name="unique_date_range"
             ),
         ]
 
@@ -344,7 +386,7 @@ class Question(models.Model):
         return [
             q.field_name
             for q in user.questions.all()
-            if q.type in (Question.SLIDER, Question.CHOICES, Question.OPEN)
+            if q.type in (Question.SLIDER, Question.INTEGER, Question.CHOICES, Question.OPEN)
         ]
 
     def calculate_points(self, answers):
@@ -406,6 +448,7 @@ class Answer(RecommendationFieldsMixin):
     response = models.CharField(max_length=200, blank=True)
 
     value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    date_value = models.DateField(blank=True, null=True)
     values = ArrayField(
         models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True),
         null=True,

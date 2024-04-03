@@ -1,5 +1,7 @@
 import re
 
+from datetime import datetime
+
 from rest_framework import viewsets, mixins, status, serializers
 from rest_framework.response import Response
 
@@ -57,7 +59,7 @@ class LeadViewSet(
                         }
                     )
 
-                answer_data["value"] = answer_data["response"]
+                answer_data["date_value"] = datetime.strptime(answer_data["response"], "%Y-%m-%d").date()
 
             elif question.type == Question.CHOICES:
                 choice = question.choices.filter(slug=answer_data["response"]).first()
@@ -157,7 +159,10 @@ class LeadViewSet(
         for answer in answers_data:
             field_name = answer["field_name"]
 
-            if answer.get("value") is not None:
+            if answer.get("date_value") is not None:
+                answers[field_name] = answer["date_value"]
+
+            elif answer.get("value") is not None:
                 answers[field_name] = answer["value"]
 
             elif answer.get("values") is not None:
