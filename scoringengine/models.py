@@ -3,6 +3,7 @@ import re
 import uuid
 
 from datetime import date
+from itertools import chain
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
@@ -18,10 +19,11 @@ COMPARISON_OPERATORS = [">", "<", "==", "!=", ">=", "<="]
 LOGICAL_OPERATORS = ["and", "or", "not"]
 
 NUMBER_REGEX = r"[0-9.]+"
+DATE_REGEX = r"\d{4}-\d{2}-\d{2}"
 FIELD_NAME_REGEX = r"\w+"
 
 RULE_PREFIX = "If"
-RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
+RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
 
 FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
@@ -51,9 +53,24 @@ def validate_rule(value):
     if not re.fullmatch(RULE_REGEX, value):
         raise ValidationError("Rule is invalid", code="invalid_rule")
 
-    mocked_data = {
-        k: f"{{{k}}}" for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value)
-    }
+    mocked_data = {}
+    multiple_values = 0
+
+    for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value):
+        if Question.objects.filter(field_name=k, multiple_values=True).exists():
+            multiple_values += 1
+
+        if Question.objects.filter(field_name=k, type=Question.DATE).exists():
+            mocked_data[k] = date.today()
+
+        else:
+            mocked_data[k] = f"{{{k}}}"
+
+    if multiple_values > 1:
+        raise ValidationError(
+            f"You may use only one multiple values field",
+            code="invalid_formula",
+        )
 
     try:
         Question.eval_rule(value, data=mocked_data)
@@ -76,6 +93,20 @@ def validate_formula(value):
     mocked_data = {
         k: f"{{{k}}}" for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value)
     }
+
+    multiple_values = 0
+
+    for field_name in mocked_data.keys():
+        if Question.objects.filter(
+            field_name=field_name, multiple_values=True
+        ).exists():
+            multiple_values += 1
+
+    if multiple_values > 1:
+        raise ValidationError(
+            f"You may use only one multiple values field",
+            code="invalid_formula",
+        )
 
     try:
         ScoringModel.eval_formula(value, data=mocked_data)
@@ -168,7 +199,23 @@ class ScoringModel(models.Model):
     def eval_formula(formula, data):
         """Eval formula for provided data and return rounded result"""
         try:
-            return eval(formula.format(**data))
+            found_multi_values = False
+            points = 0
+            filtered_data = {k: v for k, v in data.items() if f"{{{k}}}" in formula}
+
+            for k, v in filtered_data.items():
+                if isinstance(v, dict):
+                    found_multi_values = True
+                    for sv in v.values():
+                        prepared_date = filtered_data.copy()
+                        prepared_date[k] = sv
+                        points += eval(formula.format(**prepared_date))
+
+            if found_multi_values:
+                return points
+
+            return eval(formula.format(**filtered_data))
+
         except ZeroDivisionError:
             return None
 
@@ -209,7 +256,14 @@ class ScoringModel(models.Model):
             value = answers.get(self.question.field_name)
 
             if self.question.type == Question.MULTIPLE_CHOICES:
-                points = [calculate_points_for_value(v) for v in value]
+                points = [
+                    calculate_points_for_value(v)
+                    for v in (
+                        list(chain.from_iterable(value.values()))
+                        if isinstance(value, dict)
+                        else value
+                    )
+                ]
                 points = [p for p in points if p is not None]
 
                 if points:
@@ -220,6 +274,9 @@ class ScoringModel(models.Model):
             value = self.eval_formula(self.formula, answers)
 
         if value is not None:
+            if isinstance(value, dict):
+                return sum([calculate_points_for_value(v) for v in value.values()])
+
             return calculate_points_for_value(value)
 
         return None
@@ -315,6 +372,7 @@ class Question(models.Model):
         validators=[validate_field_name],
         help_text="Field name should contain only letters, numbers and underscore",
     )
+    multiple_values = models.BooleanField(default=False)
     type = models.CharField(
         max_length=2,
         choices=TYPE_CHOICES,
@@ -359,7 +417,50 @@ class Question(models.Model):
     def eval_rule(rule, data):
         """Remove RULE_PREFIX and eval rule for provided data"""
         try:
-            return eval(rule.removeprefix(RULE_PREFIX).format(**data))
+            prepared_rule = rule
+            for dd in re.findall(r"\d{4}-\d{2}-\d{2}", rule):
+                prepared_rule = prepared_rule.replace(
+                    dd, f"date({', '.join([v.lstrip('0') for v in dd.split('-')])})"
+                )
+
+            filtered_data = {}
+            for k, v in data.items():
+                if f"{{{k}}}" not in rule:
+                    continue
+
+                re_date = re.match(r"(\d{4})-(\d{2})-(\d{2})", str(v))
+
+                if isinstance(v, date):
+                    filtered_data[k] = v.strftime("date(%Y, %-m, %-d)")
+
+                elif re_date:
+                    filtered_data[
+                        k
+                    ] = f"date({re_date.group(1)}, {re_date.group(2).lstrip(0)}, {re_date.group(3).lstrip(0)})"
+
+                else:
+                    filtered_data[k] = v
+
+            found_multi_values = False
+
+            for k, v in filtered_data.items():
+                if isinstance(v, dict):
+                    found_multi_values = True
+                    for sv in v.values():
+                        prepared_date = filtered_data.copy()
+                        prepared_date[k] = sv
+                        if eval(
+                            prepared_rule.removeprefix(RULE_PREFIX).format(
+                                **prepared_date
+                            )
+                        ):
+                            True
+
+            if not found_multi_values:
+                return eval(
+                    prepared_rule.removeprefix(RULE_PREFIX).format(**filtered_data)
+                )
+
         except ZeroDivisionError:
             return False
 
@@ -382,14 +483,19 @@ class Question(models.Model):
             return {}
 
     @staticmethod
-    def get_possible_field_names(user):
+    def get_possible_field_names(user, obj):
         """Return field names of questions that can be used in recommendation rule and scoring model formula"""
-        return [
-            q.field_name
-            for q in user.questions.all()
-            if q.type
-            in (Question.SLIDER, Question.INTEGER, Question.CHOICES, Question.OPEN)
+        possible_type = [
+            Question.SLIDER,
+            Question.INTEGER,
+            Question.CHOICES,
+            Question.OPEN,
         ]
+
+        if isinstance(obj, Recommendation):
+            possible_type.append(Question.DATE)
+
+        return [q.field_name for q in user.questions.all() if q.type in possible_type]
 
     def calculate_points(self, answers):
         """Calculate question points using scoring model if question has assigned scoring model"""
@@ -449,6 +555,7 @@ class Answer(RecommendationFieldsMixin):
     field_name = models.CharField(max_length=200)
     response = models.CharField(max_length=200, blank=True)
 
+    value_number = models.PositiveBigIntegerField(blank=True, null=True)
     value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     date_value = models.DateField(blank=True, null=True)
     values = ArrayField(
@@ -460,9 +567,9 @@ class Answer(RecommendationFieldsMixin):
     def __str__(self):
         return f"{self.field_name}: {self.response}"
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["lead", "field_name"], name="unique_answer"
-            ),
-        ]
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint(
+    #             fields=["lead", "field_name"], name="unique_answer"
+    #         ),
+    #     ]

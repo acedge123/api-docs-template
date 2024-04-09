@@ -48,7 +48,9 @@ class ValidateFieldNameModelAdminForm(forms.ModelForm):
 
                 invalid_field_name_errors = []
                 for field_name in re.findall(r"{(\w*)}", value):
-                    if field_name not in Question.get_possible_field_names(user):
+                    if field_name not in Question.get_possible_field_names(
+                        user, self.instance
+                    ):
                         invalid_field_name_errors.append(
                             ValidationError(
                                 'Field name "%(value)s" used in %(field)s is not valid.',
@@ -92,10 +94,14 @@ class RestrictedAdmin(admin.ModelAdmin):
         form.base_fields["owner"].widget = forms.HiddenInput()
         form.base_fields["owner"].initial = request.user
 
+        if "formula" in form.base_fields and obj and obj.question.type == Question.DATE:
+            form.base_fields["formula"].widget = forms.HiddenInput()
+            form.base_fields["formula"].initial = None
+
         if self.field_to_extend_help_text:
 
             possible_field_names = (
-                ", ".join(Question.get_possible_field_names(request.user))
+                ", ".join(Question.get_possible_field_names(request.user, obj))
                 or "No appropriate questions created yet"
             )
 
@@ -177,7 +183,7 @@ class QuestionAdminForm(forms.ModelForm):
 class QuestionAdmin(RestrictedAdmin):
     form = QuestionAdminForm
     inlines = [ChoiceInline]
-    list_display = ("__str__", "field_name", "type")
+    list_display = ("__str__", "field_name", "type", "multiple_values")
     ordering = ["owner__id", "number"]
 
     def get_urls(self):
@@ -310,6 +316,16 @@ class ScoringModelAdmin(RestrictedAdmin):
     ordering = ["question__number"]
 
     field_to_extend_help_text = "formula"
+
+    def get_inlines(self, request, obj=None):
+        if obj and obj.question:
+            if obj.question.type == Question.DATE:
+                return [DatesRangeInline]
+
+            else:
+                return [ValueRangeInline]
+
+        return [ValueRangeInline, DatesRangeInline]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Ensure that user can select only available questions he own

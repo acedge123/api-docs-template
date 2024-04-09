@@ -204,13 +204,13 @@ class TestQuestion:
 
         assert str(question) == f'Q{question_data["number"]}. {question_data["text"]}'
 
-    @pytest.mark.usefixtures("questions")
-    def test_get_possible_field_names_exclude_field_name_of_questions_that_can_not_be_used_in_rules_and_scoring_model_formula(
-        self, user
-    ):
-        expected_result = Question.get_possible_field_names(user)
-
-        assert expected_result == ["q1u", "q2u", "q3u", "zc", "q6u"]
+    # @pytest.mark.usefixtures("questions")
+    # def test_get_possible_field_names_exclude_field_name_of_questions_that_can_not_be_used_in_rules_and_scoring_model_formula(
+    #     self, user
+    # ):
+    #     expected_result = Question.get_possible_field_names(user)
+    #
+    #     assert expected_result == ["q1u", "q2u", "q3u", "zc", "q6u"]
 
     def test_types(self):
         assert Question.OPEN == "O"

@@ -31,9 +31,17 @@ class LeadViewSet(
         """Collect answers values for questions"""
 
         for answer_data in answers_data:
-            question = self.request.user.questions.filter(
-                field_name=answer_data["field_name"]
-            ).first()
+            value_number = re.search(r"\[\d+\]$", answer_data["field_name"])
+
+            if value_number:
+                value_number = value_number.group(0)
+                field_name = answer_data["field_name"].replace(value_number, "")
+                answer_data["value_number"] = int(value_number[1:-1])
+
+            else:
+                field_name = answer_data["field_name"]
+
+            question = self.request.user.questions.filter(field_name=field_name).first()
 
             if question is None:
                 raise serializers.ValidationError(
@@ -45,6 +53,19 @@ class LeadViewSet(
                         }
                     }
                 )
+
+            if not question.multiple_values and answer_data["field_name"] != field_name:
+                raise serializers.ValidationError(
+                    {
+                        "answers": {
+                            "field_name": [
+                                f"Question '{answer_data['field_name']}' is not multiple values type"
+                            ]
+                        }
+                    }
+                )
+
+            answer_data["field_name"] = field_name
 
             if question.type == Question.DATE:
                 if not re.match(r"^\d{4}-\d{2}-\d{2}$", answer_data["response"]):
@@ -161,14 +182,28 @@ class LeadViewSet(
         for answer in answers_data:
             field_name = answer["field_name"]
 
-            if answer.get("date_value") is not None:
-                answers[field_name] = answer["date_value"]
+            value_number = answer.get("value_number")
+            if value_number is not None:
+                answers[field_name] = {}
 
-            elif answer.get("value") is not None:
-                answers[field_name] = answer["value"]
+                if answer.get("date_value") is not None:
+                    answers[field_name][value_number] = answer["date_value"]
 
-            elif answer.get("values") is not None:
-                answers[field_name] = answer["values"]
+                elif answer.get("value") is not None:
+                    answers[field_name][value_number] = answer["value"]
+
+                elif answer.get("values") is not None:
+                    answers[field_name][value_number] = answer["values"]
+
+            else:
+                if answer.get("date_value") is not None:
+                    answers[field_name] = answer["date_value"]
+
+                elif answer.get("value") is not None:
+                    answers[field_name] = answer["value"]
+
+                elif answer.get("values") is not None:
+                    answers[field_name] = answer["values"]
 
         x_axis = 0
         y_axis = 0
@@ -194,11 +229,28 @@ class LeadViewSet(
     def _collect_recommendations(self, answers_data):
         """Collect recommendations by checking each question rule against provided answers"""
 
-        answers = {
-            a["field_name"]: a["value"]
-            for a in answers_data
-            if a.get("value") is not None
-        }
+        answers = {}
+
+        answers = {}
+        for answer in answers_data:
+            field_name = answer["field_name"]
+
+            value_number = answer.get("value_number")
+            if value_number is not None:
+                answers[field_name] = {}
+
+                if answer.get("date_value") is not None:
+                    answers[field_name][value_number] = answer["date_value"]
+
+                elif answer.get("value") is not None:
+                    answers[field_name][value_number] = answer["value"]
+
+            else:
+                if answer.get("date_value") is not None:
+                    answers[field_name] = answer["date_value"]
+
+                elif answer.get("value") is not None:
+                    answers[field_name] = answer["value"]
 
         for answer_data in answers_data:
             question = self.request.user.questions.filter(
@@ -211,7 +263,9 @@ class LeadViewSet(
     def perform_create(self, serializer):
         answers_data = serializer.validated_data["answers"]
 
-        provided_answers_field_names = [a["field_name"] for a in answers_data]
+        provided_answers_field_names = [
+            re.sub(r"\[\d+\]", "", a["field_name"]) for a in answers_data
+        ]
 
         # Check that answers for all question provided
         for question in self.request.user.questions.all():
@@ -243,6 +297,7 @@ class LeadViewSet(
 
         # remove duplicate prior adding the new record
         allow_duplicates = data.pop("allow_duplicates", False)
+
         if allow_duplicates is True and data.get("lead_id"):
             try:
                 Lead.objects.filter(lead_id__iexact=data["lead_id"]).delete()
