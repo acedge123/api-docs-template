@@ -20,12 +20,13 @@ LOGICAL_OPERATORS = ["and", "or", "not"]
 
 NUMBER_REGEX = r"[0-9.]+"
 DATE_REGEX = r"\d{4}-\d{2}-\d{2}"
-FIELD_NAME_REGEX = r"\w+"
+FIELD_NAME_REGEX = r"\w+(\[\d+\])?"
+FUNCTION_REGEX = rf"(avg|sum|min|max|len)\({{{FIELD_NAME_REGEX}}}\)"
 
 RULE_PREFIX = "If"
-RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
+RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
 
-FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
+FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
 
 @receiver(post_save, sender=get_user_model())
@@ -54,23 +55,13 @@ def validate_rule(value):
         raise ValidationError("Rule is invalid", code="invalid_rule")
 
     mocked_data = {}
-    multiple_values = 0
 
     for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value):
-        if Question.objects.filter(field_name=k, multiple_values=True).exists():
-            multiple_values += 1
-
         if Question.objects.filter(field_name=k, type=Question.DATE).exists():
             mocked_data[k] = date.today()
 
         else:
             mocked_data[k] = f"{{{k}}}"
-
-    if multiple_values > 1:
-        raise ValidationError(
-            f"You may use only one multiple values field",
-            code="invalid_formula",
-        )
 
     try:
         Question.eval_rule(value, data=mocked_data)
@@ -94,20 +85,6 @@ def validate_formula(value):
         k: f"{{{k}}}" for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value)
     }
 
-    multiple_values = 0
-
-    for field_name in mocked_data.keys():
-        if Question.objects.filter(
-            field_name=field_name, multiple_values=True
-        ).exists():
-            multiple_values += 1
-
-    if multiple_values > 1:
-        raise ValidationError(
-            f"You may use only one multiple values field",
-            code="invalid_formula",
-        )
-
     try:
         ScoringModel.eval_formula(value, data=mocked_data)
     except SyntaxError as ex:
@@ -118,6 +95,125 @@ def validate_formula(value):
     except NameError:
         # No syntax errors in formula
         pass
+
+
+def prepare_answers(formula: str, answers: dict) -> (str, dict):
+    prepared_answers = {}
+    formatted_formula = formula
+
+    for field in re.findall(r"{\w+(\[\-?\d+\])?}", formula):
+        field_name = field.strip("{}")
+        re_item = re.search(r"\[(\-?\d+)\]", field_name)
+
+        if re_item:
+            stripped_field_name = field_name.replace(re_item.group(0), "")
+            item_number = int(re_item.group(1))
+
+            formatted_field_name = f"{stripped_field_name}_{f'm{-item_number}' if item_number <0 else item_number}"
+            prepared_answers[formatted_field_name] = answers[stripped_field_name][
+                item_number
+            ]
+            formatted_formula = formatted_formula.replace(
+                re_item.group(0), formatted_field_name
+            )
+
+        else:
+            prepared_answers[field_name] = answers[field_name]
+
+    return formatted_formula, prepared_answers
+
+
+def prepare_formula(formula: str, answers: dict) -> (str, dict):
+    prepared_formula = formula
+
+    while True:
+        re_avg = re.search(r"(avg|sum|min|max|len)\({(\w+)}\)", prepared_formula)
+
+        if re_avg:
+            func_name = re_avg.group(1)
+            field_name = re_avg.group(2)
+
+            if Question.objects.filter(
+                field_name=field_name, type=Question.DATE
+            ).exists():
+                if func_name == "avg":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(
+                            (answers[field_name][-1] - answers[field_name][0]).days
+                            / len(answers[field_name])
+                        ),
+                    )
+
+                elif func_name == "sum":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str((answers[field_name][-1] - answers[field_name][0]).days),
+                    )
+
+                elif func_name == "min":
+                    _date = answers[field_name][0]
+                    days = 999999999999
+                    for n in range(1, len(answers[field_name])):
+                        if (answers[field_name][n] - _date).days < days:
+                            days = (answers[field_name][n] - _date).days
+                        _date = answers[field_name][n]
+
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0), str(days)
+                    )
+
+                elif func_name == "max":
+                    _date = answers[field_name][0]
+                    days = 0
+                    for n in range(1, len(answers[field_name])):
+                        if (answers[field_name][n] - _date).days > days:
+                            days = (answers[field_name][n] - _date).days
+                        _date = answers[field_name][n]
+
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0), str(days)
+                    )
+
+                elif func_name == "len":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0), str(len(answers[field_name]))
+                    )
+
+            else:
+                if func_name == "avg":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(sum(answers[field_name]) / len(answers[field_name])),
+                    )
+
+                elif func_name == "sum":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(sum(answers[field_name])),
+                    )
+
+                elif func_name == "min":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(min(answers[field_name])),
+                    )
+
+                elif func_name == "max":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(max(answers[field_name])),
+                    )
+
+                elif func_name == "len":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(len(answers[field_name])),
+                    )
+        else:
+            break
+
+    return prepared_formula, answers
 
 
 class RecommendationFieldsMixin(models.Model):
