@@ -94,12 +94,7 @@ class RestrictedAdmin(admin.ModelAdmin):
         form.base_fields["owner"].widget = forms.HiddenInput()
         form.base_fields["owner"].initial = request.user
 
-        if "formula" in form.base_fields and obj and obj.question.type == Question.DATE:
-            form.base_fields["formula"].widget = forms.HiddenInput()
-            form.base_fields["formula"].initial = None
-
         if self.field_to_extend_help_text:
-
             possible_field_names = (
                 ", ".join(Question.get_possible_field_names(request.user, obj))
                 or "No appropriate questions created yet"
@@ -317,21 +312,17 @@ class ScoringModelAdmin(RestrictedAdmin):
 
     field_to_extend_help_text = "formula"
 
-    def get_inlines(self, request, obj=None):
-        if obj and obj.question:
-            if obj.question.type == Question.DATE:
-                return [DatesRangeInline]
-
-            else:
-                return [ValueRangeInline]
-
-        return [ValueRangeInline, DatesRangeInline]
-
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Ensure that user can select only available questions he own
         if db_field.name == "question":
             kwargs["queryset"] = Question.objects.filter(owner=request.user)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_inlines(self, request, obj):
+        if obj and obj.question and obj.question.type != Question.DATE:
+            return [ValueRangeInline]
+
+        return [ValueRangeInline, DatesRangeInline]
 
 
 class AnswerInline(RecommendationFieldsAdminMixin, admin.StackedInline):

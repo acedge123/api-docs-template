@@ -17,11 +17,12 @@ from rest_framework.authtoken.models import Token
 ARITHMETIC_OPERATORS = ["+", "-", "*", "/"]
 COMPARISON_OPERATORS = [">", "<", "==", "!=", ">=", "<="]
 LOGICAL_OPERATORS = ["and", "or", "not"]
+MATH_FUNCTIONS = ["count", "max", "mean", "median", "min", "sum"]
 
 NUMBER_REGEX = r"[0-9.]+"
 DATE_REGEX = r"\d{4}-\d{2}-\d{2}"
-FIELD_NAME_REGEX = r"\w+(\[\d+\])?"
-FUNCTION_REGEX = rf"(avg|sum|min|max|len)\({{{FIELD_NAME_REGEX}}}\)"
+FIELD_NAME_REGEX = r"\w+(\[\-?\d+\])?"
+FUNCTION_REGEX = rf"({'|'.join(MATH_FUNCTIONS)})\({{{FIELD_NAME_REGEX}}}\)"
 
 RULE_PREFIX = "If"
 RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
@@ -54,25 +55,26 @@ def validate_rule(value):
     if not re.fullmatch(RULE_REGEX, value):
         raise ValidationError("Rule is invalid", code="invalid_rule")
 
-    mocked_data = {}
-
-    for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value):
-        if Question.objects.filter(field_name=k, type=Question.DATE).exists():
-            mocked_data[k] = date.today()
-
-        else:
-            mocked_data[k] = f"{{{k}}}"
-
-    try:
-        Question.eval_rule(value, data=mocked_data)
-    except SyntaxError as ex:
-        raise ValidationError(
-            f'Rule syntax invalid "{RULE_PREFIX} {ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
-            code="invalid_rule",
-        )
-    except NameError:
-        # No syntax errors in rule
-        pass
+    # mocked_data = {}
+    #
+    # for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value):
+    #     question = Question.objects.get(field_name=k)
+    #     if Question.objects.filter(field_name=k, type=Question.DATE).exists():
+    #         mocked_data[k] = date.today()
+    #
+    #     else:
+    #         mocked_data[k] = f"{{{k}}}"
+    #
+    # try:
+    #     Question.eval_rule(value, data=mocked_data)
+    # except SyntaxError as ex:
+    #     raise ValidationError(
+    #         f'Rule syntax invalid "{RULE_PREFIX} {ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
+    #         code="invalid_rule",
+    #     )
+    # except NameError:
+    #     # No syntax errors in rule
+    #     pass
 
 
 def validate_formula(value):
@@ -81,40 +83,44 @@ def validate_formula(value):
     if not re.fullmatch(FORMULA_REGEX, value):
         raise ValidationError("Formula is invalid", code="invalid_formula")
 
-    mocked_data = {
-        k: f"{{{k}}}" for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value)
-    }
-
-    try:
-        ScoringModel.eval_formula(value, data=mocked_data)
-    except SyntaxError as ex:
-        raise ValidationError(
-            f'Formula syntax invalid "{ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
-            code="invalid_formula",
-        )
-    except NameError:
-        # No syntax errors in formula
-        pass
+    # mocked_data = {
+    #     k: f"{{{k}}}" for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value)
+    # }
+    #
+    # try:
+    #     ScoringModel.eval_formula(value, data=mocked_data)
+    # except SyntaxError as ex:
+    #     raise ValidationError(
+    #         f'Formula syntax invalid "{ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
+    #         code="invalid_formula",
+    #     )
+    # except NameError:
+    #     # No syntax errors in formula
+    #     pass
 
 
 def prepare_answers(formula: str, answers: dict) -> (str, dict):
     prepared_answers = {}
     formatted_formula = formula
 
-    for field in re.findall(r"{\w+(\[\-?\d+\])?}", formula):
-        field_name = field.strip("{}")
+    for field_name in re.findall(r"{(.+?)}", formula):
         re_item = re.search(r"\[(\-?\d+)\]", field_name)
 
         if re_item:
             stripped_field_name = field_name.replace(re_item.group(0), "")
             item_number = int(re_item.group(1))
 
-            formatted_field_name = f"{stripped_field_name}_{f'm{-item_number}' if item_number <0 else item_number}"
-            prepared_answers[formatted_field_name] = answers[stripped_field_name][
-                item_number
-            ]
+            formatted_field_name = f"{stripped_field_name}_{f'm{-item_number}' if item_number < 0 else item_number}"
+
+            answer = answers[stripped_field_name][item_number]
+
+            prepared_answers[formatted_field_name] = (
+                f"date({answer.year}, {answer.month}, {answer.day})"
+                if isinstance(answer, date)
+                else answer
+            )
             formatted_formula = formatted_formula.replace(
-                re_item.group(0), formatted_field_name
+                field_name, formatted_field_name
             )
 
         else:
@@ -126,17 +132,61 @@ def prepare_answers(formula: str, answers: dict) -> (str, dict):
 def prepare_formula(formula: str, answers: dict) -> (str, dict):
     prepared_formula = formula
 
+    for dd in re.findall(r"\d{4}-\d{2}-\d{2}", prepared_formula):
+        prepared_formula = prepared_formula.replace(
+            dd, f"date({','.join([d.lstrip('0') for d in dd.split('-')])})"
+        )
+
     while True:
-        re_avg = re.search(r"(avg|sum|min|max|len)\({(\w+)}\)", prepared_formula)
+        re_avg = re.search(
+            r"(mean|median|sum|min|max|count)\({(\w+)}\)", prepared_formula
+        )
 
         if re_avg:
             func_name = re_avg.group(1)
             field_name = re_avg.group(2)
 
-            if Question.objects.filter(
-                field_name=field_name, type=Question.DATE
-            ).exists():
-                if func_name == "avg":
+            if not isinstance(answers[field_name], list):
+                raise ValidationError(
+                    '"Math functions can be used only with multiple value questions. %(field_name)s" is not multiple value',
+                    params={"field_name": value},
+                    code="invalid_field_name",
+                )
+                continue
+
+            if all([isinstance(v, date) for v in answers[field_name]]):
+                if func_name == "mean":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(
+                            (answers[field_name][-1] - answers[field_name][0]).days
+                            / len(answers[field_name])
+                        ),
+                    )
+
+                elif func_name == "median":
+                    if len(answers[field_name]) > 1:
+                        _date = answers[field_name][0]
+                        min_days = 999999999999
+                        max_days = 0
+                        for n in range(1, len(answers[field_name])):
+                            if (answers[field_name][n] - _date).days < min_days:
+                                min_days = (answers[field_name][n] - _date).days
+
+                            if (answers[field_name][n] - _date).days > max_days:
+                                max_days = (answers[field_name][n] - _date).days
+
+                            _date = answers[field_name][n]
+
+                        days = (max_days - min_days) / 2.0
+
+                    else:
+                        days = 0
+
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0), str(days)
+                    )
+
                     prepared_formula = prepared_formula.replace(
                         re_avg.group(0),
                         str(
@@ -153,11 +203,15 @@ def prepare_formula(formula: str, answers: dict) -> (str, dict):
 
                 elif func_name == "min":
                     _date = answers[field_name][0]
-                    days = 999999999999
-                    for n in range(1, len(answers[field_name])):
-                        if (answers[field_name][n] - _date).days < days:
-                            days = (answers[field_name][n] - _date).days
-                        _date = answers[field_name][n]
+                    if len(answers[field_name]) > 1:
+                        days = 999999999999
+                        for n in range(1, len(answers[field_name])):
+                            if (answers[field_name][n] - _date).days < days:
+                                days = (answers[field_name][n] - _date).days
+                            _date = answers[field_name][n]
+
+                    else:
+                        days = 0
 
                     prepared_formula = prepared_formula.replace(
                         re_avg.group(0), str(days)
@@ -175,16 +229,24 @@ def prepare_formula(formula: str, answers: dict) -> (str, dict):
                         re_avg.group(0), str(days)
                     )
 
-                elif func_name == "len":
+                elif func_name == "count":
                     prepared_formula = prepared_formula.replace(
                         re_avg.group(0), str(len(answers[field_name]))
                     )
 
             else:
-                if func_name == "avg":
+                if func_name == "mean":
                     prepared_formula = prepared_formula.replace(
                         re_avg.group(0),
                         str(sum(answers[field_name]) / len(answers[field_name])),
+                    )
+
+                elif func_name == "median":
+                    prepared_formula = prepared_formula.replace(
+                        re_avg.group(0),
+                        str(
+                            (max(answers[field_name]) - min(answers[field_name])) / 2.0
+                        ),
                     )
 
                 elif func_name == "sum":
@@ -205,7 +267,7 @@ def prepare_formula(formula: str, answers: dict) -> (str, dict):
                         str(max(answers[field_name])),
                     )
 
-                elif func_name == "len":
+                elif func_name == "count":
                     prepared_formula = prepared_formula.replace(
                         re_avg.group(0),
                         str(len(answers[field_name])),
@@ -251,7 +313,7 @@ class Recommendation(RecommendationFieldsMixin):
         f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}), '
         f'comparison ({", ".join(COMPARISON_OPERATORS)}), '
         f'logical operations ({", ".join(LOGICAL_OPERATORS)}) '
-        f"and parentheses",
+        f'and parentheses.</br>Mathematical which may be used in are: {", ".join(MATH_FUNCTIONS)}.',
     )
 
     owner = models.ForeignKey(
@@ -283,8 +345,9 @@ class ScoringModel(models.Model):
         help_text=f"Leave empty to select points based on direct value from associated question.</br>"
         f'Add expression with "Field names" in curly braces (e.g. {{field_name}}), '
         f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}) operations '
-        f"and parentheses "
-        f"to select points based on expression result.",
+        "and parentheses "
+        "to select points based on expression result."
+        f'</br>Mathematical which may be used in are: {", ".join(MATH_FUNCTIONS)}',
     )
 
     owner = models.ForeignKey(
@@ -295,22 +358,12 @@ class ScoringModel(models.Model):
     def eval_formula(formula, data):
         """Eval formula for provided data and return rounded result"""
         try:
-            found_multi_values = False
-            points = 0
-            filtered_data = {k: v for k, v in data.items() if f"{{{k}}}" in formula}
+            prepared_formula, prepared_data = prepare_answers(formula, data)
+            prepared_formula, prepared_data = prepare_formula(
+                prepared_formula, prepared_data
+            )
 
-            for k, v in filtered_data.items():
-                if isinstance(v, dict):
-                    found_multi_values = True
-                    for sv in v.values():
-                        prepared_date = filtered_data.copy()
-                        prepared_date[k] = sv
-                        points += eval(formula.format(**prepared_date))
-
-            if found_multi_values:
-                return points
-
-            return eval(formula.format(**filtered_data))
+            return eval(prepared_formula.format(**prepared_data))
 
         except ZeroDivisionError:
             return None
@@ -370,8 +423,8 @@ class ScoringModel(models.Model):
             value = self.eval_formula(self.formula, answers)
 
         if value is not None:
-            if isinstance(value, dict):
-                return sum([calculate_points_for_value(v) for v in value.values()])
+            if isinstance(value, list):
+                return sum([calculate_points_for_value(v) for v in value])
 
             return calculate_points_for_value(value)
 
@@ -486,7 +539,9 @@ class Question(models.Model):
         "Y-axis score calculation but not in recommendations rules and not in scoring models formulas. </br>"
         "<b>Slider</b> question with predefined range of possible values. "
         "Answer is a value. Can be used in recommendations rules and in scoring models formulas for X-axis, "
-        "Y-axis score calculation. </br>",
+        "Y-axis score calculation. </br>"
+        "<b>Integer</b> works pretty the same as <b>Slider</b> but without range </br>"
+        "<b>Date</b> doesn't have predefined range. </br>",
     )
 
     # For SLIDER type question
@@ -513,49 +568,10 @@ class Question(models.Model):
     def eval_rule(rule, data):
         """Remove RULE_PREFIX and eval rule for provided data"""
         try:
-            prepared_rule = rule
-            for dd in re.findall(r"\d{4}-\d{2}-\d{2}", rule):
-                prepared_rule = prepared_rule.replace(
-                    dd, f"date({', '.join([v.lstrip('0') for v in dd.split('-')])})"
-                )
+            prepared_rule, prepared_data = prepare_answers(rule, data)
+            prepared_rule, prepared_data = prepare_formula(prepared_rule, prepared_data)
 
-            filtered_data = {}
-            for k, v in data.items():
-                if f"{{{k}}}" not in rule:
-                    continue
-
-                re_date = re.match(r"(\d{4})-(\d{2})-(\d{2})", str(v))
-
-                if isinstance(v, date):
-                    filtered_data[k] = v.strftime("date(%Y, %-m, %-d)")
-
-                elif re_date:
-                    filtered_data[
-                        k
-                    ] = f"date({re_date.group(1)}, {re_date.group(2).lstrip(0)}, {re_date.group(3).lstrip(0)})"
-
-                else:
-                    filtered_data[k] = v
-
-            found_multi_values = False
-
-            for k, v in filtered_data.items():
-                if isinstance(v, dict):
-                    found_multi_values = True
-                    for sv in v.values():
-                        prepared_date = filtered_data.copy()
-                        prepared_date[k] = sv
-                        if eval(
-                            prepared_rule.removeprefix(RULE_PREFIX).format(
-                                **prepared_date
-                            )
-                        ):
-                            True
-
-            if not found_multi_values:
-                return eval(
-                    prepared_rule.removeprefix(RULE_PREFIX).format(**filtered_data)
-                )
+            return eval(prepared_rule.removeprefix(RULE_PREFIX).format(**prepared_data))
 
         except ZeroDivisionError:
             return False
@@ -581,17 +597,18 @@ class Question(models.Model):
     @staticmethod
     def get_possible_field_names(user, obj):
         """Return field names of questions that can be used in recommendation rule and scoring model formula"""
-        possible_type = [
-            Question.SLIDER,
-            Question.INTEGER,
-            Question.CHOICES,
-            Question.OPEN,
+        return [
+            q.field_name
+            for q in user.questions.all()
+            if q.type
+            in [
+                Question.SLIDER,
+                Question.INTEGER,
+                Question.CHOICES,
+                Question.OPEN,
+                Question.DATE,
+            ]
         ]
-
-        if isinstance(obj, Recommendation):
-            possible_type.append(Question.DATE)
-
-        return [q.field_name for q in user.questions.all() if q.type in possible_type]
 
     def calculate_points(self, answers):
         """Calculate question points using scoring model if question has assigned scoring model"""

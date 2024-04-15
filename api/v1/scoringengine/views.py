@@ -184,16 +184,17 @@ class LeadViewSet(
 
             value_number = answer.get("value_number")
             if value_number is not None:
-                answers[field_name] = {}
+                if field_name not in answers:
+                    answers[field_name] = []
 
                 if answer.get("date_value") is not None:
-                    answers[field_name][value_number] = answer["date_value"]
+                    answers[field_name].append(answer["date_value"])
 
                 elif answer.get("value") is not None:
-                    answers[field_name][value_number] = answer["value"]
+                    answers[field_name].append(answer["value"])
 
                 elif answer.get("values") is not None:
-                    answers[field_name][value_number] = answer["values"]
+                    answers[field_name].append(answer["values"])
 
             else:
                 if answer.get("date_value") is not None:
@@ -208,21 +209,24 @@ class LeadViewSet(
         x_axis = 0
         y_axis = 0
 
+        points = {}
+
         for answer_data in answers_data:
-            question = self.request.user.questions.filter(
-                field_name=answer_data["field_name"]
-            ).first()
+            field_name = answer_data["field_name"]
+            question = self.request.user.questions.filter(field_name=field_name).first()
 
-            points = question.calculate_points(answers)
+            if field_name not in points:
+                p = question.calculate_points(answers)
+                points[field_name] = p
 
-            if points is not None:
-                if question.scoring_model.x_axis:
-                    x_axis += points
+                if points[field_name] is not None:
+                    if question.scoring_model.x_axis:
+                        x_axis += p
 
-                if question.scoring_model.y_axis:
-                    y_axis += points
+                    if question.scoring_model.y_axis:
+                        y_axis += p
 
-            answer_data["points"] = points
+            answer_data["points"] = points[field_name]
 
         return x_axis, y_axis
 
@@ -230,20 +234,19 @@ class LeadViewSet(
         """Collect recommendations by checking each question rule against provided answers"""
 
         answers = {}
-
-        answers = {}
         for answer in answers_data:
             field_name = answer["field_name"]
 
             value_number = answer.get("value_number")
             if value_number is not None:
-                answers[field_name] = {}
+                if field_name not in answers:
+                    answers[field_name] = []
 
                 if answer.get("date_value") is not None:
-                    answers[field_name][value_number] = answer["date_value"]
+                    answers[field_name].append(answer["date_value"])
 
                 elif answer.get("value") is not None:
-                    answers[field_name][value_number] = answer["value"]
+                    answers[field_name].append(answer["value"])
 
             else:
                 if answer.get("date_value") is not None:
