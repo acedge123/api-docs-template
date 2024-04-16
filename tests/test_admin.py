@@ -423,68 +423,68 @@ class TestScoringModelAdmin:
         assert "__all__" in form.errors
         assert form.errors["__all__"] == error_message
 
-    # @pytest.mark.parametrize(
-    #     "start,end,deleted",
-    #     [
-    #         ("0", "1", None),
-    #         ("1", "1", None),
-    #         ("2", "1", "on"),
-    #     ],
-    # )
-    # def test_value_range_start_less_than_or_equal_end_if_not_deleted_valid(
-    #     self, scoring_model_admin_and_model, fake_request, start, end, deleted
-    # ):
-    #     scoring_model_admin, scoring_model = scoring_model_admin_and_model
-    #
-    #     sm = scoring_model(id=111)
-    #
-    #     value_range_inline = scoring_model_admin.get_inline_instances(fake_request, sm)[
-    #         0
-    #     ]
-    #     formset_class = value_range_inline.get_formset(fake_request, sm)
-    #
-    #     data = {
-    #         "ranges-TOTAL_FORMS": "1",
-    #         "ranges-INITIAL_FORMS": "0",
-    #         "ranges-0-scoring_model": "111",
-    #         "ranges-0-start": start,
-    #         "ranges-0-end": end,
-    #         "ranges-0-points": "1",
-    #         "ranges-0-DELETE": deleted,
-    #     }
-    #
-    #     formset = formset_class(data, instance=sm)
-    #
-    #     assert formset.is_valid()
-    #     assert len(formset.non_form_errors()) == 0
+    @pytest.mark.parametrize(
+        "start,end,deleted",
+        [
+            ("0", "1", None),
+            ("1", "1", None),
+            ("2", "1", "on"),
+        ],
+    )
+    def test_value_range_start_less_than_or_equal_end_if_not_deleted_valid(
+        self, scoring_model_admin_and_model, fake_request, start, end, deleted
+    ):
+        scoring_model_admin, scoring_model = scoring_model_admin_and_model
 
-    # def test_value_range_start_less_than_or_equal_end_if_not_deleted_not_valid(
-    #     self, scoring_model_admin_and_model, fake_request
-    # ):
-    #     scoring_model_admin, scoring_model = scoring_model_admin_and_model
-    #
-    #     sm = scoring_model(id=111)
-    #
-    #     value_range_inline = scoring_model_admin.get_inline_instances(fake_request, sm)[
-    #         0
-    #     ]
-    #     formset_class = value_range_inline.get_formset(fake_request, sm)
-    #
-    #     data = {
-    #         "ranges-TOTAL_FORMS": "1",
-    #         "ranges-INITIAL_FORMS": "0",
-    #         "ranges-0-scoring_model": "111",
-    #         "ranges-0-start": "5",
-    #         "ranges-0-end": "1",
-    #         "ranges-0-points": "1",
-    #     }
-    #
-    #     formset = formset_class(data, instance=sm)
-    #
-    #     assert not formset.is_valid()
-    #     assert formset.non_form_errors() == [
-    #         "Start of range must be less than or equal to End"
-    #     ]
+        sm = scoring_model(id=111)
+
+        value_range_inline = scoring_model_admin.get_inline_instances(fake_request, sm)[
+            0
+        ]
+        formset_class = value_range_inline.get_formset(fake_request, sm)
+
+        data = {
+            "ranges-TOTAL_FORMS": "1",
+            "ranges-INITIAL_FORMS": "0",
+            "ranges-0-scoring_model": "111",
+            "ranges-0-start": start,
+            "ranges-0-end": end,
+            "ranges-0-points": "1",
+            "ranges-0-DELETE": deleted,
+        }
+
+        formset = formset_class(data, instance=sm)
+
+        assert formset.is_valid()
+        assert len(formset.non_form_errors()) == 0
+
+    def test_value_range_start_less_than_or_equal_end_if_not_deleted_not_valid(
+        self, scoring_model_admin_and_model, fake_request
+    ):
+        scoring_model_admin, scoring_model = scoring_model_admin_and_model
+
+        sm = scoring_model(id=111)
+
+        value_range_inline = scoring_model_admin.get_inline_instances(fake_request, sm)[
+            0
+        ]
+        formset_class = value_range_inline.get_formset(fake_request, sm)
+
+        data = {
+            "ranges-TOTAL_FORMS": "1",
+            "ranges-INITIAL_FORMS": "0",
+            "ranges-0-scoring_model": "111",
+            "ranges-0-start": "5",
+            "ranges-0-end": "1",
+            "ranges-0-points": "1",
+        }
+
+        formset = formset_class(data, instance=sm)
+
+        assert not formset.is_valid()
+        assert formset.non_form_errors() == [
+            "Start of range must be less than or equal to End"
+        ]
 
 
 class TestQuestionAdmin:

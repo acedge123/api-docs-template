@@ -55,26 +55,7 @@ def validate_rule(value):
     if not re.fullmatch(RULE_REGEX, value):
         raise ValidationError("Rule is invalid", code="invalid_rule")
 
-    # mocked_data = {}
-    #
-    # for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value):
-    #     question = Question.objects.get(field_name=k)
-    #     if Question.objects.filter(field_name=k, type=Question.DATE).exists():
-    #         mocked_data[k] = date.today()
-    #
-    #     else:
-    #         mocked_data[k] = f"{{{k}}}"
-    #
-    # try:
-    #     Question.eval_rule(value, data=mocked_data)
-    # except SyntaxError as ex:
-    #     raise ValidationError(
-    #         f'Rule syntax invalid "{RULE_PREFIX} {ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
-    #         code="invalid_rule",
-    #     )
-    # except NameError:
-    #     # No syntax errors in rule
-    #     pass
+    # TODO: Overwrite Recommendation.clean()
 
 
 def validate_formula(value):
@@ -83,20 +64,7 @@ def validate_formula(value):
     if not re.fullmatch(FORMULA_REGEX, value):
         raise ValidationError("Formula is invalid", code="invalid_formula")
 
-    # mocked_data = {
-    #     k: f"{{{k}}}" for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", value)
-    # }
-    #
-    # try:
-    #     ScoringModel.eval_formula(value, data=mocked_data)
-    # except SyntaxError as ex:
-    #     raise ValidationError(
-    #         f'Formula syntax invalid "{ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"',
-    #         code="invalid_formula",
-    #     )
-    # except NameError:
-    #     # No syntax errors in formula
-    #     pass
+    # TODO: Overwrite ScoreModel.clean()
 
 
 def prepare_answers(formula: str, answers: dict) -> (str, dict):

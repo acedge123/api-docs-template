@@ -319,7 +319,7 @@ class ScoringModelAdmin(RestrictedAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_inlines(self, request, obj):
-        if obj and obj.question and obj.question.type != Question.DATE:
+        if obj and hasattr(obj, "question") and obj.question.type != Question.DATE:
             return [ValueRangeInline]
 
         return [ValueRangeInline, DatesRangeInline]
