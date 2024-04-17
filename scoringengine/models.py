@@ -38,6 +38,24 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
+    mocked_data = {}
+
+    for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", formula):
+        field_name = re.sub(r"\[.+\]", "", k[0])
+        question = Question.objects.filter(field_name=field_name, owner=owner).first()
+        value = (
+            date.today()
+            if question and question.type == Question.DATE
+            else f"{{{field_name}}}"
+        )
+        mocked_data[field_name] = (
+            [value] if question and question.multiple_values else value
+        )
+
+    return mocked_data
+
+
 def validate_field_name(value):
     """Check that entered field name is valid rule variable"""
 
@@ -55,16 +73,12 @@ def validate_rule(value):
     if not re.fullmatch(RULE_REGEX, value):
         raise ValidationError("Rule is invalid", code="invalid_rule")
 
-    # TODO: Overwrite Recommendation.clean()
-
 
 def validate_formula(value):
     """Check that entered formula is valid: contain only allowed parts and can be evaluated using "eval" function"""
 
     if not re.fullmatch(FORMULA_REGEX, value):
         raise ValidationError("Formula is invalid", code="invalid_formula")
-
-    # TODO: Overwrite ScoreModel.clean()
 
 
 def prepare_answers(formula: str, answers: dict) -> (str, dict):
@@ -80,18 +94,19 @@ def prepare_answers(formula: str, answers: dict) -> (str, dict):
 
             formatted_field_name = f"{stripped_field_name}_{f'm{-item_number}' if item_number < 0 else item_number}"
 
-            answer = answers[stripped_field_name][item_number]
+            if stripped_field_name in answers:
+                answer = answers[stripped_field_name][item_number]
 
-            prepared_answers[formatted_field_name] = (
-                f"date({answer.year}, {answer.month}, {answer.day})"
-                if isinstance(answer, date)
-                else answer
-            )
-            formatted_formula = formatted_formula.replace(
-                field_name, formatted_field_name
-            )
+                prepared_answers[formatted_field_name] = (
+                    f"date({answer.year}, {answer.month}, {answer.day})"
+                    if isinstance(answer, date)
+                    else answer
+                )
+                formatted_formula = formatted_formula.replace(
+                    field_name, formatted_field_name
+                )
 
-        else:
+        elif field_name in answers:
             prepared_answers[field_name] = answers[field_name]
 
     return formatted_formula, prepared_answers
@@ -291,6 +306,24 @@ class Recommendation(RecommendationFieldsMixin):
     def __str__(self):
         return f"Q{self.question.number}: {self.rule}"
 
+    def clean_fields(self, exclude=None):
+        super().clean_fields(exclude)
+
+        try:
+            Question.eval_rule(
+                self.rule, data=generate_mocked_data(self.rule, self.owner)
+            )
+        except SyntaxError as ex:
+            raise ValidationError(
+                {
+                    "rule": f'Rule syntax invalid "{RULE_PREFIX} {ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"'
+                },
+                code="invalid_rule",
+            )
+        except NameError:
+            # No syntax errors in rule
+            pass
+
 
 class ScoringModel(models.Model):
     question = models.OneToOneField(
@@ -321,6 +354,26 @@ class ScoringModel(models.Model):
     owner = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, related_name="scoring_models"
     )
+
+    def clean_fields(self, exclude=None):
+        super().clean_fields(exclude)
+
+        try:
+            ScoringModel.eval_formula(
+                self.formula, data=generate_mocked_data(self.formula, self.owner)
+            )
+
+        except SyntaxError as ex:
+            raise ValidationError(
+                {
+                    "formula": f'Formula syntax invalid "{ex.text[:ex.offset - 1]}>>>here>>>{ex.text[ex.offset - 1:]}"'
+                },
+                code="invalid_formula",
+            )
+
+        except NameError:
+            # No syntax errors in formula
+            pass
 
     @staticmethod
     def eval_formula(formula, data):
@@ -536,8 +589,10 @@ class Question(models.Model):
     def eval_rule(rule, data):
         """Remove RULE_PREFIX and eval rule for provided data"""
         try:
+            print("0", rule, data)
             prepared_rule, prepared_data = prepare_answers(rule, data)
             prepared_rule, prepared_data = prepare_formula(prepared_rule, prepared_data)
+            print("1", prepared_rule, prepared_data)
 
             return eval(prepared_rule.removeprefix(RULE_PREFIX).format(**prepared_data))
 
@@ -563,7 +618,7 @@ class Question(models.Model):
             return {}
 
     @staticmethod
-    def get_possible_field_names(user, obj):
+    def get_possible_field_names(user):
         """Return field names of questions that can be used in recommendation rule and scoring model formula"""
         return [
             q.field_name

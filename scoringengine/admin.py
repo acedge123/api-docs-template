@@ -48,9 +48,7 @@ class ValidateFieldNameModelAdminForm(forms.ModelForm):
 
                 invalid_field_name_errors = []
                 for field_name in re.findall(r"{(\w*)}", value):
-                    if field_name not in Question.get_possible_field_names(
-                        user, self.instance
-                    ):
+                    if field_name not in Question.get_possible_field_names(user):
                         invalid_field_name_errors.append(
                             ValidationError(
                                 'Field name "%(value)s" used in %(field)s is not valid.',
@@ -96,7 +94,7 @@ class RestrictedAdmin(admin.ModelAdmin):
 
         if self.field_to_extend_help_text:
             possible_field_names = (
-                ", ".join(Question.get_possible_field_names(request.user, obj))
+                ", ".join(Question.get_possible_field_names(request.user))
                 or "No appropriate questions created yet"
             )
 
