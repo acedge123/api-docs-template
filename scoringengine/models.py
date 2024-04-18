@@ -4,6 +4,7 @@ import uuid
 
 from datetime import date
 from itertools import chain
+from random import randint
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
@@ -22,12 +23,13 @@ MATH_FUNCTIONS = ["count", "max", "mean", "median", "min", "sum"]
 NUMBER_REGEX = r"[0-9.]+"
 DATE_REGEX = r"\d{4}-\d{2}-\d{2}"
 FIELD_NAME_REGEX = r"\w+(\[\-?\d+\])?"
-FUNCTION_REGEX = rf"({'|'.join(MATH_FUNCTIONS)})\({{{FIELD_NAME_REGEX}}}\)"
+FUNCTION_REGEX = rf"({'|'.join(MATH_FUNCTIONS)}|)\({{{FIELD_NAME_REGEX}}}\)"
+DAYS_REGEX = rf"\({{{FIELD_NAME_REGEX}}}\s*-\s*{{{FIELD_NAME_REGEX}}}\).days"
 
 RULE_PREFIX = "If"
-RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
+RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
 
-FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
+FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
 
 @receiver(post_save, sender=get_user_model())
@@ -44,13 +46,21 @@ def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
     for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", formula):
         field_name = re.sub(r"\[.+\]", "", k[0])
         question = Question.objects.filter(field_name=field_name, owner=owner).first()
-        value = (
-            date.today()
-            if question and question.type == Question.DATE
-            else f"{{{field_name}}}"
-        )
+
+        if question and question.type == Question.DATE:
+            value = date.today()
+
+        elif question and question.type == Question.INTEGER:
+            value = randint(1, 100)
+
+        elif question and question.type == Question.SLIDER:
+            value = randint(question.min_value or 0, question.max_value or 100)
+
+        else:
+            value = f"{{{field_name}}}"
+
         mocked_data[field_name] = (
-            [value] if question and question.multiple_values else value
+            [value, value, value, value] if question and question.multiple_values else value
         )
 
     return mocked_data
