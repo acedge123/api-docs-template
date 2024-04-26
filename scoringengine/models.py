@@ -18,18 +18,18 @@ from rest_framework.authtoken.models import Token
 ARITHMETIC_OPERATORS = ["+", "-", "*", "/"]
 COMPARISON_OPERATORS = [">", "<", "==", "!=", ">=", "<="]
 LOGICAL_OPERATORS = ["and", "or", "not"]
-MATH_FUNCTIONS = ["count", "max", "mean", "median", "min", "sum"]
+AGGREGATE_FUNCTIONS = ["count", "max", "mean", "median", "min", "sum"]
 
 NUMBER_REGEX = r"[0-9.]+"
 DATE_REGEX = r"\d{4}-\d{2}-\d{2}"
 FIELD_NAME_REGEX = r"\w+(\[\-?\d+\])?"
-FUNCTION_REGEX = rf"({'|'.join(MATH_FUNCTIONS)}|)\({{{FIELD_NAME_REGEX}}}\)"
+AGGREGATE_REGEX = rf"({'|'.join(AGGREGATE_FUNCTIONS)})\({{{FIELD_NAME_REGEX}}}\)"
 DAYS_REGEX = rf"\({{{FIELD_NAME_REGEX}}}\s*-\s*{{{FIELD_NAME_REGEX}}}\).days"
 
 RULE_PREFIX = "If"
-RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
+RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
 
-FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{FUNCTION_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
+FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
 
 @receiver(post_save, sender=get_user_model())
@@ -60,7 +60,9 @@ def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
             value = f"{{{field_name}}}"
 
         mocked_data[field_name] = (
-            [value, value, value, value] if question and question.multiple_values else value
+            [value, value, value, value]
+            if question and question.multiple_values
+            else value
         )
 
     return mocked_data
@@ -306,7 +308,7 @@ class Recommendation(RecommendationFieldsMixin):
         f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}), '
         f'comparison ({", ".join(COMPARISON_OPERATORS)}), '
         f'logical operations ({", ".join(LOGICAL_OPERATORS)}) '
-        f'and parentheses.</br>Mathematical which may be used in are: {", ".join(MATH_FUNCTIONS)}.',
+        f'and parentheses.</br>Mathematical which may be used in are: {", ".join(AGGREGATE_FUNCTIONS)}.',
     )
 
     owner = models.ForeignKey(
@@ -358,7 +360,7 @@ class ScoringModel(models.Model):
         f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}) operations '
         "and parentheses "
         "to select points based on expression result."
-        f'</br>Mathematical which may be used in are: {", ".join(MATH_FUNCTIONS)}',
+        f'</br>Mathematical which may be used in are: {", ".join(AGGREGATE_FUNCTIONS)}',
     )
 
     owner = models.ForeignKey(

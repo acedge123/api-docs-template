@@ -1,5 +1,7 @@
 import re
 
+from datetime import datetime
+
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
@@ -9,6 +11,8 @@ from django.template.response import TemplateResponse
 from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils.html import mark_safe
+
+from rangefilter.filters import DateRangeFilterBuilder, NumericRangeFilterBuilder
 
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
@@ -330,9 +334,16 @@ class AnswerInline(RecommendationFieldsAdminMixin, admin.StackedInline):
 
 class LeadAdmin(RestrictedAdmin):
     inlines = [AnswerInline]
-    list_display = ("lead_id", "timestamp")
+    list_display = ("lead_id", "x_axis", "y_axis", "total_score", "timestamp")
+    list_filter = (
+        ("x_axis", NumericRangeFilterBuilder()),
+        ("y_axis", NumericRangeFilterBuilder()),
+        ("total_score", NumericRangeFilterBuilder()),
+        ("timestamp", DateRangeFilterBuilder()),
+    )
     ordering = ["owner__id", "-timestamp"]
     readonly_fields = ("timestamp",)
+    search_fields = ("lead_id", "answers__response")
 
     def has_add_permission(self, request, obj=None):
         return False

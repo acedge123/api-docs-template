@@ -62,6 +62,7 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 THIRD_PARTY_APPS = [
+    "rangefilter",
     "rest_framework",
     "rest_framework.authtoken",
 ]
