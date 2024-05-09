@@ -300,7 +300,7 @@ class Recommendation(RecommendationFieldsMixin):
     )
 
     rule = models.CharField(
-        max_length=200,
+        max_length=500,
         validators=[validate_rule],
         help_text=f'Rule should start with "If" and may contain only valid numbers, questions with choices '
         f'"Field names" in curly braces (e.g. {{field_name}}) '
@@ -352,7 +352,7 @@ class ScoringModel(models.Model):
     y_axis = models.BooleanField()
 
     formula = models.CharField(
-        max_length=200,
+        max_length=500,
         blank=True,
         validators=[validate_formula],
         help_text=f"Leave empty to select points based on direct value from associated question.</br>"
