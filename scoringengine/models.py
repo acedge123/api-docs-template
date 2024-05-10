@@ -4,6 +4,7 @@ import uuid
 
 from datetime import date
 from itertools import chain
+from math import sqrt
 from random import randint
 
 from django.contrib.auth import get_user_model
@@ -15,21 +16,29 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
-ARITHMETIC_OPERATORS = ["+", "-", "*", "/"]
+ARITHMETIC_OPERATORS = ["+", "-", "*", "%", "/", "**", "//"]
 COMPARISON_OPERATORS = [">", "<", "==", "!=", ">=", "<="]
 LOGICAL_OPERATORS = ["and", "or", "not"]
+
 AGGREGATE_FUNCTIONS = ["count", "max", "mean", "median", "min", "sum"]
+MATH_FUNCTIONS = ["sqrt"]
+DATE_FUNCTIONS = ["today"]
 
 NUMBER_REGEX = r"[0-9.]+"
 DATE_REGEX = r"\d{4}-\d{2}-\d{2}"
 FIELD_NAME_REGEX = r"\w+(\[\-?\d+\])?"
-AGGREGATE_REGEX = rf"({'|'.join(AGGREGATE_FUNCTIONS)})\({{{FIELD_NAME_REGEX}}}\)"
-DAYS_REGEX = rf"\({{{FIELD_NAME_REGEX}}}\s*-\s*{{{FIELD_NAME_REGEX}}}\).days"
+
+AGGREGATE_FUNCTIONS_REGEX = (
+    rf"({'|'.join(AGGREGATE_FUNCTIONS)})\({{{FIELD_NAME_REGEX}}}\)"
+)
+MATH_FUNCTIONS_REGEX = rf"({'|'.join(MATH_FUNCTIONS)})\((.*?)\)"
+DATE_FUNCTIONS_REGEX = rf"({'|'.join(DATE_FUNCTIONS)})\(\)"
+DAYS_FUNCTIONS_REGEX = rf"\(({{{FIELD_NAME_REGEX}}}|{DATE_FUNCTIONS_REGEX})\s*-\s*({{{FIELD_NAME_REGEX}}}|{DATE_FUNCTIONS_REGEX})\).days"
 
 RULE_PREFIX = "If"
-RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
+RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_FUNCTIONS_REGEX}|{MATH_FUNCTIONS_REGEX}|{DATE_FUNCTIONS_REGEX}|{DAYS_FUNCTIONS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS + COMPARISON_OPERATORS + LOGICAL_OPERATORS])})|\s*|[()]*)+'
 
-FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_REGEX}|{DAYS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
+FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_FUNCTIONS_REGEX}|{MATH_FUNCTIONS_REGEX}|{DATE_FUNCTIONS_REGEX}|{DAYS_FUNCTIONS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
 
 @receiver(post_save, sender=get_user_model())
@@ -269,6 +278,8 @@ def prepare_formula(formula: str, answers: dict) -> (str, dict):
                     )
         else:
             break
+
+    prepared_formula = prepared_formula.replace("today()", "date.today()")
 
     return prepared_formula, answers
 
@@ -601,10 +612,8 @@ class Question(models.Model):
     def eval_rule(rule, data):
         """Remove RULE_PREFIX and eval rule for provided data"""
         try:
-            print("0", rule, data)
             prepared_rule, prepared_data = prepare_answers(rule, data)
             prepared_rule, prepared_data = prepare_formula(prepared_rule, prepared_data)
-            print("1", prepared_rule, prepared_data)
 
             return eval(prepared_rule.removeprefix(RULE_PREFIX).format(**prepared_data))
 
