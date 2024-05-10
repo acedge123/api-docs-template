@@ -48,8 +48,10 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
 
+
 def days(dt):
     return dt.days
+
 
 def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
     mocked_data = {}
