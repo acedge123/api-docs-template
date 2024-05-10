@@ -319,7 +319,10 @@ class Recommendation(RecommendationFieldsMixin):
         f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}), '
         f'comparison ({", ".join(COMPARISON_OPERATORS)}), '
         f'logical operations ({", ".join(LOGICAL_OPERATORS)}) '
-        f'and parentheses.</br>Mathematical which may be used in are: {", ".join(AGGREGATE_FUNCTIONS)}.',
+        "and parentheses to select points based on expression result."
+        f'</br>Aggregate functions which may be used in are: {", ".join(AGGREGATE_FUNCTIONS)}'
+        f'</br>Mathematical functions which may be used in are: {", ".join(MATH_FUNCTIONS)}'
+        f'</br>Date functions which may be used in are: {", ".join(DATE_FUNCTIONS)}',
     )
 
     owner = models.ForeignKey(
@@ -369,9 +372,10 @@ class ScoringModel(models.Model):
         help_text=f"Leave empty to select points based on direct value from associated question.</br>"
         f'Add expression with "Field names" in curly braces (e.g. {{field_name}}), '
         f'arithmetic ({", ".join(ARITHMETIC_OPERATORS)}) operations '
-        "and parentheses "
-        "to select points based on expression result."
-        f'</br>Mathematical which may be used in are: {", ".join(AGGREGATE_FUNCTIONS)}',
+        "and parentheses to select points based on expression result."
+        f'</br>Aggregate functions which may be used in are: {", ".join(AGGREGATE_FUNCTIONS)}'
+        f'</br>Mathematical functions which may be used in are: {", ".join(MATH_FUNCTIONS)}'
+        f'</br>Date functions which may be used in are: {", ".join(DATE_FUNCTIONS)}',
     )
 
     owner = models.ForeignKey(
