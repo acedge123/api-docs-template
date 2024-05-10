@@ -22,7 +22,7 @@ LOGICAL_OPERATORS = ["and", "or", "not"]
 
 AGGREGATE_FUNCTIONS = ["count", "max", "mean", "median", "min", "sum"]
 MATH_FUNCTIONS = ["sqrt"]
-DATE_FUNCTIONS = ["today"]
+DATE_FUNCTIONS = ["days", "today"]
 
 NUMBER_REGEX = r"[0-9.]+"
 DATE_REGEX = r"\d{4}-\d{2}-\d{2}"
@@ -32,7 +32,7 @@ AGGREGATE_FUNCTIONS_REGEX = (
     rf"({'|'.join(AGGREGATE_FUNCTIONS)})\({{{FIELD_NAME_REGEX}}}\)"
 )
 MATH_FUNCTIONS_REGEX = rf"({'|'.join(MATH_FUNCTIONS)})\((.*?)\)"
-DATE_FUNCTIONS_REGEX = rf"({'|'.join(DATE_FUNCTIONS)})\(\)"
+DATE_FUNCTIONS_REGEX = rf"({'|'.join(DATE_FUNCTIONS)})\((.*?)\)"
 DAYS_FUNCTIONS_REGEX = rf"\(({{{FIELD_NAME_REGEX}}}|{DATE_FUNCTIONS_REGEX})\s*-\s*({{{FIELD_NAME_REGEX}}}|{DATE_FUNCTIONS_REGEX})\).days"
 
 RULE_PREFIX = "If"
@@ -48,6 +48,8 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
 
+def days(dt):
+    return dt.days
 
 def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
     mocked_data = {}
