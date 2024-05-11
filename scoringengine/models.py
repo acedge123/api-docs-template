@@ -120,7 +120,11 @@ def prepare_answers(formula: str, answers: dict) -> (str, dict):
             formatted_field_name = f"{stripped_field_name}_{f'm{-item_number}' if item_number < 0 else item_number}"
 
             if stripped_field_name in answers:
-                answer = answers[stripped_field_name][item_number]
+                try:
+                    answer = answers[stripped_field_name][item_number]
+
+                except IndexError:
+                    answer = 1
 
                 prepared_answers[formatted_field_name] = (
                     f"date({answer.year}, {answer.month}, {answer.day})"
