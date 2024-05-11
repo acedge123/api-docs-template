@@ -721,7 +721,7 @@ class Answer(RecommendationFieldsMixin):
     response = models.CharField(max_length=200, blank=True)
 
     value_number = models.PositiveBigIntegerField(blank=True, null=True)
-    value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    value = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
     date_value = models.DateField(blank=True, null=True)
     values = ArrayField(
         models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True),
