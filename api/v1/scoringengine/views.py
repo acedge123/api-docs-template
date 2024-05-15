@@ -303,8 +303,8 @@ class LeadViewSet(
 
         if allow_duplicates is True and data.get("lead_id"):
             try:
-                Lead.objects.filter(lead_id__iexact=data["lead_id"]).delete()
-            except:
+                Lead.objects.get(lead_id__iexact=data["lead_id"]).delete()
+            except Lead.DoesNotExist():
                 # this part of the process is not crucial, so not worth acknowledging
                 pass
 
