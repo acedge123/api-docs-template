@@ -1,3 +1,4 @@
+from django.utils.timezone import now
 from rest_framework import serializers
 
 from scoringengine.models import Lead, Answer
@@ -26,6 +27,7 @@ class LeadSerializerCreate(serializers.ModelSerializer):
 
     def create(self, validated_data):
         answers_data = validated_data.pop("answers")
+        validated_data["timestamp"] = now()
         lead = Lead.objects.create(**validated_data)
 
         for answer_data in answers_data:
