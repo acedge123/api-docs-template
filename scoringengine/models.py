@@ -705,6 +705,7 @@ class Choice(models.Model):
 class Lead(models.Model):
     lead_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     timestamp = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     x_axis = models.DecimalField(max_digits=12, decimal_places=2)
     y_axis = models.DecimalField(max_digits=12, decimal_places=2)

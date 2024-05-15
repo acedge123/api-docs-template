@@ -334,15 +334,16 @@ class AnswerInline(RecommendationFieldsAdminMixin, admin.StackedInline):
 
 class LeadAdmin(RestrictedAdmin):
     inlines = [AnswerInline]
-    list_display = ("lead_id", "x_axis", "y_axis", "total_score", "timestamp")
+    list_display = ("lead_id", "x_axis", "y_axis", "total_score", "timestamp", "updated_at")
     list_filter = (
         ("x_axis", NumericRangeFilterBuilder()),
         ("y_axis", NumericRangeFilterBuilder()),
         ("total_score", NumericRangeFilterBuilder()),
         ("timestamp", DateRangeFilterBuilder()),
+        ("updated_at", DateRangeFilterBuilder()),
     )
-    ordering = ["owner__id", "-timestamp"]
-    readonly_fields = ("timestamp",)
+    ordering = ["owner__id", "-updated_at", "-timestamp"]
+    readonly_fields = ("timestamp", "updated_at")
     search_fields = ("lead_id", "answers__response")
 
     def has_add_permission(self, request, obj=None):
