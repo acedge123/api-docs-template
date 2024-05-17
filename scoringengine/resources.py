@@ -1,4 +1,3 @@
-from attr import fields
 from import_export import fields, resources
 
 from scoringengine.models import Lead
