@@ -305,7 +305,7 @@ class LeadViewSet(
             try:
                 Lead.objects.filter(lead_id__iexact=data["lead_id"]).delete()
 
-            except: # noqa: this part of the process is not crucial, so not worth acknowledging
+            except:  # noqa: this part of the process is not crucial, so not worth acknowledging
                 pass
 
         serializer = self.get_serializer(data=data)

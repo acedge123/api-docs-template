@@ -9,7 +9,7 @@ from random import randint
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
+from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
@@ -716,6 +716,30 @@ class Lead(models.Model):
 
     def __str__(self):
         return str(self.lead_id)
+
+    def get_answer_response(self, field_nane: str) -> str:
+        try:
+            return self.answers.get(lead=self, field_name__exact=field_nane).response
+
+        except MultipleObjectsReturned:
+            return ", ".join(
+                self.answers.filter(
+                    lead=self, field_name__exact=field_nane
+                ).values_list("response", flat=True)
+            )
+
+        except Answer.DoesNotExist:
+            pass
+
+        return ""
+
+    @property
+    def customer_email(self) -> str:
+        return self.get_answer_response("customer_email")
+
+    @property
+    def customer_id(self) -> str:
+        return self.get_answer_response("customer_id")
 
 
 class Answer(RecommendationFieldsMixin):

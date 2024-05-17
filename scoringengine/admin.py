@@ -12,6 +12,8 @@ from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils.html import mark_safe
 
+from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ExportMixin
 from rangefilter.filters import DateRangeFilterBuilder, NumericRangeFilterBuilder
 
 from rest_framework.authtoken import admin as drf_admin
@@ -28,6 +30,7 @@ from scoringengine.models import (
     Answer,
     RecommendationFieldsMixin,
 )
+from scoringengine.resources import LeadResource
 from scoringengine.tools import clone_account
 
 User = get_user_model()
@@ -332,7 +335,7 @@ class AnswerInline(RecommendationFieldsAdminMixin, admin.StackedInline):
     extra = 0
 
 
-class LeadAdmin(RestrictedAdmin):
+class LeadAdmin(ExportMixin, RestrictedAdmin):
     inlines = [AnswerInline]
     list_display = (
         "lead_id",
@@ -349,6 +352,7 @@ class LeadAdmin(RestrictedAdmin):
     )
     ordering = ["owner__id", "-timestamp"]
     readonly_fields = ("timestamp",)
+    resource_classes = [LeadResource]
     search_fields = ("lead_id", "answers__response")
 
     def has_add_permission(self, request, obj=None):
