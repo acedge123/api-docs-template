@@ -12,7 +12,6 @@ from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils.html import mark_safe
 
-from import_export.admin import ImportExportModelAdmin
 from import_export.admin import ExportMixin
 from rangefilter.filters import DateRangeFilterBuilder, NumericRangeFilterBuilder
 
@@ -37,6 +36,54 @@ User = get_user_model()
 
 admin.site.site_title = "Scoring engine site admin"
 admin.site.site_header = "Scoring engine administration"
+
+
+class OwnAdminSite(admin.AdminSite):
+    site_title = "Scoring engine site admin"
+    site_header = "Scoring engine administration"
+
+    def get_app_list(self, request):
+        app_list = super().get_app_list(request)
+
+        for app in app_list:
+            if app["app_label"] == "scoringengine":
+                app["models"].append({
+                    "name": "Test post lead",
+                    "object_name": "testpostlead",
+                    "admin_url": "/admin/scoringengine/test-post-lead/",
+                    "add_url": False,
+                    "view_only": True
+                })
+
+        return app_list
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path(
+                "scoringengine/test-post-lead/",
+                # self.test_post_lead,
+                admin_site.admin_view(self.test_post_lead),
+                name="test_post_lead",
+            ),
+        ]
+        return my_urls + urls
+
+    def test_post_lead(self, request):
+        app_list = self.get_app_list(request)
+
+        context = {
+            **self.each_context(request),
+            'title': "Test post lead",
+            'app_list': app_list,
+        }
+
+        request.current_app = self.name
+
+        return TemplateResponse(request, 'admin/test_post_lead.html', context)
+
+
+admin_site = OwnAdminSite()
 
 
 class ValidateFieldNameModelAdminForm(forms.ModelForm):
@@ -380,17 +427,6 @@ class TokenAdmin(drf_admin.TokenAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-admin.site.register(Question, QuestionAdmin)
-admin.site.register(Recommendation, RecommendationAdmin)
-admin.site.register(ScoringModel, ScoringModelAdmin)
-admin.site.register(Lead, LeadAdmin)
-
-admin.site.unregister(TokenProxy)
-admin.site.register(TokenProxy, TokenAdmin)
-
-admin.site.unregister(User)
-
-
 class CloneUserForm(forms.Form):
     username = forms.CharField(required=True, label="Username")
     password1 = forms.CharField(
@@ -459,7 +495,6 @@ class CloneUserForm(forms.Form):
         return user
 
 
-@admin.register(User)
 class UserOwnAdmin(UserAdmin):
     list_display = UserAdmin.list_display + ("actions_column",)
     readonly_fields = UserAdmin.readonly_fields + ("actions_column",)
@@ -515,3 +550,15 @@ class UserOwnAdmin(UserAdmin):
         ] + super().get_urls()
 
     actions_column.short_description = "Actions"
+
+
+admin_site.register(Question, QuestionAdmin)
+admin_site.register(Recommendation, RecommendationAdmin)
+admin_site.register(ScoringModel, ScoringModelAdmin)
+admin_site.register(Lead, LeadAdmin)
+
+# admin_site.unregister(TokenProxy)
+admin_site.register(TokenProxy, TokenAdmin)
+
+# admin_site.unregister(User)
+admin_site.register(User, UserOwnAdmin)
