@@ -1,7 +1,5 @@
 import re
 
-from datetime import datetime
-
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
@@ -12,7 +10,6 @@ from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils.html import mark_safe
 
-from import_export.admin import ImportExportModelAdmin
 from import_export.admin import ExportMixin
 from rangefilter.filters import DateRangeFilterBuilder, NumericRangeFilterBuilder
 
@@ -27,7 +24,9 @@ from scoringengine.models import (
     ValueRange,
     DatesRange,
     Lead,
+    LeadLog,
     Answer,
+    AnswerLog,
     RecommendationFieldsMixin,
 )
 from scoringengine.resources import LeadResource
@@ -335,8 +334,12 @@ class AnswerInline(RecommendationFieldsAdminMixin, admin.StackedInline):
     extra = 0
 
 
-class LeadAdmin(ExportMixin, RestrictedAdmin):
-    inlines = [AnswerInline]
+class AnswerLogInline(RecommendationFieldsAdminMixin, admin.StackedInline):
+    model = AnswerLog
+    extra = 0
+
+
+class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
     list_display = (
         "lead_id",
         "x_axis",
@@ -362,6 +365,14 @@ class LeadAdmin(ExportMixin, RestrictedAdmin):
         return False
 
 
+class LeadAdmin(LeadAdminAbstract):
+    inlines = [AnswerInline]
+
+
+class LeadLogAdmin(LeadAdminAbstract):
+    inlines = [AnswerLogInline]
+
+
 class TokenAdmin(drf_admin.TokenAdmin):
     def get_queryset(self, request):
         # Ensure user can access only his api tokens
@@ -384,6 +395,7 @@ admin.site.register(Question, QuestionAdmin)
 admin.site.register(Recommendation, RecommendationAdmin)
 admin.site.register(ScoringModel, ScoringModelAdmin)
 admin.site.register(Lead, LeadAdmin)
+admin.site.register(LeadLog, LeadLogAdmin)
 
 admin.site.unregister(TokenProxy)
 admin.site.register(TokenProxy, TokenAdmin)

@@ -257,7 +257,6 @@ class TestAnswerInline:
         answer_inline, _ = answer_inline_and_model
 
         expected_fields_order = [
-            "lead",
             "field_name",
             "response",
             "value_number",
@@ -265,6 +264,7 @@ class TestAnswerInline:
             "date_value",
             "values",
             "points",
+            "lead",
             "response_text",
             "affiliate_name",
             "affiliate_image",
