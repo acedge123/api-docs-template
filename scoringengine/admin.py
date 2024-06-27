@@ -1,7 +1,5 @@
 import re
 
-from datetime import datetime
-
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
@@ -26,7 +24,9 @@ from scoringengine.models import (
     ValueRange,
     DatesRange,
     Lead,
+    LeadLog,
     Answer,
+    AnswerLog,
     RecommendationFieldsMixin,
 )
 from scoringengine.resources import LeadResource
@@ -382,8 +382,12 @@ class AnswerInline(RecommendationFieldsAdminMixin, admin.StackedInline):
     extra = 0
 
 
-class LeadAdmin(ExportMixin, RestrictedAdmin):
-    inlines = [AnswerInline]
+class AnswerLogInline(RecommendationFieldsAdminMixin, admin.StackedInline):
+    model = AnswerLog
+    extra = 0
+
+
+class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
     list_display = (
         "lead_id",
         "x_axis",
@@ -409,6 +413,14 @@ class LeadAdmin(ExportMixin, RestrictedAdmin):
         return False
 
 
+class LeadAdmin(LeadAdminAbstract):
+    inlines = [AnswerInline]
+
+
+class LeadLogAdmin(LeadAdminAbstract):
+    inlines = [AnswerLogInline]
+
+
 class TokenAdmin(drf_admin.TokenAdmin):
     def get_queryset(self, request):
         # Ensure user can access only his api tokens
@@ -425,6 +437,18 @@ class TokenAdmin(drf_admin.TokenAdmin):
             if not request.user.is_superuser:
                 kwargs["queryset"] = User.objects.filter(pk=request.user.pk)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(Recommendation, RecommendationAdmin)
+admin.site.register(ScoringModel, ScoringModelAdmin)
+admin.site.register(Lead, LeadAdmin)
+admin.site.register(LeadLog, LeadLogAdmin)
+
+admin.site.unregister(TokenProxy)
+admin.site.register(TokenProxy, TokenAdmin)
+
+admin.site.unregister(User)
 
 
 class CloneUserForm(forms.Form):

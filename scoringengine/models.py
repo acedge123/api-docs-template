@@ -702,20 +702,10 @@ class Choice(models.Model):
         return self.text
 
 
-class Lead(models.Model):
-    lead_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
+class LeadAbstract(models.Model):
     x_axis = models.DecimalField(max_digits=12, decimal_places=2)
     y_axis = models.DecimalField(max_digits=12, decimal_places=2)
     total_score = models.DecimalField(max_digits=12, decimal_places=2)
-
-    owner = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="leads"
-    )
-
-    def __str__(self):
-        return str(self.lead_id)
 
     def get_answer_response(self, field_nane: str) -> str:
         try:
@@ -741,10 +731,33 @@ class Lead(models.Model):
     def customer_id(self) -> str:
         return self.get_answer_response("customer_id")
 
+    class Meta:
+        abstract = True
 
-class Answer(RecommendationFieldsMixin):
-    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name="answers")
 
+class Lead(LeadAbstract):
+    lead_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="leads"
+    )
+
+    def __str__(self):
+        return str(self.lead_id)
+
+
+class LeadLog(LeadAbstract):
+    lead_id = models.UUIDField(default=uuid.uuid4, unique=False)
+    timestamp = models.DateTimeField()
+    owner = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="leads_history"
+    )
+
+    def __str__(self):
+        return f"{str(self.lead_id)} @ {str(self.timestamp)}"
+
+
+class AnswerAbstract(RecommendationFieldsMixin):
     field_name = models.CharField(max_length=200)
     response = models.CharField(max_length=200, blank=True)
 
@@ -760,9 +773,13 @@ class Answer(RecommendationFieldsMixin):
     def __str__(self):
         return f"{self.field_name}: {self.response}"
 
-    # class Meta:
-    #     constraints = [
-    #         models.UniqueConstraint(
-    #             fields=["lead", "field_name"], name="unique_answer"
-    #         ),
-    #     ]
+    class Meta:
+        abstract = True
+
+
+class Answer(AnswerAbstract):
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name="answers")
+
+
+class AnswerLog(AnswerAbstract):
+    lead = models.ForeignKey(LeadLog, on_delete=models.CASCADE, related_name="answers")

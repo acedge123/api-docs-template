@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from api.v1.scoringengine.serializers import LeadSerializerCreate, LeadSerializerView
 from scoringengine.models import Lead, Question
+from scoringengine.helpers import add_lead_log
 
 
 class LeadViewSet(
@@ -312,6 +313,7 @@ class LeadViewSet(
 
         serializer.is_valid(raise_exception=True)
         obj = self.perform_create(serializer)
+        add_lead_log(obj)
         headers = self.get_success_headers(serializer.data)
 
         view_serializer = LeadSerializerView(obj, context={"request": request})
