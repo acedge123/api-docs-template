@@ -1,4 +1,4 @@
-import re
+import re, json
 
 from django import forms
 from django.contrib import admin, messages
@@ -16,6 +16,12 @@ from rangefilter.filters import DateRangeFilterBuilder, NumericRangeFilterBuilde
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
 
+from scoringengine.forms import TestPostLeadForm
+from scoringengine.helpers import (
+    collect_answers_values,
+    calculate_x_and_y_scores,
+    collect_recommendations,
+)
 from scoringengine.models import (
     Question,
     Choice,
@@ -24,7 +30,6 @@ from scoringengine.models import (
     ValueRange,
     DatesRange,
     Lead,
-    LeadLog,
     Answer,
     AnswerLog,
     RecommendationFieldsMixin,
@@ -47,13 +52,15 @@ class OwnAdminSite(admin.AdminSite):
 
         for app in app_list:
             if app["app_label"] == "scoringengine":
-                app["models"].append({
-                    "name": "Test post lead",
-                    "object_name": "testpostlead",
-                    "admin_url": "/admin/scoringengine/test-post-lead/",
-                    "add_url": False,
-                    "view_only": True
-                })
+                app["models"].append(
+                    {
+                        "name": "Test post lead",
+                        "object_name": "testpostlead",
+                        "admin_url": "/admin/scoringengine/test-post-lead/",
+                        "add_url": False,
+                        "view_only": True,
+                    }
+                )
 
         return app_list
 
@@ -71,16 +78,59 @@ class OwnAdminSite(admin.AdminSite):
 
     def test_post_lead(self, request):
         app_list = self.get_app_list(request)
+        form = TestPostLeadForm(data=request.POST, owner=request.user)
+
+        response = {}
+
+        if request.method == "POST" and form.is_valid():
+            answers_data = [
+                {
+                    "field_name": field_name,
+                    "response": ",".join(response)
+                    if isinstance(response, list)
+                    else response,
+                }
+                for field_name, response in form.cleaned_data.items()
+            ]
+            collect_answers_values(request.user, answers_data)
+
+            x_axis, y_axis = calculate_x_and_y_scores(request.user, answers_data)
+            total_score = x_axis + y_axis
+
+            collect_recommendations(request.user, answers_data)
+
+            response["x_axis"] = x_axis
+            response["y_axis"] = y_axis
+            response["total_score"] = total_score
+
+            response["recommendations"] = dict(
+                [
+                    (
+                        answer["field_name"],
+                        {
+                            "response_text": answer["response_text"],
+                            "affiliate_name": answer["affiliate_name"],
+                            "affiliate_image": answer["affiliate_image"],
+                            "affiliate_link": answer["affiliate_link"],
+                            "redirect_url": answer["redirect_url"],
+                        },
+                    )
+                    for answer in answers_data
+                    if "response_text" in answer
+                ]
+            )
 
         context = {
             **self.each_context(request),
-            'title': "Test post lead",
-            'app_list': app_list,
+            "title": "Test post lead",
+            "app_list": app_list,
+            "form": form,
+            "response": response,
         }
 
         request.current_app = self.name
 
-        return TemplateResponse(request, 'admin/test_post_lead.html', context)
+        return TemplateResponse(request, "admin/test_post_lead.html", context)
 
 
 admin_site = OwnAdminSite()
@@ -437,18 +487,6 @@ class TokenAdmin(drf_admin.TokenAdmin):
             if not request.user.is_superuser:
                 kwargs["queryset"] = User.objects.filter(pk=request.user.pk)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
-admin.site.register(Question, QuestionAdmin)
-admin.site.register(Recommendation, RecommendationAdmin)
-admin.site.register(ScoringModel, ScoringModelAdmin)
-admin.site.register(Lead, LeadAdmin)
-admin.site.register(LeadLog, LeadLogAdmin)
-
-admin.site.unregister(TokenProxy)
-admin.site.register(TokenProxy, TokenAdmin)
-
-admin.site.unregister(User)
 
 
 class CloneUserForm(forms.Form):
