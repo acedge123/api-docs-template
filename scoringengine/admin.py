@@ -30,6 +30,7 @@ from scoringengine.models import (
     ValueRange,
     DatesRange,
     Lead,
+    LeadLog,
     Answer,
     AnswerLog,
     RecommendationFieldsMixin,
@@ -618,6 +619,7 @@ admin_site.register(Question, QuestionAdmin)
 admin_site.register(Recommendation, RecommendationAdmin)
 admin_site.register(ScoringModel, ScoringModelAdmin)
 admin_site.register(Lead, LeadAdmin)
+admin_site.register(LeadLog, LeadLogAdmin)
 
 # admin_site.unregister(TokenProxy)
 admin_site.register(TokenProxy, TokenAdmin)
