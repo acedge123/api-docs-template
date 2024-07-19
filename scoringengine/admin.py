@@ -493,4 +493,3 @@ admin_site.register(Lead, LeadAdmin)
 admin_site.register(LeadLog, LeadLogAdmin)
 
 admin_site.register(TokenProxy, TokenAdmin)
-
