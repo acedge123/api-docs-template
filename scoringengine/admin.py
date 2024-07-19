@@ -1,14 +1,11 @@
-import re, json
+import re
 
 from django import forms
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import ValidationError
 from django.template.response import TemplateResponse
-from django.shortcuts import redirect, render
-from django.urls import path, reverse
-from django.utils.html import mark_safe
+from django.urls import path
 
 from import_export.admin import ExportMixin
 from rangefilter.filters import DateRangeFilterBuilder, NumericRangeFilterBuilder
@@ -36,7 +33,6 @@ from scoringengine.models import (
     RecommendationFieldsMixin,
 )
 from scoringengine.resources import LeadResource
-from scoringengine.tools import clone_account
 
 User = get_user_model()
 
@@ -490,139 +486,11 @@ class TokenAdmin(drf_admin.TokenAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class CloneUserForm(forms.Form):
-    username = forms.CharField(required=True, label="Username")
-    password1 = forms.CharField(
-        required=True, label="Password", widget=forms.PasswordInput
-    )
-    password2 = forms.CharField(
-        required=True, label="Password repeat", widget=forms.PasswordInput
-    )
-    copy_quiz_structure = forms.BooleanField(
-        label="Copy quiz structure", required=False
-    )
-    copy_scoring_model = forms.BooleanField(label="Copy scoring model", required=False)
-    copy_leads = forms.BooleanField(label="Copy leads and answers", required=False)
-
-    def clean_username(self):
-        if User.objects.filter(username=self.cleaned_data["username"]).exists():
-            raise forms.ValidationError("User with this username already exists.")
-
-        return self.cleaned_data["username"]
-
-    def clean_password2(self):
-        if self.cleaned_data["password1"] != self.cleaned_data["password2"]:
-            raise forms.ValidationError("Passwords are not the same.")
-
-        return self.cleaned_data["password2"]
-
-    def clean_copy_scoring_model(self):
-        if self.cleaned_data["copy_scoring_model"] and not self.cleaned_data.get(
-            "copy_quiz_structure", False
-        ):
-            raise forms.ValidationError(
-                "You cannot copy scoring model without quiz structure"
-            )
-
-        return self.cleaned_data["copy_scoring_model"]
-
-    def clean_copy_leads(self):
-        if self.cleaned_data["copy_leads"] and (
-            not self.cleaned_data.get("copy_scoring_model", False)
-            or not self.cleaned_data.get("copy_quiz_structure", False)
-        ):
-            raise forms.ValidationError(
-                "You cannot copy leads and answers without scoring model and quiz structure"
-            )
-
-        return self.cleaned_data["copy_leads"]
-
-    def clone_user(self, source_user: User):
-        user = User.objects.create(
-            username=self.cleaned_data["username"], is_staff=True, is_active=True
-        )
-        user.set_password(self.cleaned_data["password1"])
-        user.save()
-
-        user.user_permissions.set(source_user.user_permissions.all())
-        user.groups.set(source_user.groups.all())
-
-        clone_account(
-            source_user,
-            user,
-            self.cleaned_data.get("copy_quiz_structure", False),
-            self.cleaned_data.get("copy_scoring_model", False),
-            self.cleaned_data.get("copy_leads", False),
-        )
-
-        return user
-
-
-class UserOwnAdmin(UserAdmin):
-    list_display = UserAdmin.list_display + ("actions_column",)
-    readonly_fields = UserAdmin.readonly_fields + ("actions_column",)
-
-    def actions_column(self, obj: User):
-        return mark_safe(
-            '<a href="{}">Clone</a>'.format(
-                reverse("admin:auth_user_clone", kwargs={"object_id": obj.pk})
-            )
-        )
-
-    def clone(self, request, object_id):
-        try:
-            obj = User.objects.get(pk=object_id)
-
-            if request.method == "POST":
-                form = CloneUserForm(data=request.POST)
-
-                if form.is_valid():
-                    form.clone_user(obj)
-                    messages.add_message(request, messages.SUCCESS, "User cloned.")
-                    return redirect(reverse("admin:auth_user_changelist"))
-
-            else:
-                form = CloneUserForm()
-
-            opts = self.model._meta
-            app_label = opts.app_label
-
-            return render(
-                request,
-                "admin/auth/user/clone.html",
-                {
-                    **self.admin_site.each_context(request),
-                    "opts": opts,
-                    "app_label": app_label,
-                    "has_view_permission": self.has_view_permission(request, obj),
-                    "original": "Clone account",
-                    "form": form,
-                },
-            )
-
-        except User.DoesNotExist:
-            return redirect(reverse("admin:auth_user_changelist"))
-
-    def get_urls(self):
-        return [
-            path(
-                "<int:object_id>/clone/",
-                self.clone,
-                name="auth_user_clone",
-            ),
-        ] + super().get_urls()
-
-    actions_column.short_description = "Actions"
-
-
 admin_site.register(Question, QuestionAdmin)
 admin_site.register(Recommendation, RecommendationAdmin)
 admin_site.register(ScoringModel, ScoringModelAdmin)
 admin_site.register(Lead, LeadAdmin)
 admin_site.register(LeadLog, LeadLogAdmin)
 
-# admin_site.unregister(TokenProxy)
 admin_site.register(TokenProxy, TokenAdmin)
 
-# admin_site.unregister(User)
-admin_site.register(User, UserOwnAdmin)

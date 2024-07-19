@@ -69,8 +69,9 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "scoringengine.apps.ScoringengineConfig",
     "api.apps.ApiConfig",
+    "scoringengine.apps.ScoringengineConfig",
+    "users.apps.UsersConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
