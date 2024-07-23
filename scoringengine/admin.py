@@ -173,14 +173,19 @@ class RestrictedAdmin(admin.ModelAdmin):
         query_set = super().get_queryset(request)
 
         if not request.user.is_superuser:
-            query_set = query_set.filter(owner=request.user)
+            if hasattr(request.user, "catalogue_as_master"):
+                query_set = query_set.filter(
+                    owner__in=request.user.catalogue_as_master.slaves.all()
+                )
+            else:
+                query_set = query_set.filter(owner=request.user)
 
         return query_set
 
     def get_list_display(self, request):
         list_display = super().get_list_display(request)
 
-        if request.user.is_superuser:
+        if request.user.is_superuser or hasattr(request.user, "catalogue_as_master"):
             list_display += ("owner",)
 
         return list_display
@@ -190,8 +195,16 @@ class RestrictedAdmin(admin.ModelAdmin):
 
         # Hide owner field and pre-populate it with current user.
         # This is needed for unique constraints validation.
-        form.base_fields["owner"].widget = forms.HiddenInput()
-        form.base_fields["owner"].initial = request.user
+        if not request.user.is_superuser:
+            if hasattr(request.user, "catalogue_as_master"):
+                form.base_fields["owner"].required = True
+                form.base_fields[
+                    "owner"
+                ].queryset = request.user.catalogue_as_master.slaves.all()
+
+            else:
+                form.base_fields["owner"].widget = forms.HiddenInput()
+                form.base_fields["owner"].initial = request.user
 
         if self.field_to_extend_help_text:
             possible_field_names = (

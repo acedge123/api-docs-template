@@ -2,7 +2,9 @@ from django import forms
 
 from users.helpers import clone_account
 from django.contrib.auth import get_user_model
+from django.contrib.admin.widgets import FilteredSelectMultiple
 
+from users.models import Catalogue
 
 User = get_user_model()
 
@@ -73,3 +75,19 @@ class CloneUserForm(forms.Form):
         )
 
         return user
+
+
+class CatalogueForm(forms.ModelForm):
+    master = forms.ModelChoiceField(
+        required=True,
+        queryset=User.objects.filter(catalogues_as_slave__isnull=True).all(),
+    )
+    slaves = forms.ModelMultipleChoiceField(
+        required=False,
+        queryset=User.objects.filter(catalogue_as_master__isnull=True).all(),
+        widget=FilteredSelectMultiple("Slaves", is_stacked=False),
+    )
+
+    class Meta:
+        model = Catalogue
+        fields = "__all__"

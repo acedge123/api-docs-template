@@ -8,13 +8,14 @@ from django.utils.html import mark_safe
 
 from scoringengine.admin import admin_site
 
-from users.forms import CloneUserForm
+from users.forms import CloneUserForm, CatalogueForm
 from users.models import Catalogue
 
 User = get_user_model()
 
 
 class CatalogueAdmin(admin.ModelAdmin):
+    form = CatalogueForm
     list_display = ("master", "slaves_usernames")
     list_display_links = list_display
 
