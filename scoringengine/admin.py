@@ -4,11 +4,18 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.models import Exists, OuterRef
 from django.template.response import TemplateResponse
 from django.urls import path
 
 from import_export.admin import ExportMixin
-from rangefilter.filters import DateRangeFilterBuilder, NumericRangeFilterBuilder
+from rangefilter.filters import (
+    BaseRangeFilter,
+    DateRangeFilter,
+    DateRangeFilterBuilder,
+    NumericRangeFilter,
+    NumericRangeFilterBuilder,
+)
 
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
@@ -447,6 +454,63 @@ class AnswerLogInline(RecommendationFieldsAdminMixin, admin.StackedInline):
     extra = 0
 
 
+class AnswersQuerysetFilterMixin:
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        field_name = getattr(self, "field_name")
+        self.lookup_kwarg_gte = f"{field_name}__gte"
+        self.lookup_kwarg_lte = f"{field_name}__lte"
+
+        super(BaseRangeFilter, self).__init__(
+            field, request, params, model, model_admin, field_path
+        )
+
+        self.default_gte, self.default_lte = self._get_default_values(
+            request, model_admin, field_path
+        )
+        self.title = self._get_default_title(request, model_admin, field_path)
+
+        self.request = request
+        self.model_admin = model_admin
+        self.form = self.get_form(request)
+
+    def queryset(self, request, queryset):
+        if self.form.is_valid():
+            field_path = self.field_path.replace("answers__", "")
+            field_name = getattr(self, "field_name")
+            return queryset.filter(Exists(Answer.objects.filter(
+                lead_id=OuterRef("pk"),
+                field_name=field_name,
+                **dict([
+                    (key.replace(field_name, field_path), value)
+                    for key, value in self.form.cleaned_data.items()
+                    if value is not None
+                ])
+            )))
+
+        return queryset
+
+
+def AnswerRangeFilterBuilder(question, default_start=None, default_end=None):
+    filter_cls = type(
+        str("AnswerNumericRangeFilter"),
+        (
+            AnswersQuerysetFilterMixin,
+            DateRangeFilter
+            if question.type == Question.DATE
+            else NumericRangeFilter,
+        ),
+        {
+            "__from_builder": True,
+            "default_title": question.text,
+            "field_name": question.field_name,
+            "default_start": default_start,
+            "default_end": default_end,
+        },
+    )
+
+    return filter_cls
+
+
 class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
     list_display = (
         "lead_id",
@@ -454,12 +518,6 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
         "y_axis",
         "total_score",
         "timestamp",
-    )
-    list_filter = (
-        ("x_axis", NumericRangeFilterBuilder()),
-        ("y_axis", NumericRangeFilterBuilder()),
-        ("total_score", NumericRangeFilterBuilder()),
-        ("timestamp", DateRangeFilterBuilder()),
     )
     ordering = ["owner__id", "-timestamp"]
     readonly_fields = ("timestamp",)
@@ -471,6 +529,28 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    def get_list_filter(self, request):
+        answers_fields = [
+            (
+                "answers__date_value"
+                if question.type == Question.DATE
+                else "answers__value",
+                AnswerRangeFilterBuilder(question),
+            )
+            for question in Question.objects.filter(
+                    owner=request.user,
+                    type__in=[Question.DATE, Question.INTEGER, Question.SLIDER]
+            ).order_by("number")
+        ]
+
+        return (
+            ("x_axis", NumericRangeFilterBuilder("X Axis Range")),
+            ("y_axis", NumericRangeFilterBuilder("Y Axis Range")),
+            ("total_score", NumericRangeFilterBuilder("Total Score Range")),
+            ("timestamp", DateRangeFilterBuilder("Timestamp Range")),
+            *answers_fields,
+        )
 
 
 class LeadAdmin(LeadAdminAbstract):
