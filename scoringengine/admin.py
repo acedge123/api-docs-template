@@ -477,15 +477,21 @@ class AnswersQuerysetFilterMixin:
         if self.form.is_valid():
             field_path = self.field_path.replace("answers__", "")
             field_name = getattr(self, "field_name")
-            return queryset.filter(Exists(Answer.objects.filter(
-                lead_id=OuterRef("pk"),
-                field_name=field_name,
-                **dict([
-                    (key.replace(field_name, field_path), value)
-                    for key, value in self.form.cleaned_data.items()
-                    if value is not None
-                ])
-            )))
+            return queryset.filter(
+                Exists(
+                    Answer.objects.filter(
+                        lead_id=OuterRef("pk"),
+                        field_name=field_name,
+                        **dict(
+                            [
+                                (key.replace(field_name, field_path), value)
+                                for key, value in self.form.cleaned_data.items()
+                                if value is not None
+                            ]
+                        ),
+                    )
+                )
+            )
 
         return queryset
 
@@ -495,9 +501,7 @@ def AnswerRangeFilterBuilder(question, default_start=None, default_end=None):
         str("AnswerNumericRangeFilter"),
         (
             AnswersQuerysetFilterMixin,
-            DateRangeFilter
-            if question.type == Question.DATE
-            else NumericRangeFilter,
+            DateRangeFilter if question.type == Question.DATE else NumericRangeFilter,
         ),
         {
             "__from_builder": True,
@@ -539,8 +543,8 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
                 AnswerRangeFilterBuilder(question),
             )
             for question in Question.objects.filter(
-                    owner=request.user,
-                    type__in=[Question.DATE, Question.INTEGER, Question.SLIDER]
+                owner=request.user,
+                type__in=[Question.DATE, Question.INTEGER, Question.SLIDER],
             ).order_by("number")
         ]
 
