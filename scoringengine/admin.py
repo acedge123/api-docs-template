@@ -4,7 +4,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q
 from django.template.response import TemplateResponse
 from django.urls import path
 
@@ -40,6 +40,7 @@ from scoringengine.models import (
     RecommendationFieldsMixin,
 )
 from scoringengine.resources import LeadResource
+from users.models import Catalogue
 
 User = get_user_model()
 
@@ -535,6 +536,19 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
         return False
 
     def get_list_filter(self, request):
+        questions_qs = Question.objects.filter(
+            type__in=[Question.DATE, Question.INTEGER, Question.SLIDER]
+        )
+        if isinstance(request.user, User) and hasattr(
+            request.user, "catalogue_as_master"
+        ):
+            questions_qs = questions_qs.filter(
+                Q(owner=request.user)
+                | Q(owner__in=request.user.catalogue_as_master.slaves.all())
+            )
+        else:
+            questions_qs = questions_qs.filter(Q(owner=request.user))
+
         answers_fields = [
             (
                 "answers__date_value"
@@ -542,10 +556,7 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
                 else "answers__value",
                 AnswerRangeFilterBuilder(question),
             )
-            for question in Question.objects.filter(
-                owner=request.user,
-                type__in=[Question.DATE, Question.INTEGER, Question.SLIDER],
-            ).order_by("number")
+            for question in questions_qs.order_by("number")
         ]
 
         return (
