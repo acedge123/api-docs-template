@@ -498,18 +498,18 @@ class AnswersQuerysetFilterMixin:
 
 
 def AnswerRangeFilterBuilder(
-    question, default_start=None, default_end=None, prefix=None
+    title, question_type, field_name, default_start=None, default_end=None
 ):
     filter_cls = type(
         str("AnswerNumericRangeFilter"),
         (
             AnswersQuerysetFilterMixin,
-            DateRangeFilter if question.type == Question.DATE else NumericRangeFilter,
+            DateRangeFilter if question_type == Question.DATE else NumericRangeFilter,
         ),
         {
             "__from_builder": True,
-            "default_title": f"{prefix} :{question.text}" if prefix else question.text,
-            "field_name": question.field_name,
+            "default_title": title,
+            "field_name": field_name,
             "default_start": default_start,
             "default_end": default_end,
         },
@@ -545,25 +545,38 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
         if isinstance(request.user, User) and hasattr(
             request.user, "catalogue_as_master"
         ):
-            is_master = True
             questions_qs = questions_qs.filter(
                 Q(owner=request.user)
                 | Q(owner__in=request.user.catalogue_as_master.slaves.all())
             )
         else:
-            is_master = False
             questions_qs = questions_qs.filter(owner=request.user)
+
+        questions = {}
+        for question in questions_qs.order_by("number"):
+            if question.field_name in questions:
+                continue
+
+            questions[question.field_name] = {
+                "title": question.text,
+                "question_type": question.type,
+                "field_name": question.field_name,
+                "default_start": question.min_value
+                if question.type == Question.SLIDER
+                else None,
+                "default_end": question.max_value
+                if question.type == Question.SLIDER
+                else None,
+            }
 
         answers_fields = [
             (
                 "answers__date_value"
-                if question.type == Question.DATE
+                if question["question_type"] == Question.DATE
                 else "answers__value",
-                AnswerRangeFilterBuilder(
-                    question, prefix=is_master and question.owner.username
-                ),
+                AnswerRangeFilterBuilder(**question),
             )
-            for question in questions_qs.order_by("number")
+            for question in questions.values()
         ]
 
         return (
