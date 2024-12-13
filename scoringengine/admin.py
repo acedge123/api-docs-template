@@ -497,7 +497,9 @@ class AnswersQuerysetFilterMixin:
         return queryset
 
 
-def AnswerRangeFilterBuilder(question, default_start=None, default_end=None):
+def AnswerRangeFilterBuilder(
+    question, default_start=None, default_end=None, prefix=None
+):
     filter_cls = type(
         str("AnswerNumericRangeFilter"),
         (
@@ -506,7 +508,7 @@ def AnswerRangeFilterBuilder(question, default_start=None, default_end=None):
         ),
         {
             "__from_builder": True,
-            "default_title": question.text,
+            "default_title": f"{prefix} :{question.text}" if prefix else question.text,
             "field_name": question.field_name,
             "default_start": default_start,
             "default_end": default_end,
@@ -539,22 +541,27 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
         questions_qs = Question.objects.filter(
             type__in=[Question.DATE, Question.INTEGER, Question.SLIDER]
         )
+
         if isinstance(request.user, User) and hasattr(
             request.user, "catalogue_as_master"
         ):
+            is_master = True
             questions_qs = questions_qs.filter(
                 Q(owner=request.user)
                 | Q(owner__in=request.user.catalogue_as_master.slaves.all())
             )
         else:
-            questions_qs = questions_qs.filter(Q(owner=request.user))
+            is_master = False
+            questions_qs = questions_qs.filter(owner=request.user)
 
         answers_fields = [
             (
                 "answers__date_value"
                 if question.type == Question.DATE
                 else "answers__value",
-                AnswerRangeFilterBuilder(question),
+                AnswerRangeFilterBuilder(
+                    question, prefix=is_master and question.owner.username
+                ),
             )
             for question in questions_qs.order_by("number")
         ]
