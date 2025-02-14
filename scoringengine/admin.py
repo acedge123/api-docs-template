@@ -438,7 +438,15 @@ class ScoringModelAdmin(RestrictedAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Ensure that user can select only available questions he own
         if db_field.name == "question":
-            kwargs["queryset"] = Question.objects.filter(owner=request.user)
+            if not request.user.is_superuser:
+                if hasattr(request.user, "catalogue_as_master"):
+                    kwargs["queryset"] = Question.objects.filter(owner=request.user.catalogue_as_master.slaves.all())
+                else:
+                    kwargs["queryset"] = Question.objects.filter(owner=request.user)
+
+            else:
+                kwargs["queryset"] = Question.objects.all()
+
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_inlines(self, request, obj):
