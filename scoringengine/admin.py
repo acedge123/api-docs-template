@@ -213,6 +213,9 @@ class RestrictedAdmin(admin.ModelAdmin):
             else:
                 form.base_fields["owner"].widget = forms.HiddenInput()
                 form.base_fields["owner"].initial = request.user
+        else:
+            form.base_fields["owner"].required = True
+            form.base_fields["owner"].queryset = User.objects.all()
 
         if self.field_to_extend_help_text:
             possible_field_names = (
