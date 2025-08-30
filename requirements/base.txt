@@ -10,6 +10,7 @@ django-redis==4.12.1  # https://github.com/jazzband/django-redis
 django-import-export==3.3.9  # https://github.com/django-import-export/django-import-export
 djangorestframework==3.12.4  # https://github.com/encode/django-rest-framework
 django-admin-rangefilter==0.12.4  # https://github.com/silentsokolov/django-admin-rangefilter
+django-cors-headers==3.10.1  # https://github.com/adamchainz/django-cors-headers
 
 # Sentry
 # ------------------------------------------------------------------------------

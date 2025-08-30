@@ -1,7 +1,11 @@
 from django.utils.timezone import now
 from rest_framework import serializers
 
-from scoringengine.models import Lead, Answer
+from scoringengine.models import (
+    Lead, Answer, Question, Choice, ScoringModel, 
+    ValueRange, DatesRange, Recommendation
+)
+from users.models import User
 
 
 class AnswerSerializerCreate(serializers.ModelSerializer):
@@ -76,3 +80,106 @@ class LeadSerializerView(serializers.ModelSerializer):
         result["recommendations"] = non_empty_recommendations
 
         return result
+
+
+# Admin Serializers
+class ChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Choice
+        fields = ['id', 'text', 'slug', 'value']
+
+
+class ValueRangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ValueRange
+        fields = ['id', 'start', 'end', 'points']
+
+
+class DatesRangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DatesRange
+        fields = ['id', 'start', 'end', 'points']
+
+
+class RecommendationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recommendation
+        fields = [
+            'id', 'rule', 'response_text', 'affiliate_name', 
+            'affiliate_image', 'affiliate_link', 'redirect_url'
+        ]
+
+
+class ScoringModelSerializer(serializers.ModelSerializer):
+    value_ranges = ValueRangeSerializer(many=True, read_only=True)
+    dates_ranges = DatesRangeSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = ScoringModel
+        fields = [
+            'id', 'weight', 'x_axis', 'y_axis', 'formula',
+            'value_ranges', 'dates_ranges'
+        ]
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    choices = ChoiceSerializer(many=True, read_only=True)
+    scoring_model = ScoringModelSerializer(read_only=True)
+    recommendation = RecommendationSerializer(read_only=True)
+    
+    class Meta:
+        model = Question
+        fields = [
+            'id', 'number', 'text', 'field_name', 'multiple_values',
+            'type', 'min_value', 'max_value', 'choices', 'scoring_model', 'recommendation'
+        ]
+
+    def validate_field_name(self, value):
+        """Validate field name format"""
+        import re
+        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', value):
+            raise serializers.ValidationError(
+                "Field name must start with a letter or underscore and contain only letters, numbers, and underscores."
+            )
+        return value
+
+    def validate(self, data):
+        """Validate question data"""
+        # Check if field_name is unique for this user
+        user = self.context['request'].user
+        field_name = data.get('field_name')
+        question_id = self.instance.id if self.instance else None
+        
+        existing_question = Question.objects.filter(
+            owner=user, 
+            field_name=field_name
+        ).exclude(id=question_id).first()
+        
+        if existing_question:
+            raise serializers.ValidationError({
+                'field_name': f'A question with field name "{field_name}" already exists.'
+            })
+        
+        # Validate min_value and max_value for slider type
+        if data.get('type') == Question.SLIDER:
+            min_value = data.get('min_value')
+            max_value = data.get('max_value')
+            if min_value is not None and max_value is not None and min_value >= max_value:
+                raise serializers.ValidationError({
+                    'min_value': 'Min value must be less than max value for slider questions.'
+                })
+        
+        return data
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff']
+        read_only_fields = ['id', 'is_staff']
+
+
+class LeadAnalyticsSerializer(serializers.Serializer):
+    total_leads = serializers.IntegerField()
+    average_scores = serializers.DictField()
+    score_distribution = serializers.DictField()
