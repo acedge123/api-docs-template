@@ -120,7 +120,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://your-frontend-domain.vercel.app",  # Update this with your actual frontend domain
+    "https://api-docs-template-git-main-alan-edgetts-projects.vercel.app",
+    "https://api-docs-template.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
