@@ -35,7 +35,10 @@ class LeadViewSet(
     mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
     """
-    API endpoint that allows lead to be created.
+    API endpoint for lead management.
+    
+    Provides endpoints to create and retrieve leads with automatic scoring.
+    Requires authentication via token.
     """
 
     queryset = Lead.objects.all()
@@ -82,6 +85,17 @@ class LeadViewSet(
         return serializer.save(**data)
 
     def create(self, request, *args, **kwargs):
+        """
+        Create a new lead with automatic scoring.
+        
+        Accepts lead data with answers and automatically calculates X/Y axis scores
+        and total score based on the user's scoring model.
+        
+        Parameters:
+        - answers: List of answer objects with field_name and response
+        - allow_duplicates: Boolean to allow duplicate lead_id (optional)
+        - lead_id: Unique identifier for the lead (optional)
+        """
         data = request.data.copy()
 
         # remove duplicate prior adding the new record
