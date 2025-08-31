@@ -20,6 +20,12 @@ DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
+# Database connection pooling for production
+DATABASES["default"]["OPTIONS"] = {
+    "MAX_CONNS": env.int("DB_MAX_CONNS", default=20),
+    "MIN_CONNS": env.int("DB_MIN_CONNS", default=5),
+}
+
 # CACHES
 # ------------------------------------------------------------------------------
 CACHES = {

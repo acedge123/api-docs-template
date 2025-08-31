@@ -16,6 +16,12 @@ DATABASES["default"] = env.db("DATABASE_URL", default="sqlite:///db.sqlite3")  #
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
 
+# Database connection pooling
+DATABASES["default"]["OPTIONS"] = {
+    "MAX_CONNS": env.int("DB_MAX_CONNS", default=20),
+    "MIN_CONNS": env.int("DB_MIN_CONNS", default=5),
+}
+
 # CACHES - Use simple memory cache instead of Redis
 # ------------------------------------------------------------------------------
 CACHES = {
