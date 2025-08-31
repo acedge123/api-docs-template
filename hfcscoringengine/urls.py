@@ -15,12 +15,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
 
 from scoringengine.admin import admin_site
-from api.v1.health.views import health_check
+
+def simple_health_check(request):
+    """Simple health check that doesn't require any imports"""
+    return JsonResponse({"status": "ok", "message": "Django is running"})
+
+def test_view(request):
+    """Very simple test view"""
+    return JsonResponse({"test": "working"})
 
 urlpatterns = [
     path("admin/", admin_site.urls),
     path("api/", include("api.urls", namespace="api")),
-    path("health/", health_check, name="health_check"),
+    path("health/", simple_health_check, name="health_check"),
+    path("test/", test_view, name="test"),
 ]

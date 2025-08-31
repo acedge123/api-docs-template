@@ -22,5 +22,5 @@ EXPOSE 8000
 # Make startup script executable
 RUN chmod +x start.sh
 
-# Start the application
-CMD ["./start.sh"]
+# Start the application with immediate logging
+CMD ["sh", "-c", "echo '=== RAILWAY DEPLOYMENT STARTING ===' && echo 'Current directory:' && pwd && echo 'Files in current directory:' && ls -la && echo '=== RUNNING STARTUP SCRIPT ===' && ./start.sh"]
