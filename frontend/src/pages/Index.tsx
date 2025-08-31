@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Users, BarChart3, Shield, Target, TrendingUp, CheckCircle } from 'lucide-react';
+import { Zap, Users, BarChart3, Shield, Target, TrendingUp, CheckCircle, Code, BookOpen, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
@@ -17,10 +17,14 @@ const Index = () => {
               <span className="text-xl font-bold text-gray-900">HFC Scoring Engine</span>
             </Link>
             
-            {/* Get Started Button on the right */}
-            <Link to="/login">
-              <Button>Get Started</Button>
-            </Link>
+            {/* Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link to="/documentation" className="text-gray-600 hover:text-gray-900">Documentation</Link>
+              <Link to="/admin" className="text-gray-600 hover:text-gray-900">Admin</Link>
+              <Button asChild>
+                <Link to="/documentation">Get Started</Link>
+              </Button>
+            </nav>
           </div>
         </div>
       </header>
@@ -47,11 +51,13 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/documentation">
               <Button size="lg" className="w-full sm:w-auto">
+                <BookOpen className="mr-2 h-5 w-5" />
                 View Documentation
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/admin">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                <Shield className="mr-2 h-5 w-5" />
                 Admin Access
               </Button>
             </Link>
@@ -293,6 +299,7 @@ const Index = () => {
             <div className="text-center mt-8">
               <Button asChild>
                 <Link to="/documentation">
+                  <Code className="mr-2 h-4 w-4" />
                   View Full API Documentation
                 </Link>
               </Button>
@@ -313,10 +320,16 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" asChild>
-              <Link to="/documentation">Read Documentation</Link>
+              <Link to="/documentation">
+                <BookOpen className="mr-2 h-4 w-4" />
+                Read Documentation
+              </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600" asChild>
-              <Link to="/login">Access Admin Panel</Link>
+              <Link to="/admin">
+                <Shield className="mr-2 h-4 w-4" />
+                Access Admin Panel
+              </Link>
             </Button>
           </div>
         </div>
@@ -340,7 +353,7 @@ const Index = () => {
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link to="/documentation" className="hover:text-white transition-colors">Documentation</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Admin Panel</Link></li>
+                <li><Link to="/admin" className="hover:text-white transition-colors">Admin Panel</Link></li>
                 <li><Link to="/documentation" className="hover:text-white transition-colors">API Reference</Link></li>
               </ul>
             </div>

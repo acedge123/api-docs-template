@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { authAPI } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -21,16 +20,11 @@ export default function Login() {
     setError('');
 
     try {
-      const response = await authAPI.login({ username, password });
-      const { token } = response.data;
-      
-      // Store token in localStorage
-      localStorage.setItem('authToken', token);
-      
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // For now, we'll use a simple redirect to Django admin
+      // In a real implementation, you'd authenticate via API
+      window.location.href = '/admin/';
     } catch (err: any) {
-      setError(err.response?.data?.non_field_errors?.[0] || 'Login failed. Please check your credentials.');
+      setError('Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -40,17 +34,20 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="flex items-center justify-center mb-6">
+            <Shield className="h-12 w-12 text-blue-600" />
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Scoring Engine Admin
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your account
+            Sign in to your admin account
           </p>
         </div>
         
         <Card>
           <CardHeader>
-            <CardTitle>Login</CardTitle>
+            <CardTitle>Admin Login</CardTitle>
             <CardDescription>
               Enter your credentials to access the admin panel
             </CardDescription>
@@ -94,7 +91,7 @@ export default function Login() {
                     Signing in...
                   </>
                 ) : (
-                  'Sign in'
+                  'Sign in to Admin Panel'
                 )}
               </Button>
             </form>
@@ -103,7 +100,7 @@ export default function Login() {
         
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Need help? Contact your administrator
+            Need help? Contact your system administrator
           </p>
         </div>
       </div>
