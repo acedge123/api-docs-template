@@ -10,6 +10,10 @@ echo "Debug: $DJANGO_DEBUG"
 # Create logs directory if it doesn't exist
 mkdir -p logs
 
+# Run database migrations
+echo "Running database migrations..."
+python manage.py migrate --verbosity=0
+
 # Create admin user if it doesn't exist
 echo "Creating admin user..."
 python manage.py create_admin
@@ -22,4 +26,4 @@ exec gunicorn hfcscoringengine.wsgi:application \
     --timeout 120 \
     --access-logfile - \
     --error-logfile - \
-    --log-level debug
+    --log-level warning

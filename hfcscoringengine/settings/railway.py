@@ -64,11 +64,23 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {
         "console": {
-            "level": "INFO",
+            "level": "WARNING",  # Reduced from INFO to WARNING
             "class": "logging.StreamHandler",
         },
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {"level": "WARNING", "handlers": ["console"]},  # Reduced from INFO to WARNING
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "WARNING",  # Reduced from INFO to WARNING
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",  # Reduced from INFO to WARNING
+            "propagate": False,
+        },
+    },
 }
 
 # Additional settings for Railway
