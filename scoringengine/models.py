@@ -62,25 +62,7 @@ def clear_user_cache(user_id):
         cache.delete(key)
 
 
-@receiver([post_save, post_delete], sender=Lead)
-def clear_lead_cache(sender, instance=None, **kwargs):
-    """Clear cache when leads are modified"""
-    if instance and instance.owner:
-        clear_user_cache(instance.owner.id)
 
-
-@receiver([post_save, post_delete], sender=Question)
-def clear_question_cache(sender, instance=None, **kwargs):
-    """Clear cache when questions are modified"""
-    if instance and instance.owner:
-        clear_user_cache(instance.owner.id)
-
-
-@receiver([post_save, post_delete], sender=Answer)
-def clear_answer_cache(sender, instance=None, **kwargs):
-    """Clear cache when answers are modified"""
-    if instance and instance.lead and instance.lead.owner:
-        clear_user_cache(instance.lead.owner.id)
 
 
 def days(dt):
@@ -837,3 +819,25 @@ class Answer(AnswerAbstract):
 
 class AnswerLog(AnswerAbstract):
     lead = models.ForeignKey(LeadLog, on_delete=models.CASCADE, related_name="answers")
+
+
+# Signal handlers - placed at the end to avoid circular imports
+@receiver([post_save, post_delete], sender=Lead)
+def clear_lead_cache(sender, instance=None, **kwargs):
+    """Clear cache when leads are modified"""
+    if instance and instance.owner:
+        clear_user_cache(instance.owner.id)
+
+
+@receiver([post_save, post_delete], sender=Question)
+def clear_question_cache(sender, instance=None, **kwargs):
+    """Clear cache when questions are modified"""
+    if instance and instance.owner:
+        clear_user_cache(instance.owner.id)
+
+
+@receiver([post_save, post_delete], sender=Answer)
+def clear_answer_cache(sender, instance=None, **kwargs):
+    """Clear cache when answers are modified"""
+    if instance and instance.lead and instance.lead.owner:
+        clear_user_cache(instance.lead.owner.id)
