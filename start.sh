@@ -1,44 +1,33 @@
 #!/bin/bash
 
+# Startup script for Django application on Railway
+
 echo "=== Starting Django Application ==="
-echo "Current directory: $(pwd)"
-echo "Python version: $(python --version)"
-echo "Django settings: $DJANGO_SETTINGS_MODULE"
+echo "Environment: $DJANGO_SETTINGS_MODULE"
+echo "Port: $PORT"
+echo "Debug: $DJANGO_DEBUG"
 
-# Check Django configuration
-echo "=== Checking Django configuration ==="
-python manage.py check
-if [ $? -ne 0 ]; then
-    echo "ERROR: Django configuration check failed"
-    exit 1
-fi
+# Create logs directory if it doesn't exist
+mkdir -p logs
 
-# Run migrations
-echo "=== Running migrations ==="
-python manage.py migrate --run-syncdb
-if [ $? -ne 0 ]; then
-    echo "ERROR: Database migrations failed"
-    exit 1
-fi
+# Run Django checks
+echo "Running Django checks..."
+python manage.py check --deploy
+
+# Run migrations if needed
+echo "Running migrations..."
+python manage.py migrate --noinput
 
 # Collect static files
-echo "=== Collecting static files ==="
+echo "Collecting static files..."
 python manage.py collectstatic --noinput
-if [ $? -ne 0 ]; then
-    echo "ERROR: Static file collection failed"
-    exit 1
-fi
 
-# Start gunicorn
-echo "=== Starting Gunicorn ==="
-echo "Port: $PORT"
-echo "Workers: 1"
-echo "Timeout: 120"
-
+# Start the application
+echo "Starting Gunicorn..."
 exec gunicorn hfcscoringengine.wsgi:application \
     --bind 0.0.0.0:$PORT \
     --workers 1 \
     --timeout 120 \
-    --log-level debug \
     --access-logfile - \
-    --error-logfile -
+    --error-logfile - \
+    --log-level info

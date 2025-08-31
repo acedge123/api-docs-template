@@ -3,7 +3,7 @@
 
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hfcscoringengine.settings.test_minimal")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hfcscoringengine.settings.railway")
 
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()

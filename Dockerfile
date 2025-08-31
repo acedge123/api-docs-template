@@ -19,8 +19,11 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
+# Create logs directory
+RUN mkdir -p logs
+
 # Make startup script executable
 RUN chmod +x start.sh
 
-# Start with a simple test first
-CMD ["sh", "-c", "echo 'Container starting...' && sleep 5 && echo 'Testing basic commands...' && python --version && echo 'Testing Django...' && python manage.py check --deploy && echo 'Starting gunicorn...' && gunicorn hfcscoringengine.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120"]
+# Start the application
+CMD ["./start.sh"]
