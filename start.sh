@@ -10,7 +10,11 @@ echo "Debug: $DJANGO_DEBUG"
 # Create logs directory if it doesn't exist
 mkdir -p logs
 
-# Start the application immediately
+# Create admin user if it doesn't exist
+echo "Creating admin user..."
+python manage.py create_admin
+
+# Start the application
 echo "Starting Gunicorn..."
 exec gunicorn hfcscoringengine.wsgi:application \
     --bind 0.0.0.0:$PORT \
