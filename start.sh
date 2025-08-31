@@ -14,6 +14,10 @@ mkdir -p logs
 echo "Running database migrations..."
 python manage.py migrate --verbosity=0
 
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --verbosity=0
+
 # Create admin user if it doesn't exist
 echo "Creating admin user..."
 python manage.py create_admin
