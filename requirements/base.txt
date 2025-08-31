@@ -1,12 +1,11 @@
 argon2-cffi==20.1.0  # https://github.com/hynek/argon2_cffi
 whitenoise==5.2.0  # https://github.com/evansd/whitenoise
-redis==3.5.3  # https://github.com/andymccurdy/redis-py
+gunicorn==20.1.0  # https://github.com/benoitc/gunicorn
 
 # Django
 # ------------------------------------------------------------------------------
 django==3.2  # https://www.djangoproject.com/
 django-environ==0.4.5  # https://github.com/joke2k/django-environ
-django-redis==4.12.1  # https://github.com/jazzband/django-redis
 django-import-export==3.3.9  # https://github.com/django-import-export/django-import-export
 djangorestframework==3.12.4  # https://github.com/encode/django-rest-framework
 django-admin-rangefilter==0.12.4  # https://github.com/silentsokolov/django-admin-rangefilter

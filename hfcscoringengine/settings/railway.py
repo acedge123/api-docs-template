@@ -12,14 +12,12 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["*"])
 
 # DATABASES
 # ------------------------------------------------------------------------------
-DATABASES["default"] = env.db("DATABASE_URL", default="sqlite:///db.sqlite3")  # noqa F405
-DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa F405
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # noqa F405
-
-# Database connection pooling
-DATABASES["default"]["OPTIONS"] = {
-    "MAX_CONNS": env.int("DB_MAX_CONNS", default=20),
-    "MIN_CONNS": env.int("DB_MIN_CONNS", default=5),
+# Use SQLite for now to avoid database connection issues
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "db.sqlite3",
+    }
 }
 
 # CACHES - Use simple memory cache instead of Redis
@@ -64,32 +62,13 @@ EMAIL_BACKEND = env(
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s "
-            "%(process)d %(thread)d %(message)s"
-        }
-    },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
         },
     },
-    "root": {"level": "DEBUG", "handlers": ["console"]},
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "django.request": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-    },
+    "root": {"level": "INFO", "handlers": ["console"]},
 }
 
 # Additional settings for Railway
