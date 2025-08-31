@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Zap, Users, BarChart3, Shield, Target, TrendingUp, CheckCircle, Code, BookOpen, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// Enhanced Marketing Landing Page - Version 2.0
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
