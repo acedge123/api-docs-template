@@ -17,8 +17,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 from scoringengine.admin import admin_site
+from api.v1.health.views import health_check
 
 urlpatterns = [
     path("admin/", admin_site.urls),
     path("api/", include("api.urls", namespace="api")),
+    path("health/", health_check, name="health_check"),
 ]

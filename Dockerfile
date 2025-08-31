@@ -19,5 +19,8 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Start the application with migrations and static collection
-CMD ["sh", "-c", "python manage.py migrate --run-syncdb && python manage.py collectstatic --noinput && python manage.py check && gunicorn hfcscoringengine.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 1"]
+# Make startup script executable
+RUN chmod +x start.sh
+
+# Start the application
+CMD ["./start.sh"]
