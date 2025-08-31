@@ -45,12 +45,12 @@ CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=False)
 STATIC_ROOT = str(ROOT_DIR / "staticfiles")
 STATIC_URL = "/static/"
 
-# Enable WhiteNoise for static file serving
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# Disable WhiteNoise temporarily for debugging
+# STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
 
 # WhiteNoise configuration
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = True
+# WHITENOISE_USE_FINDERS = True
+# WHITENOISE_AUTOREFRESH = True
 
 # MEDIA
 # ------------------------------------------------------------------------------

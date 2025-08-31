@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from django.conf import settings
+from django.conf.urls.static import static
 
 from scoringengine.admin import admin_site
 
@@ -33,3 +35,7 @@ urlpatterns = [
     path("health/", meaningful_health_check, name="health_check"),
     path("test/", test_view, name="test"),
 ]
+
+# Serve static files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
