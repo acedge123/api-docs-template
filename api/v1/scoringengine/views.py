@@ -1,4 +1,5 @@
 import re
+import logging
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -8,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.db.models import Count, Avg, Q
+
+logger = logging.getLogger(__name__)
 
 from api.v1.scoringengine.serializers import (
     LeadSerializerCreate, 
@@ -99,6 +102,7 @@ class LeadViewSet(
         - allow_duplicates: Boolean to allow duplicate lead_id (optional)
         - lead_id: Unique identifier for the lead (optional)
         """
+        logger.info(f"Creating lead for user {request.user.id}")
         data = request.data.copy()
 
         # remove duplicate prior adding the new record
@@ -107,8 +111,10 @@ class LeadViewSet(
         if allow_duplicates is True and data.get("lead_id"):
             try:
                 Lead.objects.filter(lead_id__iexact=data["lead_id"]).delete()
+                logger.info(f"Deleted duplicate lead with ID {data['lead_id']}")
 
             except:  # noqa: this part of the process is not crucial, so not worth acknowledging
+                logger.warning(f"Failed to delete duplicate lead with ID {data['lead_id']}")
                 pass
 
         serializer = self.get_serializer(data=data)
@@ -119,6 +125,8 @@ class LeadViewSet(
         headers = self.get_success_headers(serializer.data)
 
         view_serializer = LeadSerializerView(obj, context={"request": request})
+        
+        logger.info(f"Successfully created lead {obj.lead_id} with score {obj.total_score}")
 
         return Response(
             view_serializer.data, status=status.HTTP_201_CREATED, headers=headers
@@ -304,12 +312,14 @@ class AnalyticsViewSet(viewsets.ViewSet):
     def lead_summary(self, request):
         """Get lead analytics summary"""
         user = request.user
+        logger.info(f"Fetching lead summary for user {user.id}")
         
         # Cache key based on user
         cache_key = f"lead_summary_{user.id}"
         cached_data = cache.get(cache_key)
         
         if cached_data:
+            logger.info(f"Returning cached lead summary for user {user.id}")
             return Response(cached_data)
         
         leads = Lead.objects.filter(owner=user)
@@ -338,6 +348,7 @@ class AnalyticsViewSet(viewsets.ViewSet):
         
         # Cache for 5 minutes
         cache.set(cache_key, data, 300)
+        logger.info(f"Generated and cached lead summary for user {user.id}: {total_leads} leads")
         
         return Response(data)
 

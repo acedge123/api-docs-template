@@ -1,83 +1,116 @@
-SHELL  := /bin/bash
+.PHONY: help install test test-unit test-integration test-performance coverage lint format clean migrate makemigrations run-dev run-prod deploy
 
-### Server
+help: ## Show this help message
+	@echo "Available commands:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-docker-build:
-	docker stop $$(docker ps -aq)
-	docker-compose -f local.yml build
-	#docker-compose -f local.yml build --force-rm --no-cache
+install: ## Install dependencies
+	pip install -r requirements/local.txt
 
-docker-up:
-	docker stop $$(docker ps -aq)
-	docker-compose -f local.yml up -d
+test: ## Run all tests
+	pytest
 
-docker-up-django:
-	docker-compose -f local.yml up -d django
+test-unit: ## Run unit tests only
+	pytest -m unit
 
-docker-up-postgres:
-	docker-compose -f local.yml up -d postgres
+test-integration: ## Run integration tests only
+	pytest -m integration
 
-docker-down:
-	docker-compose -f local.yml down
+test-performance: ## Run performance tests only
+	pytest -m performance
 
-### extra commands
+test-api: ## Run API tests only
+	pytest -m api
 
-docker-bash:
-	docker-compose -f local.yml run --rm django /bin/bash
+coverage: ## Run tests with coverage report
+	pytest --cov=scoringengine --cov=api --cov-report=html --cov-report=term-missing
 
-docker-shell:
-	docker-compose -f local.yml run --rm django python manage.py shell
+lint: ## Run linting checks
+	flake8 scoringengine/ api/ tests/
+	black --check scoringengine/ api/ tests/
+	isort --check-only scoringengine/ api/ tests/
 
-docker-test:
-	docker-compose -f local.yml run --rm django python manage.py test
+format: ## Format code
+	black scoringengine/ api/ tests/
+	isort scoringengine/ api/ tests/
 
-docker-compilemessages:
-	docker-compose -f local.yml run --rm django python manage.py compilemessages
+clean: ## Clean up temporary files
+	find . -type f -name "*.pyc" -delete
+	find . -type d -name "__pycache__" -delete
+	find . -type d -name "*.egg-info" -exec rm -rf {} +
+	rm -rf htmlcov/
+	rm -rf .coverage
+	rm -rf logs/
 
-docker-createsuperuser:
-	docker-compose -f local.yml run --rm django python manage.py createsuperuser
+migrate: ## Run database migrations
+	python manage.py migrate
 
-docker-makemessages:
-	docker-compose -f local.yml run --rm django python manage.py makemessages -a
+makemigrations: ## Create new migrations
+	python manage.py makemigrations
 
-docker-makemigrations:
-	docker-compose -f local.yml run --rm django python manage.py makemigrations
+run-dev: ## Run development server
+	python manage.py runserver
 
-docker-migrate:
-	docker-compose -f local.yml run --rm django python manage.py migrate
+run-prod: ## Run production server
+	gunicorn hfcscoringengine.wsgi:application --bind 0.0.0.0:8000 --workers 4
 
+deploy: ## Deploy to production
+	git push origin main
 
-### Logs
-docker-django-logs:
-	docker logs scoringengine_local_django --follow --since 30s
+test-db: ## Test database connection
+	python manage.py check --database default
 
+create-superuser: ## Create a superuser
+	python manage.py createsuperuser
 
-### Format files
+collect-static: ## Collect static files
+	python manage.py collectstatic --noinput
 
-format-all-files:
-	for f in `find ./ -iname *.py -print`; do echo "Formatting $$f"; black -t py310 "$$f" >/dev/null 2>&1 ; done
+load-fixtures: ## Load test fixtures
+	python manage.py loaddata fixtures/*.json
 
-format-changed-files:
-	for f in `git status --porcelain | grep '\.py$$' | awk '{ print $$2 }'`; do if [ -f "$$f" ]; then echo "Formatting $$f"; black -t py310 "$$f" >/dev/null 2>&1; fi;  done
+dump-fixtures: ## Dump current data as fixtures
+	python manage.py dumpdata --indent 2 > fixtures/current_data.json
 
+backup-db: ## Backup database
+	python manage.py dumpdata --indent 2 > backup_$(shell date +%Y%m%d_%H%M%S).json
 
+restore-db: ## Restore database from backup
+	python manage.py loaddata backup_*.json
 
-### Locally executed scripts
+monitor-logs: ## Monitor application logs
+	tail -f logs/django.log
 
-createsuperuser:
-	export DJANGO_READ_DOT_ENV_FILE=True && python manage.py createsuperuser
+monitor-errors: ## Monitor error logs
+	tail -f logs/error.log
 
-makemigrations:
-	export DJANGO_READ_DOT_ENV_FILE=True && python manage.py makemigrations
+health-check: ## Check application health
+	curl -f http://localhost:8000/health/ || echo "Health check failed"
 
-makemigrations-merge:
-	export DJANGO_READ_DOT_ENV_FILE=True && python manage.py makemigrations --merge
+performance-test: ## Run performance tests
+	pytest tests/test_performance.py -v
 
-migrate:
-	export DJANGO_READ_DOT_ENV_FILE=True && python manage.py migrate
+load-test: ## Run load tests (requires locust)
+	locust -f tests/locustfile.py --host=http://localhost:8000
 
-shell:
-	export DJANGO_READ_DOT_ENV_FILE=True && python manage.py shell
+security-check: ## Run security checks
+	bandit -r scoringengine/ api/
+	safety check
 
-test:
-	export DJANGO_READ_DOT_ENV_FILE=True && python manage.py test
+docker-build: ## Build Docker image
+	docker build -t hfc-scoring-engine .
+
+docker-run: ## Run Docker container
+	docker run -p 8000:8000 hfc-scoring-engine
+
+docker-compose-up: ## Start services with Docker Compose
+	docker-compose up -d
+
+docker-compose-down: ## Stop services with Docker Compose
+	docker-compose down
+
+setup-dev: install migrate create-superuser ## Setup development environment
+
+setup-test: install migrate ## Setup test environment
+
+ci: lint test coverage ## Run CI pipeline
