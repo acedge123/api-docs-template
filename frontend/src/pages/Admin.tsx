@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// Admin Dashboard Component - HFC Scoring Engine Admin Interface
 export default function Admin() {
   const adminSections = [
     {
