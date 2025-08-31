@@ -21,7 +21,7 @@ def add_lead_log(lead: Lead):
             value_number=answer.value_number,
             value=answer.value,
             date_value=answer.date_value,
-            values=answer.values,
+            values=answer.get_values(),
             points=answer.points,
         )
 

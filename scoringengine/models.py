@@ -1,14 +1,15 @@
 import math
 import re
 import uuid
+import json
 
 from datetime import date
 from itertools import chain
 from math import sqrt
 from random import randint
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import ArrayField
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.validators import MinValueValidator
@@ -797,11 +798,31 @@ class AnswerAbstract(RecommendationFieldsMixin):
     value_number = models.PositiveBigIntegerField(blank=True, null=True)
     value = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
     date_value = models.DateField(blank=True, null=True)
-    values = ArrayField(
-        models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True),
-        null=True,
-    )
+    values = models.TextField(null=True, blank=True)  # Store JSON as text for SQLite compatibility
     points = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+
+    def get_values(self):
+        """Get values as a list, deserializing from JSON text"""
+        if not self.values:
+            return None
+        try:
+            return json.loads(self.values)
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+    def set_values(self, values_list):
+        """Set values by serializing list to JSON text"""
+        if values_list is None:
+            self.values = None
+        else:
+            # Convert Decimal objects to float for JSON serialization
+            serializable_values = []
+            for value in values_list:
+                if isinstance(value, Decimal):
+                    serializable_values.append(float(value))
+                else:
+                    serializable_values.append(value)
+            self.values = json.dumps(serializable_values)
 
     def __str__(self):
         return f"{self.field_name}: {self.response}"

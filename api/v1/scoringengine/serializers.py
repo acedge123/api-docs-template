@@ -35,7 +35,12 @@ class LeadSerializerCreate(serializers.ModelSerializer):
         lead = Lead.objects.create(**validated_data)
 
         for answer_data in answers_data:
-            Answer.objects.create(lead=lead, **answer_data)
+            # Handle values field specially for SQLite compatibility
+            values = answer_data.pop('values', None)
+            answer = Answer.objects.create(lead=lead, **answer_data)
+            if values is not None:
+                answer.set_values(values)
+                answer.save()
 
         return lead
 
