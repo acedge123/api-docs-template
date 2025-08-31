@@ -41,7 +41,6 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["ENGINE"] = "django.db.backends.postgresql"
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
 # URLS
@@ -67,7 +66,6 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
-    "drf_yasg",
 ]
 
 LOCAL_APPS = [
@@ -114,8 +112,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "hfcscoringengine.middleware.MonitoringMiddleware",
-    "hfcscoringengine.middleware.SecurityMiddleware",
 ]
 
 # CORS
