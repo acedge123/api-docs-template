@@ -40,11 +40,11 @@ const Index = () => {
           </div>
           
           <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Transform Your Lead Qualification
+            Lead Qualification
             <span className="text-blue-600"> with Intelligent Scoring</span>
             <br />Stop Wasting Time on Low-Value Prospects
           </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
             Automatically score and qualify leads based on their answers to your questions. 
             Focus your sales team on high-value prospects while filtering out low-priority leads. 
             Boost conversion rates and maximize revenue with data-driven lead qualification.

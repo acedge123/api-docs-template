@@ -14,16 +14,16 @@ else:
     router = SimpleRouter()
 
 # Lead management
-router.register(r"leads", LeadViewSet)
+router.register(r"leads", LeadViewSet, basename='leads')
 
 # Admin endpoints
-router.register(r"questions", QuestionViewSet)
-router.register(r"choices", ChoiceViewSet)
-router.register(r"scoring-models", ScoringModelViewSet)
-router.register(r"value-ranges", ValueRangeViewSet)
-router.register(r"dates-ranges", DatesRangeViewSet)
-router.register(r"recommendations", RecommendationViewSet)
-router.register(r"users", UserViewSet)
+router.register(r"questions", QuestionViewSet, basename='questions')
+router.register(r"choices", ChoiceViewSet, basename='choices')
+router.register(r"scoring-models", ScoringModelViewSet, basename='scoring-models')
+router.register(r"value-ranges", ValueRangeViewSet, basename='value-ranges')
+router.register(r"dates-ranges", DatesRangeViewSet, basename='dates-ranges')
+router.register(r"recommendations", RecommendationViewSet, basename='recommendations')
+router.register(r"users", UserViewSet, basename='users')
 router.register(r"analytics", AnalyticsViewSet, basename='analytics')
 
 app_name = "v1"
