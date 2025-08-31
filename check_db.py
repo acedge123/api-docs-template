@@ -22,7 +22,17 @@ def check_database():
     # Check if we can connect to the database
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            # Check database type
+            db_engine = connection.settings_dict['ENGINE']
+            print(f"Database engine: {db_engine}")
+            
+            if 'sqlite' in db_engine:
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            elif 'postgresql' in db_engine:
+                cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public';")
+            else:
+                cursor.execute("SHOW TABLES;")
+                
             tables = cursor.fetchall()
             print(f"✓ Database connection successful")
             print(f"Tables in database: {[table[0] for table in tables]}")

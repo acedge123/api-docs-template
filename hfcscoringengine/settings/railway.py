@@ -12,13 +12,22 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["*"])
 
 # DATABASES
 # ------------------------------------------------------------------------------
-# Use SQLite for now to avoid database connection issues
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "db.sqlite3",
+# Use Railway's PostgreSQL database if available, fallback to SQLite
+DATABASE_URL = env("DATABASE_URL", default=None)
+if DATABASE_URL:
+    # Parse DATABASE_URL for PostgreSQL
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL)
     }
-}
+else:
+    # Fallback to SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": "db.sqlite3",
+        }
+    }
 
 # CACHES - Use simple memory cache instead of Redis
 # ------------------------------------------------------------------------------
@@ -92,5 +101,14 @@ LOGGING = {
 
 # Additional settings for Railway
 # ------------------------------------------------------------------------------
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=["*"])
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
+    "https://api-docs-template-production.up.railway.app",
+    "https://*.railway.app",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+])
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
+# Session settings
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
