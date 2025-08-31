@@ -18,9 +18,9 @@ python manage.py migrate --verbosity=2
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --verbosity=0
 
-# Create admin user if it doesn't exist
-echo "Creating admin user..."
-python manage.py create_admin
+# Create admin user if it doesn't exist (commented out for security)
+# echo "Creating admin user..."
+# python manage.py create_admin
 
 # Start the application
 echo "Starting Gunicorn..."
