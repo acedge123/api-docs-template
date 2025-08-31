@@ -252,5 +252,19 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
+# CACHES
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/dev/ref/settings/#caches
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "cache_table",
+        "TIMEOUT": 300,  # 5 minutes default
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,
+        }
+    }
+}
+
 # Your stuff...
 # ------------------------------------------------------------------------------

@@ -9,10 +9,11 @@ from random import randint
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
+from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
@@ -47,6 +48,38 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
     if created:
         Token.objects.create(user=instance)
+
+
+def clear_user_cache(user_id):
+    """Clear cache for a specific user"""
+    cache_keys = [
+        f"lead_summary_{user_id}",
+        f"question_analytics_{user_id}",
+        f"recommendation_effectiveness_{user_id}",
+    ]
+    for key in cache_keys:
+        cache.delete(key)
+
+
+@receiver([post_save, post_delete], sender=Lead)
+def clear_lead_cache(sender, instance=None, **kwargs):
+    """Clear cache when leads are modified"""
+    if instance and instance.owner:
+        clear_user_cache(instance.owner.id)
+
+
+@receiver([post_save, post_delete], sender=Question)
+def clear_question_cache(sender, instance=None, **kwargs):
+    """Clear cache when questions are modified"""
+    if instance and instance.owner:
+        clear_user_cache(instance.owner.id)
+
+
+@receiver([post_save, post_delete], sender=Answer)
+def clear_answer_cache(sender, instance=None, **kwargs):
+    """Clear cache when answers are modified"""
+    if instance and instance.lead and instance.lead.owner:
+        clear_user_cache(instance.lead.owner.id)
 
 
 def days(dt):

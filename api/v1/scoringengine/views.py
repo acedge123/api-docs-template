@@ -1,4 +1,7 @@
 import re
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 from rest_framework import viewsets, mixins, status, serializers
 from rest_framework.response import Response
@@ -45,7 +48,7 @@ class LeadViewSet(
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self, *args, **kwargs):
-        return self.queryset.filter(owner=self.request.user)
+        return self.queryset.filter(owner=self.request.user).prefetch_related('answers')
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -130,7 +133,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Question.objects.filter(owner=self.request.user).order_by('number')
+        return Question.objects.filter(owner=self.request.user).order_by('number').prefetch_related(
+            'choices', 'scoring_model__ranges', 'scoring_model__dates_ranges', 'recommendation'
+        )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -139,8 +144,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def choices(self, request, pk=None):
         """Get choices for a specific question"""
         question = self.get_object()
-        choices = question.choices.all()
-        serializer = ChoiceSerializer(choices, many=True)
+        # Choices are already prefetched in get_queryset
+        serializer = ChoiceSerializer(question.choices.all(), many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
@@ -148,6 +153,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         """Get scoring model for a specific question"""
         question = self.get_object()
         try:
+            # Scoring model is already prefetched in get_queryset
             scoring_model = question.scoring_model
             serializer = ScoringModelSerializer(scoring_model)
             return Response(serializer.data)
@@ -159,6 +165,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         """Get recommendation for a specific question"""
         question = self.get_object()
         try:
+            # Recommendation is already prefetched in get_queryset
             recommendation = question.recommendation
             serializer = RecommendationSerializer(recommendation)
             return Response(serializer.data)
@@ -174,7 +181,7 @@ class ChoiceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Choice.objects.filter(question__owner=self.request.user)
+        return Choice.objects.filter(question__owner=self.request.user).select_related('question')
 
     def perform_create(self, serializer):
         question_id = self.request.data.get('question')
@@ -190,7 +197,9 @@ class ScoringModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return ScoringModel.objects.filter(owner=self.request.user)
+        return ScoringModel.objects.filter(owner=self.request.user).select_related('question').prefetch_related(
+            'ranges', 'dates_ranges'
+        )
 
     def perform_create(self, serializer):
         question_id = self.request.data.get('question')
@@ -201,16 +210,16 @@ class ScoringModelViewSet(viewsets.ModelViewSet):
     def value_ranges(self, request, pk=None):
         """Get value ranges for a specific scoring model"""
         scoring_model = self.get_object()
-        value_ranges = scoring_model.ranges.all()
-        serializer = ValueRangeSerializer(value_ranges, many=True)
+        # Value ranges are already prefetched in get_queryset
+        serializer = ValueRangeSerializer(scoring_model.ranges.all(), many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def dates_ranges(self, request, pk=None):
         """Get date ranges for a specific scoring model"""
         scoring_model = self.get_object()
-        dates_ranges = scoring_model.dates_ranges.all()
-        serializer = DatesRangeSerializer(dates_ranges, many=True)
+        # Date ranges are already prefetched in get_queryset
+        serializer = DatesRangeSerializer(scoring_model.dates_ranges.all(), many=True)
         return Response(serializer.data)
 
 
@@ -222,7 +231,7 @@ class ValueRangeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return ValueRange.objects.filter(scoring_model__owner=self.request.user)
+        return ValueRange.objects.filter(scoring_model__owner=self.request.user).select_related('scoring_model')
 
     def perform_create(self, serializer):
         scoring_model_id = self.request.data.get('scoring_model')
@@ -238,7 +247,7 @@ class DatesRangeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return DatesRange.objects.filter(scoring_model__owner=self.request.user)
+        return DatesRange.objects.filter(scoring_model__owner=self.request.user).select_related('scoring_model')
 
     def perform_create(self, serializer):
         scoring_model_id = self.request.data.get('scoring_model')
@@ -254,7 +263,7 @@ class RecommendationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Recommendation.objects.filter(owner=self.request.user)
+        return Recommendation.objects.filter(owner=self.request.user).select_related('question')
 
     def perform_create(self, serializer):
         question_id = self.request.data.get('question')
@@ -295,6 +304,14 @@ class AnalyticsViewSet(viewsets.ViewSet):
     def lead_summary(self, request):
         """Get lead analytics summary"""
         user = request.user
+        
+        # Cache key based on user
+        cache_key = f"lead_summary_{user.id}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data:
+            return Response(cached_data)
+        
         leads = Lead.objects.filter(owner=user)
         
         total_leads = leads.count()
@@ -319,17 +336,28 @@ class AnalyticsViewSet(viewsets.ViewSet):
             'score_distribution': score_ranges,
         }
         
+        # Cache for 5 minutes
+        cache.set(cache_key, data, 300)
+        
         return Response(data)
 
     @action(detail=False, methods=['get'])
     def question_analytics(self, request):
         """Get analytics for questions"""
         user = request.user
-        questions = Question.objects.filter(owner=user)
+        
+        # Cache key based on user
+        cache_key = f"question_analytics_{user.id}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data:
+            return Response(cached_data)
+        
+        questions = Question.objects.filter(owner=user).prefetch_related('answers')
         
         question_data = []
         for question in questions:
-            # Get answer distribution for this question
+            # Get answer distribution for this question (answers are prefetched)
             answers = question.answers.all()
             answer_counts = answers.values('response').annotate(count=Count('response'))
             
@@ -343,17 +371,22 @@ class AnalyticsViewSet(viewsets.ViewSet):
                 'total_answers': answers.count(),
             })
         
+        # Cache for 5 minutes
+        cache.set(cache_key, question_data, 300)
+        
         return Response(question_data)
 
     @action(detail=False, methods=['get'])
     def recommendation_effectiveness(self, request):
         """Get recommendation effectiveness analytics"""
         user = request.user
-        recommendations = Recommendation.objects.filter(owner=user)
+        recommendations = Recommendation.objects.filter(owner=user).select_related('question').prefetch_related(
+            'question__answers__lead'
+        )
         
         rec_data = []
         for rec in recommendations:
-            # Count how many times this recommendation was triggered
+            # Count how many times this recommendation was triggered (answers are prefetched)
             triggered_count = rec.question.answers.filter(
                 lead__owner=user
             ).count()
