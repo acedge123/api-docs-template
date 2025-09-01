@@ -54,10 +54,10 @@ const OverviewTab = () => {
 
   const questionTypes = [
     { type: "Open", description: "Free text responses", useCase: "Company names, specific requirements" },
-    { type: "Choices", description: "Single selection from options", useCase: "Company size, industry, purchase timeline" },
-    { type: "Multiple Choices", description: "Multiple selections allowed", useCase: "Pain points, decision factors, budget ranges" },
-    { type: "Slider", description: "Numeric range input", useCase: "Budget ranges, timeline, credit score" },
-    { type: "Integer", description: "Numeric input", useCase: "Annual revenue, team size, budget amount" },
+    { type: "Choices", description: "Single selection from options", useCase: "Household debt, industry, purchase timeline" },
+    { type: "Multiple Choices", description: "Multiple selections allowed", useCase: "Pain points, decision factors, purchase intent" },
+    { type: "Slider", description: "Numeric range input", useCase: "Estimated credit score, timeline, income ranges" },
+    { type: "Integer", description: "Numeric input", useCase: "Household income, debt amount, budget amount" },
     { type: "Date", description: "Date picker", useCase: "Project timeline, purchase date, contract renewal" }
   ];
 
