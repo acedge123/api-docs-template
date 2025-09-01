@@ -6,29 +6,29 @@ import { Zap, Target, Code, Lightbulb, CheckCircle, AlertTriangle, XCircle } fro
 const RecommendationSystemTab = () => {
   const ruleExamples = [
     {
-      category: 'Score-Based Rules',
-      description: 'Trigger recommendations based on calculated X/Y axis scores',
+      category: 'Question-Based Rules',
+      description: 'Trigger recommendations based on specific question answers',
       examples: [
         {
-          rule: 'If {x_axis_score} > 25',
-          description: 'High quality lead detected',
+          rule: 'If {credit_score} > 700',
+          description: 'High credit score',
           response: 'Premium service recommended'
         },
         {
-          rule: 'If {y_axis_score} < 10',
-          description: 'Low purchase intent',
-          response: 'Nurture campaign suggested'
+          rule: 'If {employment_years} < 2',
+          description: 'Short employment history',
+          response: 'Additional verification required'
         },
         {
-          rule: 'If {total_score} > 50',
-          description: 'High overall score',
+          rule: 'If {income} > 50000',
+          description: 'High income level',
           response: 'Immediate follow-up required'
         }
       ]
     },
     {
-      category: 'Question-Based Rules',
-      description: 'Trigger recommendations based on specific question answers',
+      category: 'Conditional Rules',
+      description: 'Trigger recommendations based on specific question conditions',
       examples: [
         {
           rule: 'If {rent_ratio} > 0.3',
@@ -315,6 +315,91 @@ const RecommendationSystemTab = () => {
         </CardContent>
       </Card>
 
+      {/* System Limitations & Workarounds */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <AlertTriangle className="mr-2 h-5 w-5 text-yellow-600" />
+            System Limitations & Workarounds
+          </CardTitle>
+          <CardDescription>
+            Important limitations and how to work around them
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-green-800 mb-4">✅ Calculated Scores Now Supported!</h3>
+              <p className="text-green-700 mb-4">
+                <strong>You can now use calculated scores (X-axis, Y-axis, Total) in recommendation rules!</strong>
+              </p>
+              <div className="bg-white p-4 rounded border">
+                <h4 className="font-semibold text-green-600 mb-2">✅ These now work:</h4>
+                <div className="space-y-1 text-sm font-mono text-green-600">
+                  <div>If {`{x_axis_score} > 25`}</div>
+                  <div>If {`{y_axis_score} < 10`}</div>
+                  <div>If {`{total_score} > 50`}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4">✅ Available Field Types</h3>
+              <p className="text-blue-700 mb-4">
+                <strong>You can use both question field names and calculated scores in recommendation rules.</strong>
+              </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded border">
+                  <h4 className="font-semibold text-green-600 mb-2">📊 Question Fields:</h4>
+                  <div className="space-y-1 text-sm font-mono text-green-600">
+                    <div>If {`{credit_score} > 700`}</div>
+                    <div>If {`{rent_ratio} <= 0.3`}</div>
+                    <div>If {`{employment_years} >= 2`}</div>
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded border">
+                  <h4 className="font-semibold text-blue-600 mb-2">🎯 Calculated Scores:</h4>
+                  <div className="space-y-1 text-sm font-mono text-blue-600">
+                    <div>If {`{x_axis_score} > 25`}</div>
+                    <div>If {`{y_axis_score} < 10`}</div>
+                    <div>If {`{total_score} > 50`}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4">🎯 Advanced Score-Based Rules</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-blue-700 mb-2">Direct Score Usage</h4>
+                  <p className="text-blue-600 text-sm mb-2">
+                    You can now use calculated scores directly in your recommendation rules:
+                  </p>
+                  <div className="bg-white p-3 rounded border text-sm font-mono">
+                    <div className="text-blue-600">If {`{x_axis_score} > 25`}</div>
+                    <div className="text-blue-600">If {`{y_axis_score} < 10`}</div>
+                    <div className="text-blue-600">If {`{total_score} > 50`}</div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-blue-700 mb-2">Combined Rules</h4>
+                  <p className="text-blue-600 text-sm mb-2">
+                    Mix calculated scores with question fields for sophisticated logic:
+                  </p>
+                  <div className="bg-white p-3 rounded border text-sm font-mono">
+                    <div className="text-blue-600">If {`{x_axis_score} > 20 and {credit_score} > 700`}</div>
+                    <div className="text-blue-600">If {`{total_score} > 40 or {employment_years} >= 5`}</div>
+                    <div className="text-blue-600">If {`{y_axis_score} < 15 and {rent_ratio} <= 0.3`}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Best Practices */}
       <Card>
         <CardHeader>
@@ -452,6 +537,14 @@ const RecommendationSystemTab = () => {
                   <div className="font-mono text-sm mb-2">If {`{debt_payments} / {monthly_income} > 0.4`}</div>
                   <p className="text-sm text-red-700"><strong>Response:</strong> "Application declined. Debt-to-income ratio exceeds maximum threshold."</p>
                 </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                <h4 className="font-semibold text-green-800 mb-2">✅ Score-Based Rules Now Available</h4>
+                <p className="text-green-700 text-sm">
+                  The system calculates X-axis and Y-axis scores, and you can now use these calculated scores directly in recommendation rules 
+                  alongside individual question field names for maximum flexibility.
+                </p>
               </div>
             </div>
           </div>

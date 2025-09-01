@@ -42,6 +42,9 @@ RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGE
 
 FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_FUNCTIONS_REGEX}|{MATH_FUNCTIONS_REGEX}|{DATE_FUNCTIONS_REGEX}|{DAYS_FUNCTIONS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
+# Calculated score field names that can be used in recommendation rules
+CALCULATED_SCORE_FIELDS = ['x_axis_score', 'y_axis_score', 'total_score']
+
 
 @receiver(post_save, sender=get_user_model())
 def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -74,6 +77,19 @@ def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
 
     for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", formula):
         field_name = re.sub(r"\[.+\]", "", k[0])
+        
+        # Handle calculated score fields
+        if field_name in CALCULATED_SCORE_FIELDS:
+            if field_name == 'x_axis_score':
+                value = randint(10, 50)  # Mock X-axis score
+            elif field_name == 'y_axis_score':
+                value = randint(5, 30)   # Mock Y-axis score
+            elif field_name == 'total_score':
+                value = randint(15, 80)  # Mock total score
+            mocked_data[field_name] = value
+            continue
+        
+        # Handle regular question fields
         question = Question.objects.filter(field_name=field_name, owner=owner).first()
 
         if question and question.type == Question.DATE:
@@ -177,7 +193,7 @@ def prepare_formula(formula: str, answers: dict) -> (str, dict):
             if not isinstance(answers[field_name], list):
                 raise ValidationError(
                     '"Math functions can be used only with multiple value questions. %(field_name)s" is not multiple value',
-                    params={"field_name": value},
+                    params={"field_name": field_name},
                     code="invalid_field_name",
                 )
                 continue
@@ -346,7 +362,8 @@ class Recommendation(RecommendationFieldsMixin):
         "and parentheses to select points based on expression result."
         f'</br>Aggregate functions which may be used in are: {", ".join(AGGREGATE_FUNCTIONS)}'
         f'</br>Mathematical functions which may be used in are: {", ".join(MATH_FUNCTIONS)}'
-        f'</br>Date functions which may be used in are: {", ".join(DATE_FUNCTIONS)}',
+        f'</br>Date functions which may be used in are: {", ".join(DATE_FUNCTIONS)}'
+        f'</br>Calculated scores available: {", ".join([f"{{{field}}}" for field in CALCULATED_SCORE_FIELDS])}',
     )
 
     owner = models.ForeignKey(
@@ -669,7 +686,7 @@ class Question(models.Model):
     @staticmethod
     def get_possible_field_names(user):
         """Return field names of questions that can be used in recommendation rule and scoring model formula"""
-        return [
+        question_fields = [
             q.field_name
             for q in user.questions.all()
             if q.type
@@ -681,6 +698,8 @@ class Question(models.Model):
                 Question.DATE,
             ]
         ]
+        # Add calculated score fields
+        return question_fields + CALCULATED_SCORE_FIELDS
 
     def calculate_points(self, answers):
         """Calculate question points using scoring model if question has assigned scoring model"""

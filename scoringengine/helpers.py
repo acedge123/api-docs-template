@@ -234,6 +234,10 @@ def calculate_x_and_y_scores(owner, answers_data):
 def collect_recommendations(owner, answers_data):
     """Collect recommendations by checking each question rule against provided answers"""
 
+    # Calculate scores first to make them available for rule evaluation
+    x_axis, y_axis = calculate_x_and_y_scores(owner, answers_data)
+    total_score = x_axis + y_axis
+
     answers = {}
     for answer in answers_data:
         field_name = answer["field_name"]
@@ -255,6 +259,11 @@ def collect_recommendations(owner, answers_data):
 
             elif answer.get("value") is not None:
                 answers[field_name] = answer["value"]
+
+    # Add calculated scores to answers for rule evaluation
+    answers['x_axis_score'] = x_axis
+    answers['y_axis_score'] = y_axis
+    answers['total_score'] = total_score
 
     for answer_data in answers_data:
         question = owner.questions.filter(field_name=answer_data["field_name"]).first()
