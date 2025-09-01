@@ -9,7 +9,7 @@ const ApiReferenceTab = () => {
     {
       method: 'POST',
       path: '/api/v1/leads/',
-      description: 'Submit a new lead for scoring',
+      description: 'Submit a new lead for scoring with automatic X/Y axis calculation',
       auth: 'Token required',
       status: 'active'
     },
@@ -23,7 +23,7 @@ const ApiReferenceTab = () => {
     {
       method: 'GET',
       path: '/api/v1/leads/{id}/',
-      description: 'Get detailed lead information',
+      description: 'Get detailed lead information with scores and recommendations',
       auth: 'Token required',
       status: 'active'
     },
@@ -40,49 +40,64 @@ const ApiReferenceTab = () => {
       description: 'List available questions',
       auth: 'Token required',
       status: 'active'
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/scoring-models/',
+      description: 'Create scoring models with formulas',
+      auth: 'Admin token required',
+      status: 'active'
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/recommendations/',
+      description: 'Create recommendation rules (supports calculated scores)',
+      auth: 'Admin token required',
+      status: 'active'
     }
   ];
 
-  const exampleRequest = `curl -X POST https://api.hfc-scoring.com/api/v1/leads/ \\
+  const exampleRequest = `curl -X POST https://api-docs-template-production.up.railway.app/api/v1/leads/ \\
   -H "Authorization: Token YOUR_API_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "company": "Acme Corp",
-    "answers": [
-      {
-        "question_id": 1,
-        "response": "Chief Technology Officer"
-      },
-      {
-        "question_id": 2,
-        "response": "500-1000"
-      },
-      {
-        "question_id": 3,
-        "response": "100000-500000"
-      }
-    ]
+    "lead_id": "test-lead-001",
+    "answers": {
+      "income": "60000",
+      "credit_score": "750",
+      "employment_years": "3"
+    }
   }'`;
 
   const exampleResponse = `{
-  "id": 123,
-  "name": "John Doe",
-  "email": "john@example.com",
-  "company": "Acme Corp",
-  "x_score": 85,
-  "y_score": 92,
-  "total_score": 88.5,
-  "qualification_status": "high_priority",
-  "recommendations": [
+  "lead_id": "test-lead-001",
+  "x_axis": 25.5,
+  "y_axis": 18.2,
+  "total_score": 43.7,
+  "timestamp": "2024-01-15T10:30:00Z",
+  "answers": [
     {
-      "type": "immediate_contact",
-      "message": "High-value prospect. Contact within 24 hours.",
-      "affiliate_link": "https://example.com/cto-offer"
+      "field_name": "income",
+      "response": "60000",
+      "points": 15.0
+    },
+    {
+      "field_name": "credit_score", 
+      "response": "750",
+      "points": 10.5
+    },
+    {
+      "field_name": "employment_years",
+      "response": "3",
+      "points": 8.0
     }
   ],
-  "created_at": "2024-01-15T10:30:00Z"
+  "recommendations": [
+    {
+      "response_text": "High credit score and stable employment. Recommend premium product.",
+      "redirect_url": "https://example.com/premium-offer"
+    }
+  ]
 }`;
 
   return (
@@ -102,13 +117,21 @@ const ApiReferenceTab = () => {
           <div className="space-y-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-900 mb-2">Base URL</h4>
-              <code className="text-blue-800 font-mono">https://api.hfc-scoring.com</code>
+              <code className="text-blue-800 font-mono">https://api-docs-template-production.up.railway.app</code>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <h4 className="font-semibold text-green-900 mb-2">Authentication</h4>
               <p className="text-green-800 text-sm">
                 All API requests require a valid token in the Authorization header: 
                 <code className="font-mono ml-1">Authorization: Token YOUR_API_TOKEN</code>
+              </p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-purple-900 mb-2">🎯 Calculated Scores Feature</h4>
+              <p className="text-purple-800 text-sm">
+                The API automatically calculates X-axis, Y-axis, and total scores based on your scoring models. 
+                These calculated scores can be used in recommendation rules: 
+                <code className="font-mono ml-1">{`{x_axis_score}`, `{y_axis_score}`, `{total_score}`}</code>
               </p>
             </div>
           </div>
