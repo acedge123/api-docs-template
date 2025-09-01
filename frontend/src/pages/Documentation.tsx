@@ -7,6 +7,7 @@ import ScoringAlgorithmTab from '@/components/documentation/ScoringAlgorithmTab'
 import ExamplesTab from '@/components/documentation/ExamplesTab';
 
 const Documentation = () => {
+  console.log('Documentation page rendering...');
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <DocumentationHeader />
