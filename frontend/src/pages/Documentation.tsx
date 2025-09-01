@@ -4,6 +4,7 @@ import DocumentationHeader from '@/components/documentation/DocumentationHeader'
 import OverviewTab from '@/components/documentation/OverviewTab';
 import ApiReferenceTab from '@/components/documentation/ApiReferenceTab';
 import ScoringAlgorithmTab from '@/components/documentation/ScoringAlgorithmTab';
+import RecommendationSystemTab from '@/components/documentation/RecommendationSystemTab';
 import ExamplesTab from '@/components/documentation/ExamplesTab';
 
 const Documentation = () => {
@@ -14,7 +15,7 @@ const Documentation = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-8" data-tabs-container>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-1 p-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto gap-1 p-1">
             <TabsTrigger 
               value="overview" 
               data-value="overview"
@@ -37,6 +38,13 @@ const Documentation = () => {
               Scoring Algorithm
             </TabsTrigger>
             <TabsTrigger 
+              value="recommendations" 
+              data-value="recommendations"
+              className="text-xs sm:text-sm py-2 px-2 sm:px-3"
+            >
+              Recommendations
+            </TabsTrigger>
+            <TabsTrigger 
               value="examples" 
               data-value="examples"
               className="text-xs sm:text-sm py-2 px-2 sm:px-3"
@@ -55,6 +63,10 @@ const Documentation = () => {
 
           <TabsContent value="scoring" data-value="scoring" className="space-y-6">
             <ScoringAlgorithmTab />
+          </TabsContent>
+
+          <TabsContent value="recommendations" data-value="recommendations" className="space-y-6">
+            <RecommendationSystemTab />
           </TabsContent>
 
           <TabsContent value="examples" data-value="examples" className="space-y-6">

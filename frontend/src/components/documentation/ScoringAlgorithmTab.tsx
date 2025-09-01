@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Target, TrendingUp, Calculator } from 'lucide-react';
+import { BarChart3, Target, TrendingUp, Calculator, Zap, Code, Lightbulb } from 'lucide-react';
 
 const ScoringAlgorithmTab = () => {
   const scoringFactors = [
@@ -218,6 +218,79 @@ const ScoringAlgorithmTab = () => {
               <h4 className="font-semibold text-red-800">Disqualified</h4>
               <p className="text-xs text-red-700 mt-1">X: 0-39, Y: 0-39</p>
               <p className="text-xs text-red-600 mt-2">Archive or reject</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Advanced Scoring Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Code className="mr-2 h-5 w-5" />
+            Advanced Scoring Features
+          </CardTitle>
+          <CardDescription>
+            Powerful formula system for complex scoring calculations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">Formula System</h3>
+              <p className="text-gray-700 mb-4">
+                Create sophisticated scoring formulas using mathematical operations and question references:
+              </p>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-green-700 mb-2">Available Operations</h4>
+                  <div className="space-y-1 text-sm">
+                    <div><strong>Arithmetic:</strong> +, -, *, /, %, **, //</div>
+                    <div><strong>Aggregate:</strong> count(), max(), mean(), median(), min(), sum()</div>
+                    <div><strong>Math:</strong> sqrt()</div>
+                    <div><strong>Date:</strong> days(), today()</div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-blue-700 mb-2">Example Formulas</h4>
+                  <div className="space-y-1 text-sm font-mono bg-white p-2 rounded">
+                    <div>{"{rent_amount} / {income} * 100"}</div>
+                    <div>{"{age} - 18"}</div>
+                    <div>{"sqrt({credit_score})"}</div>
+                    <div>{"sum({debt_payments})"}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">Value Ranges & Points</h3>
+              <p className="text-gray-700 mb-4">
+                Define custom point ranges for different value intervals:
+              </p>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-purple-700 mb-2">Range Configuration</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="bg-white p-2 rounded">
+                      <strong>Rent Ratio:</strong><br/>
+                      0-30% = 10 points<br/>
+                      30-50% = 5 points<br/>
+                      50%+ = 0 points
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-pink-700 mb-2">Weight Multipliers</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="bg-white p-2 rounded">
+                      <strong>Question Weight:</strong> 1.0 (default)<br/>
+                      <strong>High Priority:</strong> 2.0<br/>
+                      <strong>Low Priority:</strong> 0.5
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
