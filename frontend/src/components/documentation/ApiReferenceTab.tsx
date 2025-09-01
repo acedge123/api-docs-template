@@ -131,7 +131,7 @@ const ApiReferenceTab = () => {
               <p className="text-purple-800 text-sm">
                 The API automatically calculates X-axis, Y-axis, and total scores based on your scoring models. 
                 These calculated scores can be used in recommendation rules: 
-                <code className="font-mono ml-1">{`{x_axis_score}`, `{y_axis_score}`, `{total_score}`}</code>
+                <code className="font-mono ml-1">{`{x_axis_score}, {y_axis_score}, {total_score}`}</code>
               </p>
             </div>
           </div>
