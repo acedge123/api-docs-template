@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Update this with your Railway app URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://your-app-name.railway.app/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api-docs-template-production.up.railway.app/api/v1';
 
 // Create axios instance
 const apiClient = axios.create({
