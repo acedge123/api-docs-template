@@ -16,8 +16,8 @@ const OverviewTab = () => {
   const features = [
     {
       icon: Target,
-      title: "X/Y Axis Scoring",
-      description: "Multi-dimensional scoring that evaluates leads across two axes for more nuanced qualification",
+      title: "Two-Dimensional Scoring",
+      description: "Evaluate leads across capability (financial means) and propensity (willingness to act) axes for precise qualification",
       color: "text-blue-600"
     },
     {
@@ -53,22 +53,22 @@ const OverviewTab = () => {
   ];
 
   const questionTypes = [
-    { type: "Open", description: "Free text responses", useCase: "Job titles, company names" },
-    { type: "Choices", description: "Single selection from options", useCase: "Company size, industry" },
-    { type: "Multiple Choices", description: "Multiple selections allowed", useCase: "Technologies used, pain points" },
-    { type: "Slider", description: "Numeric range input", useCase: "Budget ranges, timeline" },
-    { type: "Integer", description: "Numeric input", useCase: "Team size, budget amount" },
-    { type: "Date", description: "Date picker", useCase: "Project timeline, purchase date" }
+    { type: "Open", description: "Free text responses", useCase: "Company names, specific requirements" },
+    { type: "Choices", description: "Single selection from options", useCase: "Company size, industry, purchase timeline" },
+    { type: "Multiple Choices", description: "Multiple selections allowed", useCase: "Pain points, decision factors, budget ranges" },
+    { type: "Slider", description: "Numeric range input", useCase: "Budget ranges, timeline, credit score" },
+    { type: "Integer", description: "Numeric input", useCase: "Annual revenue, team size, budget amount" },
+    { type: "Date", description: "Date picker", useCase: "Project timeline, purchase date, contract renewal" }
   ];
 
   return (
     <div className="space-y-8">
       {/* Introduction */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900">HFC Scoring Engine</h1>
+        <h1 className="text-4xl font-bold text-gray-900">Lead Scoring Engine</h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          A powerful lead qualification system that automatically scores and categorizes leads 
-          based on their responses to custom questions, helping sales teams focus on high-value prospects.
+          A powerful two-dimensional scoring system that evaluates leads across capability and propensity axes, 
+          helping you identify prospects with both the financial means and willingness to take action.
         </p>
         <div className="flex justify-center space-x-4">
           <Badge variant="secondary" className="text-sm">
@@ -105,8 +105,8 @@ const OverviewTab = () => {
               </div>
               <h3 className="font-semibold">Ask Questions</h3>
               <p className="text-sm text-gray-600">
-                Set up custom questions to gather information about job titles, company size, 
-                budget, timeline, and other qualification criteria.
+                Set up custom questions to gather information about financial capability, 
+                purchase intent, budget, timeline, and other qualification criteria.
               </p>
             </div>
             <div className="text-center space-y-3">
@@ -116,7 +116,7 @@ const OverviewTab = () => {
               <h3 className="font-semibold">Score Automatically</h3>
               <p className="text-sm text-gray-600">
                 Our algorithms evaluate responses using your custom scoring models and 
-                assign X/Y axis scores based on lead quality and potential value.
+                assign X/Y axis scores based on financial capability and purchase propensity.
               </p>
             </div>
             <div className="text-center space-y-3">
@@ -125,8 +125,8 @@ const OverviewTab = () => {
               </div>
               <h3 className="font-semibold">Get Recommendations</h3>
               <p className="text-sm text-gray-600">
-                Receive prioritized lead lists with specific recommendations for how 
-                and when to reach out to each prospect.
+                Receive prioritized lead lists with specific recommendations based on 
+                their capability and propensity scores for optimal engagement timing.
               </p>
             </div>
           </div>
@@ -201,7 +201,7 @@ const OverviewTab = () => {
             Benefits
           </CardTitle>
           <CardDescription>
-            Why leading sales teams choose our scoring engine
+            Why organizations choose our two-dimensional scoring approach
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -211,19 +211,19 @@ const OverviewTab = () => {
               <ul className="space-y-2">
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Focus on high-value prospects</span>
+                  <span className="text-sm">Identify prospects with both means and motivation</span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Reduce time spent on low-priority leads</span>
+                  <span className="text-sm">Prioritize leads by financial capability and purchase intent</span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Improve conversion rates</span>
+                  <span className="text-sm">Improve conversion rates with targeted messaging</span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Get personalized outreach recommendations</span>
+                  <span className="text-sm">Get timing recommendations based on propensity scores</span>
                 </li>
               </ul>
             </div>
@@ -232,19 +232,19 @@ const OverviewTab = () => {
               <ul className="space-y-2">
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <span className="text-sm">Data-driven lead qualification</span>
+                  <span className="text-sm">Data-driven qualification across capability and propensity</span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <span className="text-sm">Scalable lead processing</span>
+                  <span className="text-sm">Scalable lead processing with two-dimensional insights</span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <span className="text-sm">Comprehensive analytics and reporting</span>
+                  <span className="text-sm">Comprehensive analytics on financial readiness and purchase intent</span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <span className="text-sm">Multi-tenant architecture for agencies</span>
+                  <span className="text-sm">Multi-tenant architecture for agencies managing diverse clients</span>
                 </li>
               </ul>
             </div>
@@ -260,14 +260,14 @@ const OverviewTab = () => {
             Getting Started
           </CardTitle>
           <CardDescription>
-            Ready to transform your lead qualification process?
+            Ready to transform your lead qualification with two-dimensional scoring?
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <p className="text-gray-600">
-              The HFC Scoring Engine is designed to be easy to set up and use. 
-              Whether you're a sales team looking to improve lead qualification or 
+              The Lead Scoring Engine is designed to be easy to set up and use. 
+              Whether you're a sales team looking to identify high-value prospects or 
               an agency managing multiple clients, we have you covered.
             </p>
             <div className="grid md:grid-cols-2 gap-4">
