@@ -1,0 +1,32 @@
+{
+  "name": "lead-scoring-documentation",
+  "version": "1.0.0",
+  "description": "Lead Scoring Engine with comprehensive documentation and admin interface",
+  "private": true,
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "build:dev": "cd frontend && vite build --mode development",
+    "preview": "cd frontend && npm run preview",
+    "lint": "cd frontend && npm run lint",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:frontend"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "keywords": [
+    "lead-scoring",
+    "documentation",
+    "admin-interface",
+    "react",
+    "typescript",
+    "django"
+  ],
+  "author": "Lead Scoring Team",
+  "license": "MIT"
+}

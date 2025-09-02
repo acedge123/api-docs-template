@@ -1,0 +1,7 @@
+# General
+# ------------------------------------------------------------------------------
+DJANGO_SECRET_KEY=8BQnIN1bQkkskspzHm36VBhD5TfwO59lZtGZK03XSlKhpgpeaaXhEtxQ5eNZqkME
+
+# Sentry
+# ------------------------------------------------------------------------------
+SENTRY_DSN=https://b4d21b7b58fe4b6e9c4090412c309744@sentry.brival.dev/84

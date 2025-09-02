@@ -1,0 +1,64 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static scoringengine_extras %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; {{ title|truncatewords:"18" }}
+</div>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+  <div id="content-main">
+    <form action="" method="POST">
+        <style>
+            label {
+                display: block;
+                width: 200px;
+                float: left;
+            }
+            label:before {
+                content: " ";
+                clear: both;
+            }
+            input, select, strong {
+                display: block;
+                min-width: 300px;
+            }
+        </style>
+        {% csrf_token %}
+        {{ form }}
+
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+
+        {% if response %}
+            <h2>Score</h2>
+            <label>&nbsp;X Axis:</label>
+            <strong>{{ response.x_axis }}</strong>
+            <label>&nbsp;Y Axis:</label>
+            <strong>{{ response.y_axis }}</strong>
+            <label>&nbsp;Total score:</label>
+            <strong>{{ response.total_score }}</strong>
+
+            <h2>Recommendations:</h2>
+            {% for field_name, recommendation in response.recommendations.items %}
+                <h3>Field: {{ field_name }}</h3>
+                <label>&nbsp;Response text</label>
+                <strong>{{ recommendation.response_text }}&nbsp;</strong>
+                <label>&nbsp;Affiliate name</label>
+                <strong>{{ recommendation.affiliate_name }}&nbsp;</strong>
+                <label>&nbsp;Affiliate image</label>
+                <strong>{{ recommendation.affiliate_image }}&nbsp;</strong>
+                <label>&nbsp;Affiliate link</label>
+                <strong>{{ recommendation.affiliate_link }}&nbsp;</strong>
+                <label>&nbsp;Redirect url</label>
+                <strong>{{ recommendation.redirect_url }}&nbsp;</strong>
+            {% endfor %}
+        {% endif %}
+    </form>
+  </div>
+{% endblock %}

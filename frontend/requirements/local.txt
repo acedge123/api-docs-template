@@ -1,0 +1,19 @@
+-r base.txt
+
+psycopg2==2.8.6  # https://github.com/psycopg/psycopg2
+
+# Testing
+# ------------------------------------------------------------------------------
+pytest==6.2.3  # https://github.com/pytest-dev/pytest
+pytest-django==4.2.0  # https://github.com/pytest-dev/pytest-django
+pytest-mock==3.6.1  # https://github.com/pytest-dev/pytest-mock
+pytest-cov==4.1.0  # https://github.com/pytest-dev/pytest-cov
+
+# Code quality
+# ------------------------------------------------------------------------------
+coverage==5.5  # https://github.com/nedbat/coveragepy
+pre-commit==2.20.0  # https://github.com/pre-commit/pre-commit
+
+# Code formatter
+# ------------------------------------------------------------------------------
+black==22.8.0  # https://github.com/psf/black

@@ -1,0 +1,8 @@
+{% extends "admin/actions.html" %}
+{% load i18n %}
+<div class="actions">
+  {% block actions %}
+    {{ block.super }}
+    <a href="{% url 'admin:api_request_template' %}" class="button">{% translate 'API request template' %}</a>
+  {% endblock %}
+</div>
