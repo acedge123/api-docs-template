@@ -1,191 +1,179 @@
-# Scoring Engine - Integrated Solution
+# Lead Scoring Engine - Subtree Bridge Architecture
 
-A modern scoring and recommendation engine with a beautiful admin interface, built with Django and React.
+A modern lead scoring system with a clean separation between frontend and backend, using a git subtree workflow for seamless collaboration.
 
-## 🚀 Features
+## 🏗️ Architecture Overview
 
-### Backend (Django)
-- **Question Management**: Create and manage different types of questions
-- **Scoring Models**: Configure complex scoring formulas and value ranges
-- **Recommendations**: Set up rule-based recommendations with affiliate links
-- **Lead Processing**: Calculate scores and provide personalized recommendations
-- **Analytics**: Comprehensive reporting and insights
-- **REST API**: Full CRUD operations for all entities
+We run two repositories with a "Subtree Bridge" approach:
 
-### Frontend (React + TypeScript)
-- **Modern Admin Interface**: Built with React, TypeScript, and Tailwind CSS
-- **Real-time Updates**: Live data synchronization
-- **Responsive Design**: Works on desktop and mobile
-- **Authentication**: Secure token-based authentication
-- **Analytics Dashboard**: Beautiful charts and insights
-- **Documentation**: Built-in API documentation
+- **Frontend (FE)**: `acedge123/lead-scoring-documentation` (owned by Lovable, deployed on Vercel)
+- **Backend (BE)**: `acedge123/api-docs-template` (owned by Cursor, deployed on Railway)
 
-## 🏗️ Architecture
+The frontend content is mirrored into the backend repo as a read-only convenience folder, maintaining clear ownership and deployment independence.
 
+## 🎯 Core Principles
+
+### **Single Source of Truth**
+- **FE truth** = the FE repo (Lovable owns this)
+- **BE truth** = the BE repo (Cursor owns this)
+- **FE content in BE** = a mirror for convenience, never edited there
+
+### **Predictable Location**
+- Frontend content lives under `frontend/` in the BE repo
+- Everyone assumes FE content is present but never edits it there
+- Default flow: one-way pull from FE into BE
+
+### **Deployment Independence**
+- Railway deploys only the BE, reading from BE root
+- Vercel deploys only the FE, reading from FE repo
+- Changes in FE mirrored inside BE do not auto-deploy the frontend
+
+## 👥 Roles & Responsibilities
+
+### **Lovable (Frontend Team)**
+- ✅ Own FE repo structure, build, and deployments
+- ✅ Merge FE PRs in the FE repo as usual
+- ✅ Notify Cursor when notable FE changes land
+- ✅ Treat FE content inside BE repo as read-only
+
+### **Cursor (Backend Team)**
+- ✅ Own BE repo, Django app, migrations, and Railway deployment
+- ✅ Maintain the vendored FE mirror under `frontend/` folder
+- ✅ Refresh FE mirror on demand (before BE releases, when FE docs needed)
+- ✅ Never assume BE mirror is ahead of FE
+
+## 🔄 Lifecycle & Workflows
+
+### **Day-to-Day Development**
+1. **FE team** works exclusively in the FE repo
+2. **BE team** works exclusively in the BE repo
+3. **BE team** pulls latest FE into vendored folder when needed
+
+### **Coordinated Releases**
+1. **BE team** refreshes FE mirror before cutting release branch/tag
+2. **FE deployment** remains independent
+3. **No FE redeploy** triggered by BE actions
+
+### **Exceptional "Push Back" to FE**
+- **BE team** can propose small FE fixes (typos, doc tweaks)
+- **Changes staged** in BE's vendored copy first
+- **Then pushed upstream** to FE with clear communication
+- **Lovable reviews/merges** in FE repo
+- **BE mirror refreshed** afterward
+
+## 🚀 Quick Start
+
+### **For Lovable (Frontend)**
+```bash
+# Clone the frontend repository
+git clone https://github.com/acedge123/lead-scoring-documentation.git
+cd lead-scoring-documentation
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Django API    │    │   PostgreSQL    │
-│   (Vercel)      │◄──►│   (Railway)     │◄──►│   (Railway)     │
-│                 │    │                 │    │                 │
-│ • React Admin   │    │ • Admin APIs    │    │ • Questions     │
-│ • Authentication│    │ • Lead Scoring  │    │ • Scoring Models│
-│ • Analytics     │    │ • Analytics     │    │ • Leads         │
-│ • Documentation │    │ • CORS Enabled  │    │ • Users         │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+
+### **For Cursor (Backend)**
+```bash
+# Clone the backend repository
+git clone https://github.com/acedge123/api-docs-template.git
+cd api-docs-template
+
+# Frontend content is available in frontend/ folder
+# Refresh with: git subtree pull --prefix=frontend origin main
 ```
 
 ## 📁 Project Structure
 
 ```
-scoring-engine-integrated/
-├── frontend/                 # React + TypeScript admin interface
-│   ├── src/
-│   │   ├── components/       # Reusable UI components
-│   │   ├── pages/           # Page components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── lib/             # Utility functions
-│   │   └── utils/           # Helper functions
-│   ├── package.json
-│   └── ...
-├── backend/                  # Django API
-│   ├── api/                 # API endpoints
-│   ├── scoringengine/       # Core scoring logic
-│   ├── users/               # User management
-│   ├── manage.py
-│   └── ...
-├── README.md
-├── API_DOCUMENTATION.md
-├── DEPLOYMENT_GUIDE.md
-└── IMPLEMENTATION_SUMMARY.md
+lead-scoring-documentation/          # Frontend Repo (Lovable)
+├── src/                            # React components and pages
+├── index.html                      # Main HTML file
+├── vite.config.ts                  # Vite configuration
+├── tsconfig.json                   # TypeScript configuration
+├── tsconfig.node.json              # TypeScript configuration
+├── package.json                    # Dependencies and scripts
+
+api-docs-template/                   # Backend Repo (Cursor)
+├── frontend/                       # Mirrored FE content (read-only)
+├── api/                           # Django API endpoints
+├── scoringengine/                 # Core scoring logic
+├── manage.py                      # Django management
+└── requirements/                  # Python dependencies
 ```
 
-## 🚀 Quick Start
+## 🔧 Available Scripts (Frontend)
 
-### Prerequisites
-- Node.js 18+ and npm
-- Python 3.8+ and pip
-- PostgreSQL (for production)
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build:dev` | Build for development (skips TypeScript) |
+| `npm run build` | Build for production (with TypeScript) |
+| `npm run preview` | Preview production build |
 
-### Local Development
 
-#### Backend Setup
+
+## 🔄 Mirror Management
+
+### **Refresh FE Mirror in BE (Cursor)**
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements/local.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+# From BE repo root
+git subtree pull --prefix=frontend origin main
 ```
 
-#### Frontend Setup
+### **Push FE Changes from BE (Coordinated)**
 ```bash
-cd frontend
-npm install
-npm run dev
+# Stage changes in BE's frontend/ folder
+git add frontend/
+
+# Commit with clear message
+git commit -m "FE mirror changes for [specific purpose]"
+
+# Push to FE repo (coordinated with Lovable)
+git subtree push --prefix=frontend origin main
 ```
 
-### Production Deployment
+## 🚫 What NOT to Do
 
-#### Backend (Railway)
-1. Push backend code to GitHub
-2. Connect to Railway
-3. Set environment variables
-4. Deploy
+- ❌ **Never edit** FE content directly in BE repo
+- ❌ **Never assume** BE mirror is current
+- ❌ **Never mix** FE and BE changes in same PR
+- ❌ **Never commit** secrets in either repo
 
-#### Frontend (Vercel)
-1. Push frontend code to GitHub
-2. Connect to Vercel
-3. Set environment variables
-4. Deploy
+## ✅ What Success Looks Like
+
+- **Lovable ships** FE changes without touching BE
+- **Cursor ships** BE changes without touching FE
+- **BE team updates** FE mirror when needed (quick, low-risk sync)
+- **No confusion** about "which repo is the real frontend"
 
 ## 📚 Documentation
 
-- [API Documentation](API_DOCUMENTATION.md) - Complete API reference
-- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Step-by-step deployment instructions
-- [Implementation Summary](IMPLEMENTATION_SUMMARY.md) - Technical details
+- **API Documentation**: Available in the frontend documentation tabs
+- **Backend API**: Django REST Framework with full CRUD operations
 
-## 🔧 Configuration
+## 🤝 Support & Communication
 
-### Environment Variables
+### **For Frontend Issues**
+- Check Vercel deployment logs
+- Verify build process completes successfully
+- Ensure Node.js version is 18+
 
-#### Backend (.env)
-```bash
-DATABASE_URL=postgresql://...
-DJANGO_SECRET_KEY=your-secret-key
-DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=your-domain.com
-CORS_ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app
-```
+### **For Backend Issues**
+- Check Django logs and Railway deployment
+- Verify database migrations
+- Check API endpoint configurations
 
-#### Frontend (.env)
-```bash
-VITE_API_BASE_URL=https://your-backend-domain.railway.app/api/v1
-```
-
-## 🎯 Key Features
-
-### Question Types
-- **Open**: Text input questions
-- **Choices**: Single selection from options
-- **Multiple Choices**: Multiple selections allowed
-- **Slider**: Numeric range input
-- **Integer**: Numeric input
-- **Date**: Date picker
-
-### Scoring System
-- **X-axis and Y-axis scoring**: Multi-dimensional scoring
-- **Formula-based calculations**: Complex mathematical expressions
-- **Value ranges**: Configurable point assignments
-- **Weighted scoring**: Adjustable question weights
-
-### Recommendations
-- **Rule-based logic**: Conditional recommendations
-- **Affiliate integration**: Links and tracking
-- **Multi-channel**: Text, images, and redirects
-- **A/B testing**: Multiple recommendation options
-
-### Analytics
-- **Lead summary**: Overview statistics
-- **Question analytics**: Response distribution
-- **Recommendation effectiveness**: Performance tracking
-- **Score distribution**: Visual insights
-
-## 🔒 Security
-
-- **Token-based authentication**: Secure API access
-- **User-scoped data**: Data isolation
-- **CORS protection**: Cross-origin security
-- **Input validation**: Comprehensive validation
-- **SQL injection protection**: Django ORM security
-
-## 💰 Cost Estimate
-
-- **Railway (Backend)**: $10-20/month
-- **Vercel (Frontend)**: Free tier available
-- **Total**: $10-40/month depending on usage
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-1. Check the documentation
-2. Review the API documentation
-3. Check deployment guides
-4. Open an issue on GitHub
+### **For Coordination**
+- **FE changes**: Lovable notifies Cursor when mirror refresh needed
+- **BE changes**: Cursor refreshes FE mirror before releases
+- **Cross-team fixes**: Coordinate through clear communication
 
 ---
+
+**🎯 TL;DR**: Frontend keeps its own repo and deployment. Backend keeps its own repo and deployment. We mirror the frontend into the backend repo as a read-only folder for convenience. Frontend is still the source of truth. No cross-repo surprises, no broken deploys.
 
 **Built with ❤️ using Django, React, TypeScript, and Tailwind CSS**
