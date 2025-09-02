@@ -1,32 +1,48 @@
 {
   "name": "lead-scoring-documentation",
-  "version": "1.0.0",
-  "description": "Lead Scoring Engine with comprehensive documentation and admin interface",
+  "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
-    "build:dev": "cd frontend && vite build --mode development",
-    "preview": "cd frontend && npm run preview",
-    "lint": "cd frontend && npm run lint",
-    "install:frontend": "cd frontend && npm install",
-    "install:all": "npm run install:frontend"
-  },
+  "type": "module",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=18 <21",
+    "npm": ">=9"
   },
-  "workspaces": [
-    "frontend"
-  ],
-  "keywords": [
-    "lead-scoring",
-    "documentation",
-    "admin-interface",
-    "react",
-    "typescript",
-    "django"
-  ],
-  "author": "Lead Scoring Team",
-  "license": "MIT"
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-label": "^2.0.0",
+    "@radix-ui/react-slot": "^1.0.0",
+    "@radix-ui/react-tabs": "^1.0.0",
+    "@radix-ui/react-toast": "^1.2.15",
+    "@radix-ui/react-tooltip": "^1.0.0",
+    "axios": "^1.6.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.400.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.8.2",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.9.2",
+    "vite": "^4.5.14"
+  }
 }
