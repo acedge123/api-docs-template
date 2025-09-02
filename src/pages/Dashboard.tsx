@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { 
   Users, 
   BarChart3, 
@@ -14,8 +14,8 @@ import {
   Activity,
   Database
 } from 'lucide-react';
-import { authAPI, analyticsAPI } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { authAPI, analyticsAPI } from '../lib/api';
+import { useToast } from '../hooks/use-toast';
 
 interface User {
   id: number;
