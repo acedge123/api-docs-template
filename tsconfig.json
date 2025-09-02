@@ -19,6 +19,6 @@
 
     "types": ["vite/client"]
   },
-  "include": ["src", "index.html", "vite.config.js"],
+  "include": ["src", "index.html", "vite.config.js", "src/vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
