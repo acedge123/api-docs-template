@@ -18,18 +18,41 @@ git clone https://github.com/acedge123/lead-scoring-documentation.git
 cd lead-scoring-documentation
 ```
 
-### **2. Install Dependencies**
+### **2. ⚠️ CRITICAL: Manual TypeScript Configuration Fix Required**
+
+**The TypeScript configuration files are read-only in this environment and require manual fixes outside of Lovable to resolve the project reference error.**
+
+**You must manually edit `tsconfig.node.json` before proceeding:**
+
+1. **Open `tsconfig.node.json` in your code editor**
+2. **Replace the entire content with:**
+   ```json
+   {
+     "compilerOptions": {
+       "composite": true,
+       "skipLibCheck": true,
+       "module": "ESNext",
+       "moduleResolution": "bundler",
+       "allowSyntheticDefaultImports": true,
+       "noEmit": false
+     },
+     "include": ["vite.config.*"]
+   }
+   ```
+3. **Save the file and commit to git**
+
+### **3. Install Dependencies**
 ```bash
 npm install
 ```
 **This will generate the required `package-lock.json` file.**
 
-### **3. Start Development Server**
+### **4. Start Development Server**
 ```bash
 npm run dev
 ```
 
-### **4. Build Commands**
+### **5. Build Commands**
 ```bash
 npm run build:dev    # Development build (fast)
 npm run build        # Production build (with TypeScript)
@@ -38,12 +61,19 @@ npm run preview      # Preview production build
 
 ---
 
-## **✅ What's Already Fixed**
+## **🚨 Why Manual Fix is Critical**
 
-### **TypeScript Configuration**
-- ✅ `tsconfig.node.json` properly configured with `"noEmit": false`
-- ✅ Project references working correctly
-- ✅ No compilation issues
+The `"noEmit": false` setting in `tsconfig.node.json` resolves TypeScript project reference requirements. Without this fix:
+
+- ❌ `npm run dev` will fail with compilation errors
+- ❌ TypeScript project references won't work
+- ❌ Build process will be blocked
+
+**This is a one-time manual fix that cannot be automated in this environment.**
+
+---
+
+## **✅ What's Already Fixed**
 
 ### **Project Structure**
 - ✅ Root-level frontend project (not a workspace)
@@ -53,30 +83,17 @@ npm run preview      # Preview production build
 
 ---
 
-## **🚨 Troubleshooting**
+## **🔧 Troubleshooting**
 
-### **If you get TypeScript errors:**
-1. **Verify `tsconfig.node.json` contains:**
-   ```json
-   {
-     "compilerOptions": {
-       "composite": true,
-       "skipLibCheck": true,
-       "module": "ESNext",
-       "moduleResolution": "bundler",
-       "allowSyntheticDefaultImports": true,
-       "noEmit": false  // ← This is crucial!
-     },
-     "include": ["vite.config.*"]
-   }
-   ```
-
-2. **Run `npm install`** to ensure all dependencies are installed
+### **If you still get TypeScript errors after the manual fix:**
+1. **Verify `tsconfig.node.json` contains the exact configuration above**
+2. **Run `npm install` to ensure all dependencies are installed**
 3. **Check that `node_modules` directory exists**
+4. **Clear `node_modules` and run `npm install` again if needed**
 
 ### **If build fails:**
 1. **Verify Node.js version is 18+**
-2. **Clear `node_modules` and run `npm install` again**
+2. **Ensure the manual TypeScript fix was applied**
 3. **Check for any syntax errors in source files**
 
 ---
@@ -92,7 +109,7 @@ npm run preview      # Preview production build
 
 ---
 
-## **�� Project Structure**
+## **📁 Project Structure**
 
 ```
 lead-scoring-documentation/
@@ -100,7 +117,7 @@ lead-scoring-documentation/
 ├── index.html             # Main HTML file
 ├── vite.config.ts         # Vite configuration
 ├── tsconfig.json          # TypeScript configuration
-├── tsconfig.node.json     # Node-specific TypeScript config ✅
+├── tsconfig.node.json     # Node-specific TypeScript config ⚠️ MANUAL FIX REQUIRED
 ├── tailwind.config.js     # Tailwind CSS configuration
 ├── postcss.config.js      # PostCSS configuration
 └── package.json           # Dependencies and scripts
@@ -108,14 +125,14 @@ lead-scoring-documentation/
 
 ---
 
-## **🔧 Key Features**
+## **🔒 Manual Fix Process for Lovable**
 
-- **React 18** with TypeScript
-- **Vite** for fast development and building
-- **Tailwind CSS** for styling
-- **Responsive design** for all devices
-- **Documentation tabs** for easy navigation
-- **Admin interface** integration
+1. **Clone the repository** to their local machine
+2. **Manually edit `tsconfig.node.json`** with the correct configuration
+3. **Commit and push** the fixed configuration
+4. **Then run** `npm install` and `npm run dev`
+
+This ensures the TypeScript project reference error is resolved before attempting to run the development server.
 
 ---
 
@@ -124,10 +141,10 @@ lead-scoring-documentation/
 If you encounter any issues:
 
 1. **Check this guide first**
-2. **Verify Node.js version is 18+**
-3. **Ensure `tsconfig.node.json` has `"noEmit": false`**
+2. **Verify the manual TypeScript fix was applied**
+3. **Ensure Node.js version is 18+**
 4. **Run `npm install` to regenerate dependencies**
 
 ---
 
-**🎉 You're all set! The TypeScript configuration issues have been resolved, and you should be able to run `npm run dev` without any problems.**
+**🎉 After applying the manual TypeScript fix, you should be able to run `npm run dev` without any problems!**
