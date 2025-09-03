@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 from django.db.models import Exists, OuterRef, Q
 from django.template.response import TemplateResponse
 from django.urls import path
-
 from import_export.admin import ExportMixin
 from rangefilter.filters import (
     BaseRangeFilter,
@@ -16,31 +15,29 @@ from rangefilter.filters import (
     NumericRangeFilter,
     NumericRangeFilterBuilder,
 )
-
 from rest_framework.authtoken import admin as drf_admin
 from rest_framework.authtoken.models import TokenProxy
 
 from scoringengine.forms import TestPostLeadForm
 from scoringengine.helpers import (
-    collect_answers_values,
     calculate_x_and_y_scores,
+    collect_answers_values,
     collect_recommendations,
 )
 from scoringengine.models import (
-    Question,
+    Answer,
+    AnswerLog,
     Choice,
-    Recommendation,
-    ScoringModel,
-    ValueRange,
     DatesRange,
     Lead,
     LeadLog,
-    Answer,
-    AnswerLog,
+    Question,
+    Recommendation,
     RecommendationFieldsMixin,
+    ScoringModel,
+    ValueRange,
 )
 from scoringengine.resources import LeadResource
-from users.models import Catalogue
 
 User = get_user_model()
 
@@ -91,9 +88,9 @@ class OwnAdminSite(admin.AdminSite):
             answers_data = [
                 {
                     "field_name": field_name,
-                    "response": ",".join(response)
-                    if isinstance(response, list)
-                    else response,
+                    "response": (
+                        ",".join(response) if isinstance(response, list) else response
+                    ),
                 }
                 for field_name, response in form.cleaned_data.items()
             ]
@@ -206,9 +203,9 @@ class RestrictedAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             if hasattr(request.user, "catalogue_as_master"):
                 form.base_fields["owner"].required = True
-                form.base_fields[
-                    "owner"
-                ].queryset = request.user.catalogue_as_master.slaves.all()
+                form.base_fields["owner"].queryset = (
+                    request.user.catalogue_as_master.slaves.all()
+                )
 
             else:
                 form.base_fields["owner"].widget = forms.HiddenInput()
@@ -326,13 +323,13 @@ class QuestionAdmin(RestrictedAdmin):
         answers = {}
         for q in questions:
             if q.type == Question.MULTIPLE_CHOICES:
-                answers[
-                    q.field_name
-                ] = f"put one or multiple responses separated by commas for '{q.field_name}' question here"
+                answers[q.field_name] = (
+                    f"put one or multiple responses separated by commas for '{q.field_name}' question here"
+                )
             else:
-                answers[
-                    q.field_name
-                ] = f"put response for '{q.field_name}' question here"
+                answers[q.field_name] = (
+                    f"put response for '{q.field_name}' question here"
+                )
 
         payload = {
             "lead_id": "(optional) uuid4 lead identifier, if not used just remove whole line",
@@ -440,7 +437,9 @@ class ScoringModelAdmin(RestrictedAdmin):
         if db_field.name == "question":
             if not request.user.is_superuser:
                 if hasattr(request.user, "catalogue_as_master"):
-                    kwargs["queryset"] = Question.objects.filter(owner=request.user.catalogue_as_master.slaves.all())
+                    kwargs["queryset"] = Question.objects.filter(
+                        owner=request.user.catalogue_as_master.slaves.all()
+                    )
                 else:
                     kwargs["queryset"] = Question.objects.filter(owner=request.user)
 
@@ -572,19 +571,21 @@ class LeadAdminAbstract(ExportMixin, RestrictedAdmin):
                 "title": question.text,
                 "question_type": question.type,
                 "field_name": question.field_name,
-                "default_start": question.min_value
-                if question.type == Question.SLIDER
-                else None,
-                "default_end": question.max_value
-                if question.type == Question.SLIDER
-                else None,
+                "default_start": (
+                    question.min_value if question.type == Question.SLIDER else None
+                ),
+                "default_end": (
+                    question.max_value if question.type == Question.SLIDER else None
+                ),
             }
 
         answers_fields = [
             (
-                "answers__date_value"
-                if question["question_type"] == Question.DATE
-                else "answers__value",
+                (
+                    "answers__date_value"
+                    if question["question_type"] == Question.DATE
+                    else "answers__value"
+                ),
                 AnswerRangeFilterBuilder(**question),
             )
             for question in questions.values()

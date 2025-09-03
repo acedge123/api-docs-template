@@ -5,34 +5,46 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install dependencies
-	pip install -r requirements/local.txt
+	pip3 install -r backend/requirements/local.txt
 
 test: ## Run all tests
-	pytest
+	cd backend && python3 -m pytest
 
 test-unit: ## Run unit tests only
-	pytest -m unit
+	cd backend && python3 -m pytest -m unit
 
 test-integration: ## Run integration tests only
-	pytest -m integration
+	cd backend && python3 -m pytest -m integration
 
 test-performance: ## Run performance tests only
-	pytest -m performance
+	cd backend && python3 -m pytest -m performance
 
 test-api: ## Run API tests only
-	pytest -m api
+	cd backend && python3 -m pytest -m api
 
 coverage: ## Run tests with coverage report
-	pytest --cov=scoringengine --cov=api --cov-report=html --cov-report=term-missing
+	cd backend && python3 -m pytest --cov=scoringengine --cov=api --cov-report=html --cov-report=term-missing
 
-lint: ## Run linting checks
-	flake8 scoringengine/ api/ tests/
-	black --check scoringengine/ api/ tests/
-	isort --check-only scoringengine/ api/ tests/
+lint: ## Run all linting checks
+	cd backend && python3 -m flake8 scoringengine/ api/ tests/
+	cd backend && python3 -m black --check scoringengine/ api/ tests/
+	cd backend && python3 -m isort --check-only scoringengine/ api/ tests/
+
+lint-python: ## Run Python linting only
+	cd backend && python3 -m flake8 scoringengine/ api/ tests/
 
 format: ## Format code
-	black scoringengine/ api/ tests/
-	isort scoringengine/ api/ tests/
+	cd backend && python3 -m black scoringengine/ api/ tests/
+	cd backend && python3 -m isort scoringengine/ api/ tests/
+
+format-python: ## Format Python code only
+	cd backend && python3 -m black scoringengine/ api/ tests/
+	cd backend && python3 -m isort scoringengine/ api/ tests/
+
+type-check: ## Run type checking with mypy
+	cd backend && python3 -m mypy scoringengine/ api/
+
+quality-check: lint type-check test ## Run complete quality check
 
 clean: ## Clean up temporary files
 	find . -type f -name "*.pyc" -delete
@@ -43,40 +55,40 @@ clean: ## Clean up temporary files
 	rm -rf logs/
 
 migrate: ## Run database migrations
-	python manage.py migrate
+	cd backend && python3 manage.py migrate
 
 makemigrations: ## Create new migrations
-	python manage.py makemigrations
+	cd backend && python3 manage.py makemigrations
 
 run-dev: ## Run development server
-	python manage.py runserver
+	cd backend && python3 manage.py runserver
 
 run-prod: ## Run production server
-	gunicorn hfcscoringengine.wsgi:application --bind 0.0.0.0:8000 --workers 4
+	cd backend && gunicorn hfcscoringengine.wsgi:application --bind 0.0.0.0:8000 --workers 4
 
 deploy: ## Deploy to production
 	git push origin main
 
 test-db: ## Test database connection
-	python manage.py check --database default
+	cd backend && python3 manage.py check --database default
 
 create-superuser: ## Create a superuser
-	python manage.py createsuperuser
+	cd backend && python3 manage.py createsuperuser
 
 collect-static: ## Collect static files
-	python manage.py collectstatic --noinput
+	cd backend && python3 manage.py collectstatic --noinput
 
 load-fixtures: ## Load test fixtures
-	python manage.py loaddata fixtures/*.json
+	cd backend && python3 manage.py loaddata fixtures/*.json
 
 dump-fixtures: ## Dump current data as fixtures
-	python manage.py dumpdata --indent 2 > fixtures/current_data.json
+	cd backend && python3 manage.py dumpdata --indent 2 > fixtures/current_data.json
 
 backup-db: ## Backup database
-	python manage.py dumpdata --indent 2 > backup_$(shell date +%Y%m%d_%H%M%S).json
+	cd backend && python3 manage.py dumpdata --indent 2 > backup_$(shell date +%Y%m%d_%H%M%S).json
 
 restore-db: ## Restore database from backup
-	python manage.py loaddata backup_*.json
+	cd backend && python3 manage.py loaddata backup_*.json
 
 monitor-logs: ## Monitor application logs
 	tail -f logs/django.log
@@ -88,14 +100,14 @@ health-check: ## Check application health
 	curl -f http://localhost:8000/health/ || echo "Health check failed"
 
 performance-test: ## Run performance tests
-	pytest tests/test_performance.py -v
+	cd backend && python3 -m pytest tests/test_performance.py -v
 
 load-test: ## Run load tests (requires locust)
-	locust -f tests/locustfile.py --host=http://localhost:8000
+	cd backend && locust -f tests/locustfile.py --host=http://localhost:8000
 
 security-check: ## Run security checks
-	bandit -r scoringengine/ api/
-	safety check
+	cd backend && bandit -r scoringengine/ api/
+	cd backend && safety check
 
 docker-build: ## Build Docker image
 	docker build -t hfc-scoring-engine .

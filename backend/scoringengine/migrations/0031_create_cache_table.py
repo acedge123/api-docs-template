@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0030_add_database_optimizations'),
+        ("scoringengine", "0030_add_database_optimizations"),
     ]
 
     operations = [
@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
             );
             CREATE INDEX IF NOT EXISTS cache_table_expires_idx ON cache_table (expires);
             """,
-            reverse_sql="DROP TABLE IF EXISTS cache_table;"
+            reverse_sql="DROP TABLE IF EXISTS cache_table;",
         ),
     ]

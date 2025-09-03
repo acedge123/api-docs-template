@@ -6,22 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoringengine', '0023_auto_20240403_0855'),
+        ("scoringengine", "0023_auto_20240403_0855"),
     ]
 
     operations = [
         migrations.RemoveConstraint(
-            model_name='answer',
-            name='unique_answer',
+            model_name="answer",
+            name="unique_answer",
         ),
         migrations.AddField(
-            model_name='answer',
-            name='value_number',
+            model_name="answer",
+            name="value_number",
             field=models.PositiveBigIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='question',
-            name='multiple_values',
+            model_name="question",
+            name="multiple_values",
             field=models.BooleanField(default=False),
         ),
     ]

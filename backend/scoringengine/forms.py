@@ -2,9 +2,8 @@ from datetime import date, timedelta
 from random import choice, randint
 
 from django import forms
-from django.contrib.auth import get_user_model
 
-from scoringengine.models import Question, Choice
+from scoringengine.models import Question
 
 
 class TestPostLeadForm(forms.Form):

@@ -1,20 +1,18 @@
+import json
 import math
 import re
 import uuid
-import json
-
 from datetime import date
-from itertools import chain
-from math import sqrt
-from random import randint
 from decimal import Decimal
+from itertools import chain
+from random import randint
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
@@ -43,7 +41,7 @@ RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGE
 FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_FUNCTIONS_REGEX}|{MATH_FUNCTIONS_REGEX}|{DATE_FUNCTIONS_REGEX}|{DAYS_FUNCTIONS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
 # Calculated score field names that can be used in recommendation rules
-CALCULATED_SCORE_FIELDS = ['x_axis_score', 'y_axis_score', 'total_score']
+CALCULATED_SCORE_FIELDS = ["x_axis_score", "y_axis_score", "total_score"]
 
 
 @receiver(post_save, sender=get_user_model())
@@ -65,9 +63,6 @@ def clear_user_cache(user_id):
         cache.delete(key)
 
 
-
-
-
 def days(dt):
     return dt.days
 
@@ -77,18 +72,18 @@ def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
 
     for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", formula):
         field_name = re.sub(r"\[.+\]", "", k[0])
-        
+
         # Handle calculated score fields
         if field_name in CALCULATED_SCORE_FIELDS:
-            if field_name == 'x_axis_score':
+            if field_name == "x_axis_score":
                 value = randint(10, 50)  # Mock X-axis score
-            elif field_name == 'y_axis_score':
-                value = randint(5, 30)   # Mock Y-axis score
-            elif field_name == 'total_score':
+            elif field_name == "y_axis_score":
+                value = randint(5, 30)  # Mock Y-axis score
+            elif field_name == "total_score":
                 value = randint(15, 80)  # Mock total score
             mocked_data[field_name] = value
             continue
-        
+
         # Handle regular question fields
         question = Question.objects.filter(field_name=field_name, owner=owner).first()
 
@@ -799,7 +794,9 @@ class AnswerAbstract(RecommendationFieldsMixin):
     value_number = models.PositiveBigIntegerField(blank=True, null=True)
     value = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
     date_value = models.DateField(blank=True, null=True)
-    values = models.TextField(null=True, blank=True)  # Store JSON as text for SQLite compatibility
+    values = models.TextField(
+        null=True, blank=True
+    )  # Store JSON as text for SQLite compatibility
     points = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
 
     def get_values(self):

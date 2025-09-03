@@ -2,23 +2,23 @@ import uuid
 
 import pytest
 from django.contrib.admin import AdminSite
-from django.test import RequestFactory, Client
+from django.test import Client, RequestFactory
 from rest_framework.authtoken.models import TokenProxy
 
 from scoringengine.admin import (
+    AnswerInline,
+    LeadAdmin,
     QuestionAdmin,
     RecommendationAdmin,
-    LeadAdmin,
-    TokenAdmin,
     ScoringModelAdmin,
-    AnswerInline,
+    TokenAdmin,
 )
 from scoringengine.models import (
-    Question,
-    Recommendation,
+    Answer,
     Choice,
     Lead,
-    Answer,
+    Question,
+    Recommendation,
     ScoringModel,
     ValueRange,
 )

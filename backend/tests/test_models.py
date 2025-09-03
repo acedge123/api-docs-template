@@ -4,10 +4,10 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from scoringengine.models import (
-    Choice,
-    Question,
-    Lead,
     Answer,
+    Choice,
+    Lead,
+    Question,
     Recommendation,
     ScoringModel,
     ValueRange,
