@@ -1,6 +1,6 @@
 """CSP frame-ancestors middleware.
 
-Goal: allow embedding (iframes) ONLY from https://www.vectorescore.io.
+Goal: allow embedding (iframes) ONLY from https://www.vectorscore.io.
 
 Notes:
 - X-Frame-Options cannot express an allowlist beyond SAMEORIGIN, so we use CSP.
@@ -11,7 +11,7 @@ Notes:
 from __future__ import annotations
 
 
-ALLOWED_FRAME_ANCESTORS = "'self' https://www.vectorescore.io"
+ALLOWED_FRAME_ANCESTORS = "'self' https://www.vectorscore.io"
 
 
 class CSPFrameAncestorsMiddleware:
