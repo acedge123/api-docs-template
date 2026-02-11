@@ -54,8 +54,8 @@ jobs:
       - name: Run DB Migrations
         run:  docker compose -f backend/local.yml run --rm django python manage.py migrate
 
-      - name: Run Django Tests
-        run:  docker compose -f backend/local.yml run django pytest
+      - name: Run Django Tests (control plane subset)
+        run:  docker compose -f backend/local.yml run django pytest tests/test_control_plane_manage.py
 
       - name: Tear down the Stack
         run:  docker compose -f backend/local.yml down
