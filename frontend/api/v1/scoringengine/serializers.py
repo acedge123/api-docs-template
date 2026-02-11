@@ -2,7 +2,7 @@ from django.utils.timezone import now
 from rest_framework import serializers
 
 from scoringengine.models import (
-    Lead, Answer, Question, Choice, ScoringModel, 
+    Lead, Answer, Question, Choice, ScoringModel,
     ValueRange, DatesRange, Recommendation
 )
 from users.models import User
@@ -110,7 +110,7 @@ class RecommendationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recommendation
         fields = [
-            'id', 'rule', 'response_text', 'affiliate_name', 
+            'id', 'rule', 'response_text', 'affiliate_name',
             'affiliate_image', 'affiliate_link', 'redirect_url'
         ]
 
@@ -118,7 +118,7 @@ class RecommendationSerializer(serializers.ModelSerializer):
 class ScoringModelSerializer(serializers.ModelSerializer):
     value_ranges = ValueRangeSerializer(many=True, read_only=True)
     dates_ranges = DatesRangeSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = ScoringModel
         fields = [
@@ -131,7 +131,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True, read_only=True)
     scoring_model = ScoringModelSerializer(read_only=True)
     recommendation = RecommendationSerializer(read_only=True)
-    
+
     class Meta:
         model = Question
         fields = [
@@ -154,17 +154,17 @@ class QuestionSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         field_name = data.get('field_name')
         question_id = self.instance.id if self.instance else None
-        
+
         existing_question = Question.objects.filter(
-            owner=user, 
+            owner=user,
             field_name=field_name
         ).exclude(id=question_id).first()
-        
+
         if existing_question:
             raise serializers.ValidationError({
                 'field_name': f'A question with field name "{field_name}" already exists.'
             })
-        
+
         # Validate min_value and max_value for slider type
         if data.get('type') == Question.SLIDER:
             min_value = data.get('min_value')
@@ -173,7 +173,7 @@ class QuestionSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     'min_value': 'Min value must be less than max value for slider questions.'
                 })
-        
+
         return data
 
 

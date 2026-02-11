@@ -13,7 +13,7 @@ from django.db.models import Count, Avg, Q
 logger = logging.getLogger(__name__)
 
 from api.v1.scoringengine.serializers import (
-    LeadSerializerCreate, 
+    LeadSerializerCreate,
     LeadSerializerView,
     QuestionSerializer,
     ChoiceSerializer,
@@ -25,7 +25,7 @@ from api.v1.scoringengine.serializers import (
     LeadAnalyticsSerializer
 )
 from scoringengine.models import (
-    Lead, Question, Choice, ScoringModel, ValueRange, 
+    Lead, Question, Choice, ScoringModel, ValueRange,
     DatesRange, Recommendation
 )
 from scoringengine.helpers import (
@@ -42,7 +42,7 @@ class LeadViewSet(
 ):
     """
     API endpoint for lead management.
-    
+
     Provides endpoints to create and retrieve leads with automatic scoring.
     Requires authentication via token.
     """
@@ -93,10 +93,10 @@ class LeadViewSet(
     def create(self, request, *args, **kwargs):
         """
         Create a new lead with automatic scoring.
-        
+
         Accepts lead data with answers and automatically calculates X/Y axis scores
         and total score based on the user's scoring model.
-        
+
         Parameters:
         - answers: List of answer objects with field_name and response
         - allow_duplicates: Boolean to allow duplicate lead_id (optional)
@@ -125,7 +125,7 @@ class LeadViewSet(
         headers = self.get_success_headers(serializer.data)
 
         view_serializer = LeadSerializerView(obj, context={"request": request})
-        
+
         logger.info(f"Successfully created lead {obj.lead_id} with score {obj.total_score}")
 
         return Response(
@@ -313,29 +313,29 @@ class AnalyticsViewSet(viewsets.ViewSet):
         """Get lead analytics summary"""
         user = request.user
         logger.info(f"Fetching lead summary for user {user.id}")
-        
+
         # Cache key based on user
         cache_key = f"lead_summary_{user.id}"
         cached_data = cache.get(cache_key)
-        
+
         if cached_data:
             logger.info(f"Returning cached lead summary for user {user.id}")
             return Response(cached_data)
-        
+
         leads = Lead.objects.filter(owner=user)
-        
+
         total_leads = leads.count()
         avg_x_axis = leads.aggregate(avg=Avg('x_axis'))['avg'] or 0
         avg_y_axis = leads.aggregate(avg=Avg('y_axis'))['avg'] or 0
         avg_total_score = leads.aggregate(avg=Avg('total_score'))['avg'] or 0
-        
+
         # Score distribution
         score_ranges = {
             'low': leads.filter(total_score__lt=20).count(),
             'medium': leads.filter(total_score__gte=20, total_score__lt=40).count(),
             'high': leads.filter(total_score__gte=40).count(),
         }
-        
+
         data = {
             'total_leads': total_leads,
             'average_scores': {
@@ -345,33 +345,33 @@ class AnalyticsViewSet(viewsets.ViewSet):
             },
             'score_distribution': score_ranges,
         }
-        
+
         # Cache for 5 minutes
         cache.set(cache_key, data, 300)
         logger.info(f"Generated and cached lead summary for user {user.id}: {total_leads} leads")
-        
+
         return Response(data)
 
     @action(detail=False, methods=['get'])
     def question_analytics(self, request):
         """Get analytics for questions"""
         user = request.user
-        
+
         # Cache key based on user
         cache_key = f"question_analytics_{user.id}"
         cached_data = cache.get(cache_key)
-        
+
         if cached_data:
             return Response(cached_data)
-        
+
         questions = Question.objects.filter(owner=user).prefetch_related('answers')
-        
+
         question_data = []
         for question in questions:
             # Get answer distribution for this question (answers are prefetched)
             answers = question.answers.all()
             answer_counts = answers.values('response').annotate(count=Count('response'))
-            
+
             question_data.append({
                 'id': question.id,
                 'number': question.number,
@@ -381,10 +381,10 @@ class AnalyticsViewSet(viewsets.ViewSet):
                 'answer_distribution': list(answer_counts),
                 'total_answers': answers.count(),
             })
-        
+
         # Cache for 5 minutes
         cache.set(cache_key, question_data, 300)
-        
+
         return Response(question_data)
 
     @action(detail=False, methods=['get'])
@@ -394,14 +394,14 @@ class AnalyticsViewSet(viewsets.ViewSet):
         recommendations = Recommendation.objects.filter(owner=user).select_related('question').prefetch_related(
             'question__answers__lead'
         )
-        
+
         rec_data = []
         for rec in recommendations:
             # Count how many times this recommendation was triggered (answers are prefetched)
             triggered_count = rec.question.answers.filter(
                 lead__owner=user
             ).count()
-            
+
             rec_data.append({
                 'id': rec.id,
                 'question_text': rec.question.text,
@@ -410,5 +410,5 @@ class AnalyticsViewSet(viewsets.ViewSet):
                 'affiliate_name': rec.affiliate_name,
                 'triggered_count': triggered_count,
             })
-        
+
         return Response(rec_data)

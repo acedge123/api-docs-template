@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 
 from scoringengine.models import (
-    Question, Choice, ScoringModel, ValueRange, DatesRange, 
+    Question, Choice, ScoringModel, ValueRange, DatesRange,
     Recommendation, Lead, Answer
 )
 
@@ -72,7 +72,7 @@ def choice_question(user):
         type=Question.CHOICES,
         multiple_values=False
     )
-    
+
     Choice.objects.create(
         question=question,
         text="Low",
@@ -91,7 +91,7 @@ def choice_question(user):
         slug="high",
         value=Decimal('30.0')
     )
-    
+
     return question
 
 
@@ -171,7 +171,7 @@ def scoring_model_with_date_ranges(date_question):
         y_axis=True,
         formula=""
     )
-    
+
     DatesRange.objects.create(
         scoring_model=scoring_model,
         start=date.today() - timedelta(days=365),
@@ -215,7 +215,7 @@ def lead(user, question, choice_question, slider_question, date_question):
         y_axis=Decimal('15.0'),
         total_score=Decimal('40.0')
     )
-    
+
     # Create answers for all questions
     Answer.objects.create(
         lead=lead,
@@ -223,28 +223,28 @@ def lead(user, question, choice_question, slider_question, date_question):
         response="30",
         value=Decimal('30.0')
     )
-    
+
     Answer.objects.create(
         lead=lead,
         field_name="income",
         response="Medium",
         value=Decimal('20.0')
     )
-    
+
     Answer.objects.create(
         lead=lead,
         field_name="satisfaction",
         response="8",
         value=Decimal('8.0')
     )
-    
+
     Answer.objects.create(
         lead=lead,
         field_name="start_date",
         response="2024-01-15",
         date_value=date(2024, 1, 15)
     )
-    
+
     return lead
 
 
@@ -252,7 +252,7 @@ def lead(user, question, choice_question, slider_question, date_question):
 def multiple_leads(user, question, choice_question, slider_question, date_question):
     """Create multiple test leads for analytics testing."""
     leads = []
-    
+
     for i in range(5):
         lead = Lead.objects.create(
             owner=user,
@@ -260,7 +260,7 @@ def multiple_leads(user, question, choice_question, slider_question, date_questi
             y_axis=Decimal(f'{10 + i * 3}'),
             total_score=Decimal(f'{30 + i * 8}')
         )
-        
+
         # Create answers for each lead
         Answer.objects.create(
             lead=lead,
@@ -268,36 +268,36 @@ def multiple_leads(user, question, choice_question, slider_question, date_questi
             response=str(25 + i * 5),
             value=Decimal(f'{25 + i * 5}')
         )
-        
+
         Answer.objects.create(
             lead=lead,
             field_name="income",
             response=["Low", "Medium", "High"][i % 3],
             value=Decimal(f'{10 + i * 10}')
         )
-        
+
         Answer.objects.create(
             lead=lead,
             field_name="satisfaction",
             response=str(5 + i),
             value=Decimal(f'{5 + i}')
         )
-        
+
         Answer.objects.create(
             lead=lead,
             field_name="start_date",
             response=f"2024-{i+1:02d}-15",
             date_value=date(2024, i+1, 15)
         )
-        
+
         leads.append(lead)
-    
+
     return leads
 
 
 @pytest.fixture
-def complete_test_data(user_with_token, question, choice_question, slider_question, 
-                      date_question, scoring_model_with_ranges, 
+def complete_test_data(user_with_token, question, choice_question, slider_question,
+                      date_question, scoring_model_with_ranges,
                       scoring_model_with_date_ranges, recommendation, multiple_leads):
     """Create complete test data for integration testing."""
     return {

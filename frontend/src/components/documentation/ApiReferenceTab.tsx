@@ -82,7 +82,7 @@ const ApiReferenceTab = () => {
       "points": 15.0
     },
     {
-      "field_name": "credit_score", 
+      "field_name": "credit_score",
       "response": "750",
       "points": 10.5
     },
@@ -122,15 +122,15 @@ const ApiReferenceTab = () => {
             <div className="bg-green-50 p-4 rounded-lg">
               <h4 className="font-semibold text-green-900 mb-2">Authentication</h4>
               <p className="text-green-800 text-sm">
-                All API requests require a valid token in the Authorization header: 
+                All API requests require a valid token in the Authorization header:
                 <code className="font-mono ml-1">Authorization: Token YOUR_API_TOKEN</code>
               </p>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
               <h4 className="font-semibold text-purple-900 mb-2">🎯 Calculated Scores Feature</h4>
               <p className="text-purple-800 text-sm">
-                The API automatically calculates X-axis, Y-axis, and total scores based on your scoring models. 
-                These calculated scores can be used in recommendation rules: 
+                The API automatically calculates X-axis, Y-axis, and total scores based on your scoring models.
+                These calculated scores can be used in recommendation rules:
                 <code className="font-mono ml-1">{`{x_axis_score}, {y_axis_score}, {total_score}`}</code>
               </p>
             </div>
@@ -152,7 +152,7 @@ const ApiReferenceTab = () => {
               <div key={index} className="border rounded-lg p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Badge 
+                    <Badge
                       variant={endpoint.method === 'GET' ? 'secondary' : 'default'}
                       className="font-mono"
                     >

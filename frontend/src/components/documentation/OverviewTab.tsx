@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Zap, 
-  Target, 
-  BarChart3, 
-  Users, 
-  Shield, 
+import {
+  Zap,
+  Target,
+  BarChart3,
+  Users,
+  Shield,
   TrendingUp,
   CheckCircle,
   ArrowRight
@@ -67,7 +67,7 @@ const OverviewTab = () => {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">Lead Scoring Engine</h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          A powerful two-dimensional scoring system that evaluates leads across capability and propensity axes, 
+          A powerful two-dimensional scoring system that evaluates leads across capability and propensity axes,
           helping you identify prospects with both the financial means and willingness to take action.
         </p>
         <div className="flex justify-center space-x-4">
@@ -105,7 +105,7 @@ const OverviewTab = () => {
               </div>
               <h3 className="font-semibold">Ask Questions</h3>
               <p className="text-sm text-gray-600">
-                Set up custom questions to gather information about financial capability, 
+                Set up custom questions to gather information about financial capability,
                 purchase intent, budget, timeline, and other qualification criteria.
               </p>
             </div>
@@ -115,7 +115,7 @@ const OverviewTab = () => {
               </div>
               <h3 className="font-semibold">Score Automatically</h3>
               <p className="text-sm text-gray-600">
-                Our algorithms evaluate responses using your custom scoring models and 
+                Our algorithms evaluate responses using your custom scoring models and
                 assign X/Y axis scores based on financial capability and purchase propensity.
               </p>
             </div>
@@ -125,7 +125,7 @@ const OverviewTab = () => {
               </div>
               <h3 className="font-semibold">Get Recommendations</h3>
               <p className="text-sm text-gray-600">
-                Receive prioritized lead lists with specific recommendations based on 
+                Receive prioritized lead lists with specific recommendations based on
                 their capability and propensity scores for optimal engagement timing.
               </p>
             </div>
@@ -266,8 +266,8 @@ const OverviewTab = () => {
         <CardContent>
           <div className="space-y-4">
             <p className="text-gray-600">
-              The Lead Scoring Engine is designed to be easy to set up and use. 
-              Whether you're a sales team looking to identify high-value prospects or 
+              The Lead Scoring Engine is designed to be easy to set up and use.
+              Whether you're a sales team looking to identify high-value prospects or
               an agency managing multiple clients, we have you covered.
             </p>
             <div className="grid md:grid-cols-2 gap-4">

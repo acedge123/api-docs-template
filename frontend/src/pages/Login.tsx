@@ -44,7 +44,7 @@ export default function Login() {
             Sign in to your admin account
           </p>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Admin Login</CardTitle>
@@ -59,7 +59,7 @@ export default function Login() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input
@@ -71,7 +71,7 @@ export default function Login() {
                   disabled={isLoading}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -83,7 +83,7 @@ export default function Login() {
                   disabled={isLoading}
                 />
               </div>
-              
+
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
@@ -97,7 +97,7 @@ export default function Login() {
             </form>
           </CardContent>
         </Card>
-        
+
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Need help? Contact your system administrator

@@ -77,7 +77,7 @@ def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
 
     for k in re.findall(rf"{{({FIELD_NAME_REGEX})}}", formula):
         field_name = re.sub(r"\[.+\]", "", k[0])
-        
+
         # Handle calculated score fields
         if field_name in CALCULATED_SCORE_FIELDS:
             if field_name == 'x_axis_score':
@@ -88,7 +88,7 @@ def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
                 value = randint(15, 80)  # Mock total score
             mocked_data[field_name] = value
             continue
-        
+
         # Handle regular question fields
         question = Question.objects.filter(field_name=field_name, owner=owner).first()
 

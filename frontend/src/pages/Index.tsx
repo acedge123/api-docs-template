@@ -17,7 +17,7 @@ const Index = () => {
               <Zap className="h-8 w-8 text-blue-600 mr-2" />
               <span className="text-xl font-bold text-gray-900">HFC Scoring Engine</span>
             </Link>
-            
+
             {/* Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               <Link to="/documentation" className="text-gray-600 hover:text-gray-900">Documentation</Link>
@@ -38,15 +38,15 @@ const Index = () => {
             <Zap className="h-12 w-12 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-900">HFC Scoring Engine</h1>
           </div>
-          
+
           <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
             Lead Qualification
             <span className="text-blue-600"> with Intelligent Scoring</span>
             <br />Stop Wasting Time on Low-Value Prospects
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
-            Automatically score and qualify leads based on their answers to your questions. 
-            Focus your sales team on high-value prospects while filtering out low-priority leads. 
+            Automatically score and qualify leads based on their answers to your questions.
+            Focus your sales team on high-value prospects while filtering out low-priority leads.
             Boost conversion rates and maximize revenue with data-driven lead qualification.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -77,14 +77,14 @@ const Index = () => {
               Real-world example: How Valer uses our scoring engine to focus on high-value hospital executives
             </p>
           </div>
-          
+
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 mb-12">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">The Challenge</h3>
                 <p className="text-gray-600 mb-4">
-                  Valer's sales team was spending valuable time talking to low-ranking employees 
-                  from small hospitals instead of focusing on C-level executives at large hospitals 
+                  Valer's sales team was spending valuable time talking to low-ranking employees
+                  from small hospitals instead of focusing on C-level executives at large hospitals
                   who have real decision-making power and bigger budgets.
                 </p>
                 <div className="space-y-2">
@@ -138,7 +138,7 @@ const Index = () => {
               Everything you need to build, manage, and optimize your lead scoring system
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card>
               <CardHeader>
@@ -214,7 +214,7 @@ const Index = () => {
               Simple 3-step process to transform your lead qualification
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -222,29 +222,29 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-3">Ask Questions</h3>
               <p className="text-gray-600">
-                Set up custom questions to gather information about job titles, company size, 
+                Set up custom questions to gather information about job titles, company size,
                 budget, timeline, and other qualification criteria.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-green-600">2</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">Score Automatically</h3>
               <p className="text-gray-600">
-                Our algorithms evaluate responses using your custom scoring models and 
+                Our algorithms evaluate responses using your custom scoring models and
                 assign X/Y axis scores based on lead quality and potential value.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">Get Recommendations</h3>
               <p className="text-gray-600">
-                Receive prioritized lead lists with specific recommendations for how 
+                Receive prioritized lead lists with specific recommendations for how
                 and when to reach out to each prospect.
               </p>
             </div>
@@ -263,7 +263,7 @@ const Index = () => {
               Get started in minutes with our straightforward REST API
             </p>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 gap-8">
               <div>
@@ -282,7 +282,7 @@ const Index = () => {
                   <div>{'}'}</div>
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-xl font-semibold mb-4">Get Score & Recommendations</h3>
                 <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm">
@@ -296,7 +296,7 @@ const Index = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="text-center mt-8">
               <Button asChild>
                 <Link to="/documentation">
@@ -316,7 +316,7 @@ const Index = () => {
             Ready to Transform Your Lead Qualification?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join sales teams like Valer who are already using our scoring engine to 
+            Join sales teams like Valer who are already using our scoring engine to
             focus on high-value prospects and boost their conversion rates
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -349,7 +349,7 @@ const Index = () => {
                 Intelligent lead scoring and qualification engine for modern sales teams.
               </p>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-gray-400">
@@ -358,7 +358,7 @@ const Index = () => {
                 <li><Link to="/documentation" className="hover:text-white transition-colors">API Reference</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-gray-400">
@@ -367,7 +367,7 @@ const Index = () => {
                 <li><Link to="/documentation" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-gray-400">
@@ -376,7 +376,7 @@ const Index = () => {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
             <p>&copy; 2024 HFC Scoring Engine. All rights reserved.</p>
           </div>
@@ -387,4 +387,3 @@ const Index = () => {
 };
 
 export default Index;
- 

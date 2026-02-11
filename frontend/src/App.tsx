@@ -12,7 +12,7 @@ import Admin from './pages/Admin';
 
 const App = () => {
   console.log('App component rendering...');
-  
+
   return (
     <TooltipProvider>
       <Toaster />
@@ -25,7 +25,7 @@ const App = () => {
         <Route path='/terms-of-service' element={<TermsOfService />} />
         <Route path='/login' element={<Login />} />
         <Route path='/admin' element={<Admin />} />
-        
+
         {/* Catch all */}
         <Route path='*' element={<NotFound />} />
       </Routes>

@@ -18,7 +18,7 @@ def create_admin_user():
     username = 'admin'
     email = 'alan@thegig.agency'
     password = '123456@@@'
-    
+
     # Check if user already exists
     if User.objects.filter(username=username).exists():
         print("User '{}' already exists. Updating password...".format(username))
@@ -39,7 +39,7 @@ def create_admin_user():
             is_superuser=True
         )
         print("Created superuser '{}' with email '{}'.".format(username, email))
-    
+
     print("Username: {}".format(username))
     print("Email: {}".format(email))
     print("Password: {}".format(password))

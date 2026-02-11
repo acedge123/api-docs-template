@@ -11,7 +11,7 @@ def health_check(request):
             db_status = "healthy"
     except OperationalError:
         db_status = "unhealthy"
-    
+
     return JsonResponse({
         "status": "ok",
         "database": db_status,

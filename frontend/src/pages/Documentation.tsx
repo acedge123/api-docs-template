@@ -16,36 +16,36 @@ const Documentation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-8" data-tabs-container>
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto gap-1 p-1">
-            <TabsTrigger 
-              value="overview" 
+            <TabsTrigger
+              value="overview"
               data-value="overview"
               className="text-xs sm:text-sm py-2 px-2 sm:px-3"
             >
               Overview
             </TabsTrigger>
-            <TabsTrigger 
-              value="api-reference" 
+            <TabsTrigger
+              value="api-reference"
               data-value="api-reference"
               className="text-xs sm:text-sm py-2 px-2 sm:px-3"
             >
               API Reference
             </TabsTrigger>
-            <TabsTrigger 
-              value="scoring" 
+            <TabsTrigger
+              value="scoring"
               data-value="scoring"
               className="text-xs sm:text-sm py-2 px-2 sm:px-3"
             >
               Scoring Algorithm
             </TabsTrigger>
-            <TabsTrigger 
-              value="recommendations" 
+            <TabsTrigger
+              value="recommendations"
               data-value="recommendations"
               className="text-xs sm:text-sm py-2 px-2 sm:px-3"
             >
               Recommendations
             </TabsTrigger>
-            <TabsTrigger 
-              value="examples" 
+            <TabsTrigger
+              value="examples"
               data-value="examples"
               className="text-xs sm:text-sm py-2 px-2 sm:px-3"
             >
