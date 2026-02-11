@@ -15,7 +15,11 @@ from django.db import transaction
 from django.utils.text import slugify
 
 from control_plane.acp.types import ActionDef, Pack
-from scoringengine.helpers import calculate_x_and_y_scores, collect_answers_values
+from scoringengine.helpers import (
+    calculate_x_and_y_scores,
+    collect_answers_values,
+    collect_recommendations,
+)
 from decimal import Decimal
 
 from scoringengine.models import (
@@ -443,6 +447,10 @@ def handle_leads_create(params, ctx):
 
     x_axis, y_axis = calculate_x_and_y_scores(user, answers_data)
     total_score = x_axis + y_axis
+
+    # Populate recommendation fields (response_text, affiliate_*, redirect_url) onto answers_data
+    # so they persist into Answer rows.
+    collect_recommendations(user, answers_data)
 
     if ctx.get("dry_run"):
         return {
