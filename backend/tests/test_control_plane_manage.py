@@ -104,7 +104,7 @@ class TestControlPlaneManage:
                 {
                     "action": "domain.leadscoring.leads.create",
                     "dry_run": True,
-                    "params": {"answers": [{"field_name": "goal", "response": "Buy"}]},
+                    "params": {"answers": [{"field_name": "goal", "response": "buy"}]},
                 }
             ),
             content_type="application/json",

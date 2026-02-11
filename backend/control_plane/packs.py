@@ -16,7 +16,14 @@ from django.utils.text import slugify
 
 from control_plane.acp.types import ActionDef, Pack
 from scoringengine.helpers import calculate_x_and_y_scores, collect_answers_values
-from scoringengine.models import Answer, Choice, Lead, Question, Recommendation, ScoringModel
+from scoringengine.models import (
+    Answer,
+    Choice,
+    Lead,
+    Question,
+    Recommendation,
+    ScoringModel,
+)
 
 
 def _require_user(ctx):
@@ -30,8 +37,10 @@ def handle_questions_list(params, ctx):
     """List questions (and choices) for the tenant."""
     user = _require_user(ctx)
 
-    qs = Question.objects.filter(owner=user).prefetch_related("choices").order_by(
-        "number"
+    qs = (
+        Question.objects.filter(owner=user)
+        .prefetch_related("choices")
+        .order_by("number")
     )
 
     items = []
