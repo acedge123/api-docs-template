@@ -70,6 +70,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "api.apps.ApiConfig",
+    "control_plane.apps.ControlPlaneConfig",
     "scoringengine.apps.ScoringengineConfig",
     "users.apps.UsersConfig",
     # Your stuff: custom apps go here
