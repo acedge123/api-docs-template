@@ -71,7 +71,7 @@ const submitLead = async (leadData) => {
         }
       }
     );
-    
+
     console.log('Lead scored:', response.data);
     return response.data;
   } catch (error) {
@@ -104,11 +104,11 @@ def submit_lead(lead_data):
         'Authorization': 'Token YOUR_API_TOKEN',
         'Content-Type': 'application/json'
     }
-    
+
     try:
         response = requests.post(url, json=lead_data, headers=headers)
         response.raise_for_status()
-        
+
         result = response.json()
         print(f"Lead scored: {result}")
         return result
@@ -183,7 +183,7 @@ curl -X GET https://api.hfc-scoring.com/api/v1/leads/123/ \\
                     <p className="text-gray-600">{example.description}</p>
                   </div>
                   <div className="text-right">
-                    <Badge 
+                    <Badge
                       variant={example.color === 'green' ? 'default' : 'secondary'}
                       className="mb-2"
                     >
@@ -194,7 +194,7 @@ curl -X GET https://api.hfc-scoring.com/api/v1/leads/123/ \\
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="bg-gray-50 p-3 rounded">
                     <span className="text-xs text-gray-500">Name</span>

@@ -382,7 +382,7 @@ const RecommendationSystemTab = () => {
                     <div className="text-blue-600">If {`{total_score} > 50`}</div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-semibold text-blue-700 mb-2">Combined Rules</h4>
                   <p className="text-blue-600 text-sm mb-2">
@@ -538,11 +538,11 @@ const RecommendationSystemTab = () => {
                   <p className="text-sm text-red-700"><strong>Response:</strong> "Application declined. Debt-to-income ratio exceeds maximum threshold."</p>
                 </div>
               </div>
-              
+
               <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
                 <h4 className="font-semibold text-green-800 mb-2">✅ Score-Based Rules Now Available</h4>
                 <p className="text-green-700 text-sm">
-                  The system calculates X-axis and Y-axis scores, and you can now use these calculated scores directly in recommendation rules 
+                  The system calculates X-axis and Y-axis scores, and you can now use these calculated scores directly in recommendation rules
                   alongside individual question field names for maximum flexibility.
                 </p>
               </div>

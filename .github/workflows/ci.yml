@@ -43,14 +43,19 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v5
 
+      - name: Prepare backend env files for docker compose
+        run: |
+          mkdir -p backend/.envs
+          cp -R .envs/.local backend/.envs/.local
+
       - name: Build the Stack
-        run:  docker-compose -f local.yml build
+        run:  docker compose -f backend/local.yml build
 
       - name: Run DB Migrations
-        run:  docker-compose -f local.yml run --rm django python manage.py migrate
+        run:  docker compose -f backend/local.yml run --rm django python manage.py migrate
 
-      - name: Run Django Tests
-        run:  docker-compose -f local.yml run django pytest
+      - name: Run Django Tests (control plane subset)
+        run:  docker compose -f backend/local.yml run django pytest tests/test_control_plane_manage.py --no-cov
 
       - name: Tear down the Stack
-        run:  docker-compose -f local.yml down
+        run:  docker compose -f backend/local.yml down

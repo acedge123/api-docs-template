@@ -39,7 +39,7 @@ const PrivacyPolicy = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">1. Information We Collect</h2>
                 <p className="text-gray-600 mb-4">
-                  We collect information you provide directly to us, such as when you create an account, 
+                  We collect information you provide directly to us, such as when you create an account,
                   submit leads for scoring, or contact us for support.
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
@@ -80,7 +80,7 @@ const PrivacyPolicy = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">4. Data Sharing</h2>
                 <p className="text-gray-600 mb-4">
-                  We do not sell, trade, or otherwise transfer your personal information to third parties 
+                  We do not sell, trade, or otherwise transfer your personal information to third parties
                   except in the following circumstances:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
@@ -108,7 +108,7 @@ const PrivacyPolicy = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">6. Data Retention</h2>
                 <p className="text-gray-600">
-                  We retain your data for as long as necessary to provide our services and comply with 
+                  We retain your data for as long as necessary to provide our services and comply with
                   legal obligations. Lead data is typically retained for 2 years unless you request deletion.
                 </p>
               </div>
@@ -116,7 +116,7 @@ const PrivacyPolicy = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">7. Contact Us</h2>
                 <p className="text-gray-600">
-                  If you have any questions about this Privacy Policy or our data practices, 
+                  If you have any questions about this Privacy Policy or our data practices,
                   please contact us at privacy@hfc-scoring.com
                 </p>
               </div>

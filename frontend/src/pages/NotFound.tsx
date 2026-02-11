@@ -20,7 +20,7 @@ const NotFound = () => {
               <CardTitle className="text-6xl font-bold text-gray-900 mb-4">404</CardTitle>
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">Page Not Found</h2>
               <p className="text-gray-600 mb-8">
-                Sorry, we couldn't find the page you're looking for. It might have been moved, 
+                Sorry, we couldn't find the page you're looking for. It might have been moved,
                 deleted, or you entered the wrong URL.
               </p>
             </CardHeader>
@@ -39,7 +39,7 @@ const NotFound = () => {
                   </Link>
                 </Button>
               </div>
-              
+
               <div className="pt-6 border-t">
                 <p className="text-sm text-gray-500 mb-4">Looking for something specific?</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">

@@ -33,7 +33,7 @@ const ScoringAlgorithmTab = () => {
 
   const xAxisFactors = [
     'Job Title Weight',
-    'Company Size Weight', 
+    'Company Size Weight',
     'Industry Relevance',
     'Decision Making Authority'
   ];
@@ -101,7 +101,7 @@ const ScoringAlgorithmTab = () => {
               <div key={index} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold">{factor.factor}</h4>
-                  <Badge 
+                  <Badge
                     variant={factor.weight === 'High' ? 'default' : 'secondary'}
                     className="text-xs"
                   >

@@ -17,9 +17,8 @@ DATABASE_URL = env("DATABASE_URL", default=None)
 if DATABASE_URL:
     # Parse DATABASE_URL for PostgreSQL
     import dj_database_url
-    DATABASES = {
-        "default": dj_database_url.parse(DATABASE_URL)
-    }
+
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
 else:
     # Fallback to SQLite
     DATABASES = {
@@ -84,7 +83,10 @@ LOGGING = {
             "class": "logging.StreamHandler",
         },
     },
-    "root": {"level": "WARNING", "handlers": ["console"]},  # Reduced from INFO to WARNING
+    "root": {
+        "level": "WARNING",
+        "handlers": ["console"],
+    },  # Reduced from INFO to WARNING
     "loggers": {
         "django": {
             "handlers": ["console"],
@@ -101,14 +103,17 @@ LOGGING = {
 
 # Additional settings for Railway
 # ------------------------------------------------------------------------------
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[
-    "https://api-docs-template-production.up.railway.app",
-    "https://*.railway.app",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "https://api-docs-template-production.up.railway.app",
+        "https://*.railway.app",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
+)
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # Session settings
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = "Lax"

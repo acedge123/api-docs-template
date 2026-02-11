@@ -261,9 +261,9 @@ def collect_recommendations(owner, answers_data):
                 answers[field_name] = answer["value"]
 
     # Add calculated scores to answers for rule evaluation
-    answers['x_axis_score'] = x_axis
-    answers['y_axis_score'] = y_axis
-    answers['total_score'] = total_score
+    answers["x_axis_score"] = x_axis
+    answers["y_axis_score"] = y_axis
+    answers["total_score"] = total_score
 
     for answer_data in answers_data:
         question = owner.questions.filter(field_name=answer_data["field_name"]).first()

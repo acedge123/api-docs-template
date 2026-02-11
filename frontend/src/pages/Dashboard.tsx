@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { 
-  Users, 
-  BarChart3, 
-  Settings, 
-  LogOut, 
-  Plus, 
-  FileText, 
+import {
+  Users,
+  BarChart3,
+  Settings,
+  LogOut,
+  Plus,
+  FileText,
   Target,
   TrendingUp,
   Activity,
@@ -102,7 +102,7 @@ export default function Dashboard() {
               <BarChart3 className="h-8 w-8 text-blue-600 mr-2" />
               <h1 className="text-xl font-bold text-gray-900">Scoring Engine Admin</h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
                 Welcome, {user?.first_name || user?.username}

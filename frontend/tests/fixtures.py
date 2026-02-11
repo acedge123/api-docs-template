@@ -9,8 +9,14 @@ from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 
 from scoringengine.models import (
-    Question, Choice, ScoringModel, ValueRange, DatesRange, 
-    Recommendation, Lead, Answer
+    Question,
+    Choice,
+    ScoringModel,
+    ValueRange,
+    DatesRange,
+    Recommendation,
+    Lead,
+    Answer,
 )
 
 User = get_user_model()
@@ -26,9 +32,7 @@ def api_client():
 def user():
     """Create a test user."""
     user = User.objects.create_user(
-        username='testuser',
-        email='test@example.com',
-        password='testpass123'
+        username="testuser", email="test@example.com", password="testpass123"
     )
     return user
 
@@ -44,7 +48,7 @@ def user_with_token(user):
 def authenticated_client(api_client, user_with_token):
     """Create an authenticated API client."""
     user, token = user_with_token
-    api_client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+    api_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
     return api_client
 
 
@@ -57,7 +61,7 @@ def question(user):
         text="What is your age?",
         field_name="age",
         type=Question.INTEGER,
-        multiple_values=False
+        multiple_values=False,
     )
 
 
@@ -70,28 +74,19 @@ def choice_question(user):
         text="What is your income level?",
         field_name="income",
         type=Question.CHOICES,
-        multiple_values=False
+        multiple_values=False,
     )
-    
+
     Choice.objects.create(
-        question=question,
-        text="Low",
-        slug="low",
-        value=Decimal('10.0')
+        question=question, text="Low", slug="low", value=Decimal("10.0")
     )
     Choice.objects.create(
-        question=question,
-        text="Medium",
-        slug="medium",
-        value=Decimal('20.0')
+        question=question, text="Medium", slug="medium", value=Decimal("20.0")
     )
     Choice.objects.create(
-        question=question,
-        text="High",
-        slug="high",
-        value=Decimal('30.0')
+        question=question, text="High", slug="high", value=Decimal("30.0")
     )
-    
+
     return question
 
 
@@ -106,7 +101,7 @@ def slider_question(user):
         type=Question.SLIDER,
         min_value=1,
         max_value=10,
-        multiple_values=False
+        multiple_values=False,
     )
 
 
@@ -119,7 +114,7 @@ def date_question(user):
         text="When did you start?",
         field_name="start_date",
         type=Question.DATE,
-        multiple_values=False
+        multiple_values=False,
     )
 
 
@@ -129,10 +124,10 @@ def scoring_model(question):
     return ScoringModel.objects.create(
         question=question,
         owner=question.owner,
-        weight=Decimal('1.0'),
+        weight=Decimal("1.0"),
         x_axis=True,
         y_axis=False,
-        formula=""
+        formula="",
     )
 
 
@@ -140,22 +135,13 @@ def scoring_model(question):
 def scoring_model_with_ranges(scoring_model):
     """Create a test scoring model with value ranges."""
     ValueRange.objects.create(
-        scoring_model=scoring_model,
-        start=Decimal('0'),
-        end=Decimal('25'),
-        points=10
+        scoring_model=scoring_model, start=Decimal("0"), end=Decimal("25"), points=10
     )
     ValueRange.objects.create(
-        scoring_model=scoring_model,
-        start=Decimal('25'),
-        end=Decimal('50'),
-        points=20
+        scoring_model=scoring_model, start=Decimal("25"), end=Decimal("50"), points=20
     )
     ValueRange.objects.create(
-        scoring_model=scoring_model,
-        start=Decimal('50'),
-        end=None,
-        points=30
+        scoring_model=scoring_model, start=Decimal("50"), end=None, points=30
     )
     return scoring_model
 
@@ -166,29 +152,26 @@ def scoring_model_with_date_ranges(date_question):
     scoring_model = ScoringModel.objects.create(
         question=date_question,
         owner=date_question.owner,
-        weight=Decimal('1.0'),
+        weight=Decimal("1.0"),
         x_axis=False,
         y_axis=True,
-        formula=""
+        formula="",
     )
-    
+
     DatesRange.objects.create(
         scoring_model=scoring_model,
         start=date.today() - timedelta(days=365),
         end=date.today() - timedelta(days=180),
-        points=10
+        points=10,
     )
     DatesRange.objects.create(
         scoring_model=scoring_model,
         start=date.today() - timedelta(days=180),
         end=date.today(),
-        points=20
+        points=20,
     )
     DatesRange.objects.create(
-        scoring_model=scoring_model,
-        start=date.today(),
-        end=None,
-        points=30
+        scoring_model=scoring_model, start=date.today(), end=None, points=30
     )
     return scoring_model
 
@@ -202,7 +185,7 @@ def recommendation(question):
         rule="If {age} >= 25",
         response_text="You are eligible for premium features!",
         affiliate_name="Premium Partner",
-        affiliate_link="https://example.com/premium"
+        affiliate_link="https://example.com/premium",
     )
 
 
@@ -211,40 +194,31 @@ def lead(user, question, choice_question, slider_question, date_question):
     """Create a test lead with answers."""
     lead = Lead.objects.create(
         owner=user,
-        x_axis=Decimal('25.0'),
-        y_axis=Decimal('15.0'),
-        total_score=Decimal('40.0')
+        x_axis=Decimal("25.0"),
+        y_axis=Decimal("15.0"),
+        total_score=Decimal("40.0"),
     )
-    
+
     # Create answers for all questions
     Answer.objects.create(
-        lead=lead,
-        field_name="age",
-        response="30",
-        value=Decimal('30.0')
+        lead=lead, field_name="age", response="30", value=Decimal("30.0")
     )
-    
+
     Answer.objects.create(
-        lead=lead,
-        field_name="income",
-        response="Medium",
-        value=Decimal('20.0')
+        lead=lead, field_name="income", response="Medium", value=Decimal("20.0")
     )
-    
+
     Answer.objects.create(
-        lead=lead,
-        field_name="satisfaction",
-        response="8",
-        value=Decimal('8.0')
+        lead=lead, field_name="satisfaction", response="8", value=Decimal("8.0")
     )
-    
+
     Answer.objects.create(
         lead=lead,
         field_name="start_date",
         response="2024-01-15",
-        date_value=date(2024, 1, 15)
+        date_value=date(2024, 1, 15),
     )
-    
+
     return lead
 
 
@@ -252,59 +226,67 @@ def lead(user, question, choice_question, slider_question, date_question):
 def multiple_leads(user, question, choice_question, slider_question, date_question):
     """Create multiple test leads for analytics testing."""
     leads = []
-    
+
     for i in range(5):
         lead = Lead.objects.create(
             owner=user,
-            x_axis=Decimal(f'{20 + i * 5}'),
-            y_axis=Decimal(f'{10 + i * 3}'),
-            total_score=Decimal(f'{30 + i * 8}')
+            x_axis=Decimal(f"{20 + i * 5}"),
+            y_axis=Decimal(f"{10 + i * 3}"),
+            total_score=Decimal(f"{30 + i * 8}"),
         )
-        
+
         # Create answers for each lead
         Answer.objects.create(
             lead=lead,
             field_name="age",
             response=str(25 + i * 5),
-            value=Decimal(f'{25 + i * 5}')
+            value=Decimal(f"{25 + i * 5}"),
         )
-        
+
         Answer.objects.create(
             lead=lead,
             field_name="income",
             response=["Low", "Medium", "High"][i % 3],
-            value=Decimal(f'{10 + i * 10}')
+            value=Decimal(f"{10 + i * 10}"),
         )
-        
+
         Answer.objects.create(
             lead=lead,
             field_name="satisfaction",
             response=str(5 + i),
-            value=Decimal(f'{5 + i}')
+            value=Decimal(f"{5 + i}"),
         )
-        
+
         Answer.objects.create(
             lead=lead,
             field_name="start_date",
             response=f"2024-{i+1:02d}-15",
-            date_value=date(2024, i+1, 15)
+            date_value=date(2024, i + 1, 15),
         )
-        
+
         leads.append(lead)
-    
+
     return leads
 
 
 @pytest.fixture
-def complete_test_data(user_with_token, question, choice_question, slider_question, 
-                      date_question, scoring_model_with_ranges, 
-                      scoring_model_with_date_ranges, recommendation, multiple_leads):
+def complete_test_data(
+    user_with_token,
+    question,
+    choice_question,
+    slider_question,
+    date_question,
+    scoring_model_with_ranges,
+    scoring_model_with_date_ranges,
+    recommendation,
+    multiple_leads,
+):
     """Create complete test data for integration testing."""
     return {
-        'user': user_with_token[0],
-        'token': user_with_token[1],
-        'questions': [question, choice_question, slider_question, date_question],
-        'scoring_models': [scoring_model_with_ranges, scoring_model_with_date_ranges],
-        'recommendation': recommendation,
-        'leads': multiple_leads
+        "user": user_with_token[0],
+        "token": user_with_token[1],
+        "questions": [question, choice_question, slider_question, date_question],
+        "scoring_models": [scoring_model_with_ranges, scoring_model_with_date_ranges],
+        "recommendation": recommendation,
+        "leads": multiple_leads,
     }

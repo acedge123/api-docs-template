@@ -39,8 +39,8 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">1. Acceptance of Terms</h2>
                 <p className="text-gray-600">
-                  By accessing and using the HFC Scoring Engine ("Service"), you accept and agree to be bound by 
-                  the terms and provision of this agreement. If you do not agree to abide by the above, 
+                  By accessing and using the HFC Scoring Engine ("Service"), you accept and agree to be bound by
+                  the terms and provision of this agreement. If you do not agree to abide by the above,
                   please do not use this service.
                 </p>
               </div>
@@ -48,7 +48,7 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">2. Description of Service</h2>
                 <p className="text-gray-600 mb-4">
-                  The HFC Scoring Engine provides lead scoring and recommendation services through a REST API. 
+                  The HFC Scoring Engine provides lead scoring and recommendation services through a REST API.
                   The service includes:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
@@ -104,12 +104,12 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">6. Intellectual Property</h2>
                 <p className="text-gray-600 mb-4">
-                  The Service and its original content, features, and functionality are owned by HFC Scoring Engine 
-                  and are protected by international copyright, trademark, patent, trade secret, and other 
+                  The Service and its original content, features, and functionality are owned by HFC Scoring Engine
+                  and are protected by international copyright, trademark, patent, trade secret, and other
                   intellectual property laws.
                 </p>
                 <p className="text-gray-600">
-                  You retain ownership of any data you submit, but grant us a license to process and analyze 
+                  You retain ownership of any data you submit, but grant us a license to process and analyze
                   that data to provide our services.
                 </p>
               </div>
@@ -117,7 +117,7 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">7. Service Availability</h2>
                 <p className="text-gray-600">
-                  We strive to maintain high availability but do not guarantee uninterrupted access to the Service. 
+                  We strive to maintain high availability but do not guarantee uninterrupted access to the Service.
                   We may perform maintenance, updates, or modifications that temporarily affect availability.
                 </p>
               </div>
@@ -125,8 +125,8 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">8. Limitation of Liability</h2>
                 <p className="text-gray-600">
-                  In no event shall HFC Scoring Engine be liable for any indirect, incidental, special, 
-                  consequential, or punitive damages, including without limitation, loss of profits, data, 
+                  In no event shall HFC Scoring Engine be liable for any indirect, incidental, special,
+                  consequential, or punitive damages, including without limitation, loss of profits, data,
                   use, goodwill, or other intangible losses, resulting from your use of the Service.
                 </p>
               </div>
@@ -134,7 +134,7 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">9. Termination</h2>
                 <p className="text-gray-600">
-                  We may terminate or suspend your account and access to the Service immediately, without prior 
+                  We may terminate or suspend your account and access to the Service immediately, without prior
                   notice, for any reason, including breach of these Terms of Service.
                 </p>
               </div>
@@ -142,7 +142,7 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">10. Changes to Terms</h2>
                 <p className="text-gray-600">
-                  We reserve the right to modify these terms at any time. We will notify users of any material 
+                  We reserve the right to modify these terms at any time. We will notify users of any material
                   changes by posting the new Terms of Service on this page.
                 </p>
               </div>
@@ -150,7 +150,7 @@ const TermsOfService = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-3">11. Contact Information</h2>
                 <p className="text-gray-600">
-                  If you have any questions about these Terms of Service, please contact us at 
+                  If you have any questions about these Terms of Service, please contact us at
                   legal@hfc-scoring.com
                 </p>
               </div>

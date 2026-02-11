@@ -5,7 +5,7 @@ import { questionsAPI } from '../config/api';
 const QuestionForm = ({ question = null, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: question || {
       number: '',
@@ -30,7 +30,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       if (question) {
         // Update existing question
@@ -39,7 +39,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
         // Create new question
         await questionsAPI.create(data);
       }
-      
+
       reset();
       onSuccess && onSuccess();
     } catch (err) {
@@ -54,13 +54,13 @@ const QuestionForm = ({ question = null, onSuccess }) => {
       <h2 className="text-2xl font-bold mb-6">
         {question ? 'Edit Question' : 'Create New Question'}
       </h2>
-      
+
       {error && (
         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {typeof error === 'object' ? JSON.stringify(error) : error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -76,14 +76,14 @@ const QuestionForm = ({ question = null, onSuccess }) => {
               <p className="text-red-500 text-sm mt-1">{errors.number.message}</p>
             )}
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Field Name
             </label>
             <input
               type="text"
-              {...register('field_name', { 
+              {...register('field_name', {
                 required: 'Field name is required',
                 pattern: {
                   value: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
@@ -97,7 +97,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
             )}
           </div>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Question Text
@@ -111,7 +111,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
             <p className="text-red-500 text-sm mt-1">{errors.text.message}</p>
           )}
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Question Type
@@ -130,7 +130,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
             <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>
           )}
         </div>
-        
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -141,7 +141,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
             Allow multiple values
           </label>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -153,7 +153,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Max Value (for Slider)
@@ -165,7 +165,7 @@ const QuestionForm = ({ question = null, onSuccess }) => {
             />
           </div>
         </div>
-        
+
         <div className="flex justify-end space-x-3 pt-4">
           <button
             type="button"

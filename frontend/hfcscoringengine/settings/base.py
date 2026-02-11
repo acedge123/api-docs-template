@@ -227,9 +227,7 @@ LOGGING = {
         "json": {
             "format": '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "module": "%(module)s", "message": "%(message)s", "process": %(process)d, "thread": %(thread)d}'
         },
-        "simple": {
-            "format": "%(levelname)s %(message)s"
-        }
+        "simple": {"format": "%(levelname)s %(message)s"},
     },
     "filters": {
         "require_debug_true": {
@@ -314,7 +312,7 @@ CACHES = {
         "TIMEOUT": 300,  # 5 minutes default
         "OPTIONS": {
             "MAX_ENTRIES": 1000,
-        }
+        },
     }
 }
 

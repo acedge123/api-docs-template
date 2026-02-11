@@ -1,11 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Users, 
-  BarChart3, 
-  Settings, 
-  FileText, 
+import {
+  Users,
+  BarChart3,
+  Settings,
+  FileText,
   Target,
   TrendingUp,
   Database,
@@ -84,7 +84,7 @@ export default function Admin() {
               <Shield className="h-8 w-8 text-blue-600 mr-2" />
               <h1 className="text-xl font-bold text-gray-900">Scoring Engine Admin</h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <Button variant="outline" asChild>
                 <Link to="/">
@@ -110,7 +110,7 @@ export default function Admin() {
             Admin Dashboard
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Manage your scoring engine configuration, client accounts, and view analytics. 
+            Manage your scoring engine configuration, client accounts, and view analytics.
             Use the sections below to access different admin functions.
           </p>
         </div>
