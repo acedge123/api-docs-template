@@ -43,6 +43,11 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v5
 
+      - name: Prepare backend env files for docker compose
+        run: |
+          mkdir -p backend/.envs
+          cp -R .envs/.local backend/.envs/.local
+
       - name: Build the Stack
         run:  docker compose -f backend/local.yml build
 
