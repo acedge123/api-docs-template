@@ -167,7 +167,9 @@ def handle_leads_export(params, ctx):
     w.writerow(["lead_id", "timestamp", "x_axis", "y_axis", "total_score"])
     count = 0
     for lead in qs:
-        w.writerow([lead.lead_id, lead.timestamp, lead.x_axis, lead.y_axis, lead.total_score])
+        w.writerow(
+            [lead.lead_id, lead.timestamp, lead.x_axis, lead.y_axis, lead.total_score]
+        )
         count += 1
 
     return {"data": {"record_count": count, "csv": buf.getvalue()}}

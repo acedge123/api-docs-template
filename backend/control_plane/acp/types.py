@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class ActionDef:
     """Action definition — spec/action-def.json"""
+
     name: str
     scope: str
     description: str
@@ -28,6 +29,7 @@ class ActionDef:
 @dataclass
 class Pack:
     """Pack = actions + handlers"""
+
     name: str
     actions: List[ActionDef]
     handlers: Dict[str, Any]  # name -> handler callable

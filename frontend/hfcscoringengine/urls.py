@@ -21,13 +21,16 @@ from django.conf.urls.static import static
 
 from scoringengine.admin import admin_site
 
+
 def meaningful_health_check(request):
     """Simple health check that always returns 200 OK"""
     return JsonResponse({"status": "ok", "message": "Django is running"}, status=200)
 
+
 def test_view(request):
     """Very simple test view"""
     return JsonResponse({"test": "working"})
+
 
 urlpatterns = [
     path("admin/", admin_site.urls),

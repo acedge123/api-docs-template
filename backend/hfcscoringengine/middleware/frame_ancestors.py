@@ -27,8 +27,12 @@ class CSPFrameAncestorsMiddleware:
             # If a policy already sets frame-ancestors, leave it alone.
             if "frame-ancestors" in existing:
                 return response
-            response.headers["Content-Security-Policy"] = f"{existing.rstrip(';')}; frame-ancestors {ALLOWED_FRAME_ANCESTORS}"
+            response.headers[
+                "Content-Security-Policy"
+            ] = f"{existing.rstrip(';')}; frame-ancestors {ALLOWED_FRAME_ANCESTORS}"
             return response
 
-        response.headers["Content-Security-Policy"] = f"frame-ancestors {ALLOWED_FRAME_ANCESTORS}"
+        response.headers[
+            "Content-Security-Policy"
+        ] = f"frame-ancestors {ALLOWED_FRAME_ANCESTORS}"
         return response

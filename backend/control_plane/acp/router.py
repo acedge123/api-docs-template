@@ -20,9 +20,15 @@ def _validate_request(req: Any) -> Tuple[bool, Optional[str]]:
     """Validate request per spec. Returns (ok, error_msg)."""
     if not isinstance(req, dict):
         return False, "Request must be an object"
-    if "action" not in req or not isinstance(req["action"], str) or not req["action"].strip():
+    if (
+        "action" not in req
+        or not isinstance(req["action"], str)
+        or not req["action"].strip()
+    ):
         return False, "action must be a non-empty string"
-    if "params" in req and (not isinstance(req["params"], dict) or req["params"] is None):
+    if "params" in req and (
+        not isinstance(req["params"], dict) or req["params"] is None
+    ):
         return False, "params must be an object"
     if "dry_run" in req and not isinstance(req["dry_run"], bool):
         return False, "dry_run must be a boolean"
@@ -78,7 +84,15 @@ def create_manage_router(
         if audit_adapter:
             audit_adapter.log(entry)
 
-    def _get_api_key(req) -> Tuple[bool, Optional[str], Optional[str], Optional[List[str]], Optional[get_user_model()]]:
+    def _get_api_key(
+        req,
+    ) -> Tuple[
+        bool,
+        Optional[str],
+        Optional[str],
+        Optional[List[str]],
+        Optional[get_user_model()],
+    ]:
         """Extract and validate API key.
 
         For api-docs-template v1, we treat the **DRF Token** as the API key.
@@ -133,17 +147,19 @@ def create_manage_router(
 
         auth_ok, tenant_id, api_key_id, scopes, user = _get_api_key(req_obj)
         if not auth_ok:
-            _log_audit({
-                "tenant_id": "",
-                "actor_type": "api_key",
-                "actor_id": "unknown",
-                "action": action,
-                "request_id": request_id,
-                "result": "error",
-                "error_message": "Missing or invalid X-API-Key",
-                "ip_address": ip_address,
-                "dry_run": dry_run,
-            })
+            _log_audit(
+                {
+                    "tenant_id": "",
+                    "actor_type": "api_key",
+                    "actor_id": "unknown",
+                    "action": action,
+                    "request_id": request_id,
+                    "result": "error",
+                    "error_message": "Missing or invalid X-API-Key",
+                    "ip_address": ip_address,
+                    "dry_run": dry_run,
+                }
+            )
             return {
                 "ok": False,
                 "request_id": request_id,
@@ -152,17 +168,19 @@ def create_manage_router(
             }
 
         if action not in action_registry:
-            _log_audit({
-                "tenant_id": tenant_id,
-                "actor_type": "api_key",
-                "actor_id": api_key_id or "unknown",
-                "action": action,
-                "request_id": request_id,
-                "result": "error",
-                "error_message": f"Unknown action: {action}",
-                "ip_address": ip_address,
-                "dry_run": dry_run,
-            })
+            _log_audit(
+                {
+                    "tenant_id": tenant_id,
+                    "actor_type": "api_key",
+                    "actor_id": api_key_id or "unknown",
+                    "action": action,
+                    "request_id": request_id,
+                    "result": "error",
+                    "error_message": f"Unknown action: {action}",
+                    "ip_address": ip_address,
+                    "dry_run": dry_run,
+                }
+            )
             return {
                 "ok": False,
                 "request_id": request_id,
@@ -174,17 +192,19 @@ def create_manage_router(
         required_scope = scope_map.get(action, action_def.scope)
 
         if required_scope and (not scopes or required_scope not in scopes):
-            _log_audit({
-                "tenant_id": tenant_id,
-                "actor_type": "api_key",
-                "actor_id": api_key_id or "unknown",
-                "action": action,
-                "request_id": request_id,
-                "result": "denied",
-                "error_message": f"Insufficient scope: requires '{required_scope}'",
-                "ip_address": ip_address,
-                "dry_run": dry_run,
-            })
+            _log_audit(
+                {
+                    "tenant_id": tenant_id,
+                    "actor_type": "api_key",
+                    "actor_id": api_key_id or "unknown",
+                    "action": action,
+                    "request_id": request_id,
+                    "result": "denied",
+                    "error_message": f"Insufficient scope: requires '{required_scope}'",
+                    "ip_address": ip_address,
+                    "dry_run": dry_run,
+                }
+            )
             return {
                 "ok": False,
                 "request_id": request_id,
@@ -204,17 +224,19 @@ def create_manage_router(
         if idempotency_key and not dry_run and idempotency_adapter:
             replay = idempotency_adapter.get_replay(tenant_id, action, idempotency_key)
             if replay is not None:
-                _log_audit({
-                    "tenant_id": tenant_id,
-                    "actor_type": "api_key",
-                    "actor_id": api_key_id or "unknown",
-                    "action": action,
-                    "request_id": request_id,
-                    "result": "success",
-                    "idempotency_key": idempotency_key,
-                    "ip_address": ip_address,
-                    "dry_run": False,
-                })
+                _log_audit(
+                    {
+                        "tenant_id": tenant_id,
+                        "actor_type": "api_key",
+                        "actor_id": api_key_id or "unknown",
+                        "action": action,
+                        "request_id": request_id,
+                        "result": "success",
+                        "idempotency_key": idempotency_key,
+                        "ip_address": ip_address,
+                        "dry_run": False,
+                    }
+                )
                 return {
                     "ok": True,
                     "request_id": request_id,
@@ -233,17 +255,19 @@ def create_manage_router(
             }
             result = handler(params, ctx)
         except Exception as e:
-            _log_audit({
-                "tenant_id": tenant_id,
-                "actor_type": "api_key",
-                "actor_id": api_key_id or "unknown",
-                "action": action,
-                "request_id": request_id,
-                "result": "error",
-                "error_message": str(e),
-                "ip_address": ip_address,
-                "dry_run": dry_run,
-            })
+            _log_audit(
+                {
+                    "tenant_id": tenant_id,
+                    "actor_type": "api_key",
+                    "actor_id": api_key_id or "unknown",
+                    "action": action,
+                    "request_id": request_id,
+                    "result": "error",
+                    "error_message": str(e),
+                    "ip_address": ip_address,
+                    "dry_run": dry_run,
+                }
+            )
             return {
                 "ok": False,
                 "request_id": request_id,
@@ -259,16 +283,18 @@ def create_manage_router(
         if idempotency_key and not dry_run and idempotency_adapter:
             idempotency_adapter.store_replay(tenant_id, action, idempotency_key, data)
 
-        _log_audit({
-            "tenant_id": tenant_id,
-            "actor_type": "api_key",
-            "actor_id": api_key_id or "unknown",
-            "action": action,
-            "request_id": request_id,
-            "result": "success",
-            "ip_address": ip_address,
-            "dry_run": dry_run,
-        })
+        _log_audit(
+            {
+                "tenant_id": tenant_id,
+                "actor_type": "api_key",
+                "actor_id": api_key_id or "unknown",
+                "action": action,
+                "request_id": request_id,
+                "result": "success",
+                "ip_address": ip_address,
+                "dry_run": dry_run,
+            }
+        )
 
         return {
             "ok": True,
@@ -319,7 +345,10 @@ def _get_meta_pack() -> Pack:
                 supports_dry_run=False,
             ),
         ],
-        handlers={"meta.actions": handle_meta_actions, "meta.version": handle_meta_version},
+        handlers={
+            "meta.actions": handle_meta_actions,
+            "meta.version": handle_meta_version,
+        },
     )
 
 
