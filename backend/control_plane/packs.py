@@ -332,10 +332,17 @@ def handle_models_upsert_bulk(params, ctx):
             # Auto-create exact-match ranges for CHOICES if no ranges exist.
             if q.type == Question.CHOICES and not sm.ranges.exists():
                 ranges = []
+                seen = set()
                 for c in q.choices.all():
-                    start = Decimal(c.value)
-                    end = start + Decimal("0.0001")
-                    points = int(round(float(c.value)))
+                    start = Decimal(c.value).quantize(Decimal("0.01"))
+                    if start in seen:
+                        continue
+                    seen.add(start)
+
+                    # ValueRange end is stored with 2 decimal places, so we need at least 0.01.
+                    end = (start + Decimal("0.01")).quantize(Decimal("0.01"))
+                    points = int(round(float(start)))
+
                     ranges.append(
                         ValueRange(
                             scoring_model=sm,
@@ -344,6 +351,7 @@ def handle_models_upsert_bulk(params, ctx):
                             points=points,
                         )
                     )
+
                 ValueRange.objects.bulk_create(ranges)
 
     return {"data": {"created": created, "updated": updated}}
