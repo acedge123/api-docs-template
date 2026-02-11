@@ -211,6 +211,22 @@ def handle_questions_upsert_bulk(params, ctx):
                 "owner": user,
             }
 
+            # number is unique per owner, so we must avoid collisions when upserting by field_name.
+            # If a question with the same number already exists for this owner, move it out of the way.
+            existing_same_number = Question.objects.filter(
+                owner=user, number=defaults["number"]
+            ).exclude(field_name=field_name)
+            if existing_same_number.exists():
+                # Pick a high number unlikely to collide.
+                bump_to = (
+                    Question.objects.filter(owner=user)
+                    .order_by("-number")
+                    .first()
+                    .number
+                    + 1
+                )
+                existing_same_number.update(number=bump_to)
+
             obj, created = Question.objects.update_or_create(
                 owner=user, field_name=field_name, defaults=defaults
             )
