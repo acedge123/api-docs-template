@@ -228,7 +228,9 @@ def handle_questions_upsert_bulk(params, ctx):
                 for cd in choices:
                     c_text = (cd.get("text") or "").strip()[:200]
                     if not c_text:
-                        raise ValueError(f"choice text required for question {field_name}")
+                        raise ValueError(
+                            f"choice text required for question {field_name}"
+                        )
 
                     c_slug = (cd.get("slug") or slugify(c_text)).strip()
                     if not c_slug:
@@ -236,7 +238,9 @@ def handle_questions_upsert_bulk(params, ctx):
 
                     c_value = cd.get("value")
                     if c_value is None:
-                        raise ValueError(f"choice value required for question {field_name}/{c_slug}")
+                        raise ValueError(
+                            f"choice value required for question {field_name}/{c_slug}"
+                        )
 
                     c_obj, c_created = Choice.objects.update_or_create(
                         question=obj,
