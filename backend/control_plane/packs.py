@@ -16,6 +16,8 @@ from django.utils.text import slugify
 
 from control_plane.acp.types import ActionDef, Pack
 from scoringengine.helpers import calculate_x_and_y_scores, collect_answers_values
+from decimal import Decimal
+
 from scoringengine.models import (
     Answer,
     Choice,
@@ -23,6 +25,7 @@ from scoringengine.models import (
     Question,
     Recommendation,
     ScoringModel,
+    ValueRange,
 )
 
 
@@ -281,6 +284,11 @@ def handle_models_upsert_bulk(params, ctx):
 
     Params:
       - models: [{question_field_name, weight?, x_axis, y_axis, formula?}]
+
+    Note:
+      The upstream scoring engine uses ValueRange rows to translate a computed
+      *value* into *points*. For CHOICES questions, we auto-provision exact-match
+      ranges so that choice.value becomes points.
     """
     user = _require_user(ctx)
     models = params.get("models") or []
@@ -320,6 +328,23 @@ def handle_models_upsert_bulk(params, ctx):
                 sm.full_clean()
             except ValidationError as e:
                 raise ValueError(str(e))
+
+            # Auto-create exact-match ranges for CHOICES if no ranges exist.
+            if q.type == Question.CHOICES and not sm.ranges.exists():
+                ranges = []
+                for c in q.choices.all():
+                    start = Decimal(c.value)
+                    end = start + Decimal("0.0001")
+                    points = int(round(float(c.value)))
+                    ranges.append(
+                        ValueRange(
+                            scoring_model=sm,
+                            start=start,
+                            end=end,
+                            points=points,
+                        )
+                    )
+                ValueRange.objects.bulk_create(ranges)
 
     return {"data": {"created": created, "updated": updated}}
 
