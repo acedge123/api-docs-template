@@ -463,6 +463,18 @@ def handle_leads_create(params, ctx):
             }
         }
 
+    recs = [
+        {
+            "field_name": a.get("field_name"),
+            "response_text": a.get("response_text"),
+            "affiliate_name": a.get("affiliate_name"),
+            "affiliate_link": a.get("affiliate_link"),
+            "redirect_url": a.get("redirect_url"),
+        }
+        for a in answers_data
+        if a.get("response_text")
+    ]
+
     with transaction.atomic():
         lead = Lead.objects.create(
             owner=user,
@@ -499,6 +511,7 @@ def handle_leads_create(params, ctx):
             "x_axis": float(lead.x_axis),
             "y_axis": float(lead.y_axis),
             "total_score": float(lead.total_score),
+            "recommendations": recs,
         }
     }
 
