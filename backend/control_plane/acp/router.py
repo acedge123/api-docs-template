@@ -6,6 +6,9 @@ import json
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from django.contrib.auth import get_user_model
+from rest_framework.authtoken.models import Token
+
 from .types import ActionDef, Pack
 
 
@@ -75,14 +78,30 @@ def create_manage_router(
         if audit_adapter:
             audit_adapter.log(entry)
 
-    def _get_api_key(req) -> Tuple[bool, Optional[str], Optional[str], Optional[List[str]]]:
-        """Extract and validate API key. Returns (ok, tenant_id, api_key_id, scopes)."""
+    def _get_api_key(req) -> Tuple[bool, Optional[str], Optional[str], Optional[List[str]], Optional[get_user_model()]]:
+        """Extract and validate API key.
+
+        For api-docs-template v1, we treat the **DRF Token** as the API key.
+
+        Header: `X-API-Key: <token>`
+        Returns: (ok, tenant_id, api_key_id, scopes, user)
+        """
         api_key = req.headers.get("X-API-Key") or req.headers.get("x-api-key")
         if not api_key or not api_key.strip():
-            return False, None, None, None
-        # Stub: accept any non-empty key, use first 12 chars as "tenant" for demo
-        tenant_id = str(hash(api_key) % 10**9)  # deterministic tenant from key
-        return True, tenant_id, api_key[:20], ["manage.read", "manage.domain"]
+            return False, None, None, None, None
+
+        try:
+            token = Token.objects.select_related("user").get(key=api_key.strip())
+        except Token.DoesNotExist:
+            return False, None, None, None, None
+
+        user = token.user
+        tenant_id = str(user.id)
+
+        # No scoped keys yet; treat all valid tokens as full control-plane access.
+        scopes = ["manage.read", "manage.domain"]
+        api_key_id = token.key
+        return True, tenant_id, api_key_id, scopes, user
 
     def router(request_body: Dict, meta: Dict) -> Dict:
         request_id = _generate_request_id()
@@ -112,7 +131,7 @@ def create_manage_router(
                 "code": "INVALID_API_KEY",
             }
 
-        auth_ok, tenant_id, api_key_id, scopes = _get_api_key(req_obj)
+        auth_ok, tenant_id, api_key_id, scopes, user = _get_api_key(req_obj)
         if not auth_ok:
             _log_audit({
                 "tenant_id": "",
@@ -210,6 +229,7 @@ def create_manage_router(
                 "scopes": scopes or [],
                 "dry_run": dry_run,
                 "request_id": request_id,
+                "user": user,
             }
             result = handler(params, ctx)
         except Exception as e:
