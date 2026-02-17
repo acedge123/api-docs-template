@@ -3,6 +3,7 @@ ACP Router — implements spec/ contract
 """
 
 import json
+import os
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -80,7 +81,7 @@ def create_manage_router(
         if audit_adapter:
             audit_adapter.log(entry)
 
-    def _get_api_key(req) -> Tuple[bool, Optional[str], Optional[str], Optional[List[str]], Optional[get_user_model()]]:
+    def _get_api_key(req) -> Tuple[bool, Optional[str], Optional[str], Optional[List[str]], Optional[get_user_model()], Optional[str]]:
         """Extract and validate API key.
 
         For api-docs-template v1, we treat the **DRF Token** as the API key.
@@ -98,12 +99,17 @@ def create_manage_router(
             return False, None, None, None, None
 
         user = token.user
-        tenant_id = str(user.id)
+        # For local operations, use user.id
+        local_tenant_id = str(user.id)
+        
+        # For Repo B (Governance Hub), use the registered tenant UUID from env
+        # This is set during onboarding when the tenant is registered in Repo B
+        governance_tenant_id = bindings.get('governanceTenantId') or os.environ.get('GOVERNANCE_TENANT_ID', local_tenant_id)
 
         # No scoped keys yet; treat all valid tokens as full control-plane access.
         scopes = ["manage.read", "manage.domain"]
         api_key_id = token.key
-        return True, tenant_id, api_key_id, scopes, user
+        return True, local_tenant_id, api_key_id, scopes, user, governance_tenant_id
 
     def router(request_body: Dict, meta: Dict) -> Dict:
         request_id = _generate_request_id()
@@ -133,7 +139,15 @@ def create_manage_router(
                 "code": "INVALID_API_KEY",
             }
 
-        auth_ok, tenant_id, api_key_id, scopes, user = _get_api_key(req_obj)
+        auth_ok, local_tenant_id, api_key_id, scopes, user, governance_tenant_id = _get_api_key(req_obj)
+        if not auth_ok:
+            local_tenant_id = ""
+            governance_tenant_id = ""
+        
+        # Use governance_tenant_id for Repo B calls (authorization, audit)
+        # Use local_tenant_id for local operations (idempotency, constraints)
+        tenant_id = governance_tenant_id if governance_tenant_id else local_tenant_id  # Use governance tenant for audit logs
+        
         if not auth_ok:
             _log_audit({
                 "tenant_id": "",
@@ -230,7 +244,7 @@ def create_manage_router(
                     
                     auth_request = AuthorizationRequest(
                         kernel_id=bindings.get('kernelId', 'leadscore-kernel'),
-                        tenant_id=tenant_id,
+                        tenant_id=governance_tenant_id,  # Use Repo B tenant UUID
                         actor={
                             'type': 'api_key',
                             'id': api_key_id or 'unknown',
@@ -306,8 +320,9 @@ def create_manage_router(
                     }
 
         # Idempotency replay (stub: idempotency_adapter would implement)
+        # Use local_tenant_id for local operations
         if idempotency_key and not dry_run and idempotency_adapter:
-            replay = idempotency_adapter.get_replay(tenant_id, action, idempotency_key)
+            replay = idempotency_adapter.get_replay(local_tenant_id, action, idempotency_key)
             if replay is not None:
                 _log_audit({
                     "tenant_id": tenant_id,
@@ -365,7 +380,7 @@ def create_manage_router(
             data = result.get("data", result) if isinstance(result, dict) else result
 
         if idempotency_key and not dry_run and idempotency_adapter:
-            idempotency_adapter.store_replay(tenant_id, action, idempotency_key, data)
+            idempotency_adapter.store_replay(local_tenant_id, action, idempotency_key, data)
 
         _log_audit({
             "tenant_id": tenant_id,
@@ -384,7 +399,7 @@ def create_manage_router(
             "request_id": request_id,
             "data": data,
             "dry_run": dry_run,
-            "constraints_applied": [f"tenant_scoped: {tenant_id}"],
+            "constraints_applied": [f"tenant_scoped: {local_tenant_id}"],
         }
 
     return router

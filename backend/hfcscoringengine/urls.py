@@ -23,8 +23,13 @@ from scoringengine.admin import admin_site
 
 
 def meaningful_health_check(request):
-    """Simple health check that always returns 200 OK"""
-    return JsonResponse({"status": "ok", "message": "Django is running"}, status=200)
+    """Simple health check that always returns 200 OK - no imports or DB calls"""
+    try:
+        return JsonResponse({"status": "ok", "message": "Django is running"}, status=200)
+    except Exception as e:
+        # Even if JsonResponse fails, return a simple response
+        from django.http import HttpResponse
+        return HttpResponse("OK", status=200, content_type="text/plain")
 
 
 def test_view(request):

@@ -72,10 +72,12 @@ def _get_router():
             except Exception as e:
                 print(f"⚠️ Heartbeat error (non-fatal): {e}")
         
-        # Create bindings with kernel_id
+        # Create bindings with kernel_id and governance tenant UUID
+        # governanceTenantId is the UUID registered in Repo B during onboarding
         bindings = {
             'kernelId': os.environ.get('KERNEL_ID', 'leadscore-kernel'),
             'integration': 'leadscore',
+            'governanceTenantId': os.environ.get('GOVERNANCE_TENANT_ID'),  # Tenant UUID from Repo B
         }
         
         # Create audit adapter (send to Repo B if configured, otherwise stub)

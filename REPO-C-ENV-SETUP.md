@@ -16,6 +16,7 @@ KERNEL_ID=leadscore-kernel
 # Repo B (Governance Hub) Configuration (optional - if using governance)
 GOVERNANCE_HUB_URL=https://your-governance-hub.supabase.co
 ACP_KERNEL_KEY=acp_kernel_xxxxx  # Generated kernel API key from Repo B
+GOVERNANCE_TENANT_ID=be1b7614-60ad-4e77-8661-cb4fcba9b314  # Tenant UUID registered in Repo B during onboarding
 ```
 
 ## Steps
@@ -69,6 +70,12 @@ Set to: `leadscore-kernel`
 2. Register the kernel in Repo B via `/heartbeat` endpoint
 3. Compute HMAC hash and store in Repo B `kernels` table
 4. Use the raw key value here (not the hash)
+
+### GOVERNANCE_TENANT_ID (Required if using Repo B)
+1. This is the tenant UUID that was registered in Repo B during onboarding
+2. Get this from Repo B after creating the tenant/organization
+3. Format: UUID (e.g., `be1b7614-60ad-4e77-8661-cb4fcba9b314`)
+4. This is different from the local `user.id` - it's the tenant UUID in Repo B's system
 
 ## Next Steps
 
