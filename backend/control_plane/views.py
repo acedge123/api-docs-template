@@ -73,14 +73,22 @@ def _get_router():
             except Exception as e:
                 print(f"⚠️ Heartbeat error (non-fatal): {e}")
         
-        # Create bindings with kernel_id and governance tenant UUID
-        # governanceTenantId is the UUID registered in Repo B during onboarding
+        # Create bindings with kernel_id and tenant UUID
+        # tenant_uuid is the UUID registered in Repo B (not the local user.id)
         # Support both ACP_TENANT_ID (new standard) and GOVERNANCE_TENANT_ID (legacy)
-        tenant_id = os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID')
+        tenant_uuid = os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID')
+        
+        # Debug logging to help diagnose env var issues
+        if not tenant_uuid:
+            print(f"⚠️ WARNING: ACP_TENANT_ID and GOVERNANCE_TENANT_ID are not set")
+            print(f"⚠️ Available env vars with 'TENANT' or 'ACP': {[k for k in os.environ.keys() if 'TENANT' in k or 'ACP' in k]}")
+        else:
+            print(f"✅ Found tenant UUID from env: {tenant_uuid[:8]}... (length: {len(tenant_uuid)})")
+        
         bindings = {
             'kernelId': os.environ.get('KERNEL_ID', 'leadscore-kernel'),
             'integration': 'leadscore',
-            'governanceTenantId': tenant_id,  # Tenant UUID from Repo B
+            'governanceTenantId': tenant_uuid,  # Tenant UUID from Repo B (kept for backward compatibility with bindings)
         }
         
         # Create audit adapter (send to Repo B if configured, otherwise stub)

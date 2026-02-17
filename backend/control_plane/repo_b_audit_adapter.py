@@ -68,7 +68,15 @@ class RepoBAuditAdapter:
             return
         
         # Validate tenant_id is a UUID before sending to Repo B
-        tenant_id = entry.get('tenant_id', '')
+        tenant_id = entry.get('tenant_id') or entry.get('tenantId')  # Support both snake_case and camelCase
+        if not tenant_id or tenant_id == '':
+            # Empty string or None - don't send to Repo B (would cause UUID validation error)
+            print(f"⚠️ Audit skipped: tenant_id is empty or not provided. Set ACP_TENANT_ID to the tenant UUID from Repo B.")
+            return
+        
+        # Strip whitespace
+        tenant_id = str(tenant_id).strip()
+        
         if tenant_id:
             try:
                 # Try to parse as UUID to validate format
@@ -92,29 +100,36 @@ class RepoBAuditAdapter:
             
             # Build audit event in Repo B format (matches AuditEvent interface)
             import time
+            start_time = entry.get('start_time')  # If we track request start time
+            latency_ms = None
+            if start_time:
+                latency_ms = int((time.time() - start_time) * 1000)
+            
             audit_event = {
                 'event_id': str(uuid.uuid4()),
-                'event_version': 1,
                 'schema_version': 1,
                 'ts': int(time.time() * 1000),  # Unix timestamp in milliseconds
-                'tenant_id': entry.get('tenant_id', ''),
+                'tenant_id': tenant_id,  # Use validated UUID (already validated above)
                 'integration': self.integration,
                 'pack': pack,
                 'action': action,
                 'actor': {
                     'type': entry.get('actor_type', 'api_key'),
                     'id': entry.get('actor_id', 'unknown'),
-                    'api_key_id': entry.get('api_key_id'),
+                    # Note: api_key_id not in Repo B schema, only type and id
                 },
                 'request_hash': request_hash or '',
                 'status': 'success' if entry.get('result') == 'success' else 
                          'error' if entry.get('result') == 'error' else 
                          'denied' if entry.get('result') == 'denied' else 'unknown',
-                'policy_decision_id': entry.get('policy_decision_id'),
-                'result_meta': entry.get('result_meta'),  # Optional: what changed
-                'error_code': entry.get('code') if entry.get('result') != 'success' else None,
-                'error_message_redacted': entry.get('error_message', '') if entry.get('result') != 'success' else None,
             }
+            
+            # Add optional fields only if they have values
+            if latency_ms is not None:
+                audit_event['latency_ms'] = latency_ms
+            
+            if entry.get('policy_decision_id'):
+                audit_event['policy_decision_id'] = entry.get('policy_decision_id')
             
             # Send to Repo B (async, best-effort)
             url = f"{self.governance_url}/functions/v1/audit-ingest"

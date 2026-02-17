@@ -106,23 +106,31 @@ def create_manage_router(
         # This is set during onboarding when the tenant is registered in Repo B
         # Support both ACP_TENANT_ID (new standard) and GOVERNANCE_TENANT_ID (legacy)
         # CRITICAL: Must be a UUID, not the local tenant ID
-        governance_tenant_id = bindings.get('governanceTenantId') or os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID')
+        tenant_uuid = bindings.get('governanceTenantId') or os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID')
         
-        # Validate that governance_tenant_id is a UUID if provided
-        if governance_tenant_id:
+        # Strip whitespace if present (common issue with env vars)
+        if tenant_uuid:
+            tenant_uuid = tenant_uuid.strip()
+        
+        # Validate that tenant_uuid is a UUID if provided
+        if tenant_uuid:
             try:
                 # Try to parse as UUID to validate format
-                uuid.UUID(governance_tenant_id)
+                uuid.UUID(tenant_uuid)
             except (ValueError, TypeError):
                 # Not a valid UUID - log warning and don't use it
-                print(f"⚠️ WARNING: ACP_TENANT_ID/GOVERNANCE_TENANT_ID is not a valid UUID: {governance_tenant_id}")
+                print(f"⚠️ WARNING: ACP_TENANT_ID/GOVERNANCE_TENANT_ID is not a valid UUID: '{tenant_uuid}' (length: {len(tenant_uuid)})")
                 print(f"⚠️ Repo B requires a UUID tenant ID. Set ACP_TENANT_ID to the tenant UUID from Repo B.")
-                governance_tenant_id = None
+                tenant_uuid = None
+        else:
+            # Debug: log what env vars are available
+            env_vars_with_tenant = [k for k in os.environ.keys() if 'TENANT' in k.upper() or 'ACP' in k.upper()]
+            print(f"⚠️ DEBUG: ACP_TENANT_ID not found. Available related env vars: {env_vars_with_tenant}")
 
         # No scoped keys yet; treat all valid tokens as full control-plane access.
         scopes = ["manage.read", "manage.domain"]
         api_key_id = token.key
-        return True, local_tenant_id, api_key_id, scopes, user, governance_tenant_id
+        return True, local_tenant_id, api_key_id, scopes, user, tenant_uuid
 
     def router(request_body: Dict, meta: Dict) -> Dict:
         request_id = _generate_request_id()
@@ -152,16 +160,15 @@ def create_manage_router(
                 "code": "INVALID_API_KEY",
             }
 
-        auth_ok, local_tenant_id, api_key_id, scopes, user, governance_tenant_id = _get_api_key(req_obj)
+        auth_ok, local_tenant_id, api_key_id, scopes, user, tenant_uuid = _get_api_key(req_obj)
         if not auth_ok:
             local_tenant_id = ""
-            governance_tenant_id = ""
+            tenant_uuid = None
         
-        # Use governance_tenant_id for Repo B calls (authorization, audit)
+        # Use tenant_uuid for Repo B calls (authorization, audit)
         # Use local_tenant_id for local operations (idempotency, constraints)
-        # CRITICAL: Only use governance_tenant_id if it's set and valid (UUID)
+        # CRITICAL: Only use tenant_uuid if it's set and valid (UUID)
         # If not set, we can't call Repo B (will fail validation)
-        tenant_id = governance_tenant_id if governance_tenant_id else None
         
         if not auth_ok:
             _log_audit({
@@ -184,7 +191,7 @@ def create_manage_router(
 
         if action not in action_registry:
             _log_audit({
-                "tenant_id": governance_tenant_id or "",
+                "tenant_id": tenant_uuid,  # Pass None if not set, not empty string
                 "actor_type": "api_key",
                 "actor_id": api_key_id or "unknown",
                 "action": action,
@@ -206,7 +213,7 @@ def create_manage_router(
 
         if required_scope and (not scopes or required_scope not in scopes):
             _log_audit({
-                "tenant_id": governance_tenant_id or "",
+                "tenant_id": tenant_uuid,  # Pass None if not set, not empty string
                 "actor_type": "api_key",
                 "actor_id": api_key_id or "unknown",
                 "action": action,
@@ -237,7 +244,7 @@ def create_manage_router(
         policy_decision_id = None
         if control_plane and not dry_run and required_scope in ("manage.domain", "manage.write"):
             # CRITICAL: Must have valid UUID tenant ID to call Repo B
-            if not governance_tenant_id:
+            if not tenant_uuid:
                 _log_audit({
                     "tenant_id": "",
                     "actor_type": "api_key",
@@ -278,7 +285,7 @@ def create_manage_router(
                 
                 auth_request = AuthorizationRequest(
                     kernel_id=bindings.get('kernelId', 'leadscore-kernel'),
-                    tenant_id=governance_tenant_id,  # Use Repo B tenant UUID
+                    tenant_id=tenant_uuid,  # Use tenant UUID for Repo B
                     actor={
                         'type': 'api_key',
                         'id': api_key_id or 'unknown',
@@ -296,7 +303,7 @@ def create_manage_router(
                 
                 if auth_response.decision == 'deny':
                     _log_audit({
-                        "tenant_id": governance_tenant_id or "",
+                        "tenant_id": tenant_uuid,  # Pass None if not set, not empty string
                         "actor_type": "api_key",
                         "actor_id": api_key_id or "unknown",
                         "action": action,
@@ -314,7 +321,7 @@ def create_manage_router(
                     }
                 elif auth_response.decision == 'require_approval':
                     _log_audit({
-                        "tenant_id": governance_tenant_id or "",
+                        "tenant_id": tenant_uuid,  # Pass None if not set, not empty string
                         "actor_type": "api_key",
                         "actor_id": api_key_id or "unknown",
                         "action": action,
@@ -336,7 +343,7 @@ def create_manage_router(
                 # If Repo B is unreachable, fail-closed for write actions
                 print(f"[AUTH] Authorization check FAILED: {str(e)}")
                 _log_audit({
-                    "tenant_id": governance_tenant_id or "",
+                    "tenant_id": tenant_uuid,  # Pass None if not set, not empty string
                     "actor_type": "api_key",
                     "actor_id": api_key_id or "unknown",
                     "action": action,
@@ -359,7 +366,7 @@ def create_manage_router(
             replay = idempotency_adapter.get_replay(local_tenant_id, action, idempotency_key)
             if replay is not None:
                 _log_audit({
-                    "tenant_id": governance_tenant_id or "",
+                    "tenant_id": tenant_uuid,  # Pass None if not set, not empty string
                     "actor_type": "api_key",
                     "actor_id": api_key_id or "unknown",
                     "action": action,
@@ -378,7 +385,7 @@ def create_manage_router(
 
         try:
             # Use local_tenant_id for context (handlers may need it for local operations)
-            # But only send governance_tenant_id (UUID) to Repo B
+            # But only send tenant_uuid to Repo B
             ctx = {
                 "tenant_id": local_tenant_id,  # Use local tenant ID for handler context
                 "api_key_id": api_key_id,
@@ -393,7 +400,7 @@ def create_manage_router(
             result = handler(params, ctx)
         except Exception as e:
             _log_audit({
-                "tenant_id": governance_tenant_id or "",  # Use UUID for Repo B audit
+                "tenant_id": tenant_uuid,  # Use UUID for Repo B audit (None if not set)
                 "actor_type": "api_key",
                 "actor_id": api_key_id or "unknown",
                 "action": action,
@@ -419,7 +426,7 @@ def create_manage_router(
             idempotency_adapter.store_replay(local_tenant_id, action, idempotency_key, data)
 
         _log_audit({
-            "tenant_id": governance_tenant_id or "",
+            "tenant_id": tenant_uuid,  # Use UUID for Repo B audit (None if not set)
             "actor_type": "api_key",
             "actor_id": api_key_id or "unknown",
             "action": action,
