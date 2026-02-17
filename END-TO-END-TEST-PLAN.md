@@ -125,7 +125,7 @@ curl -X POST https://YOUR_RAILWAY_DOMAIN.railway.app/api/manage \
 
 **Prerequisites:**
 1. All Phase 2 prerequisites
-2. Repo B configured (`GOVERNANCE_HUB_URL`, `ACP_KERNEL_KEY`)
+2. Repo B configured (`ACP_BASE_URL` or `GOVERNANCE_HUB_URL`, `ACP_TENANT_ID` or `GOVERNANCE_TENANT_ID`, `ACP_KERNEL_KEY`)
 3. Kernel registered in Repo B
 4. Control plane adapter implemented in Python (not done yet)
 

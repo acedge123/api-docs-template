@@ -59,7 +59,8 @@ def _get_router():
             )
         
         # Create control plane adapter (Repo B) if configured
-        governance_url = os.environ.get('GOVERNANCE_HUB_URL')
+        # Support both ACP_BASE_URL (new standard) and GOVERNANCE_HUB_URL (legacy)
+        governance_url = os.environ.get('ACP_BASE_URL') or os.environ.get('GOVERNANCE_HUB_URL')
         kernel_api_key = os.environ.get('ACP_KERNEL_KEY')
         if governance_url and kernel_api_key:
             _control_plane = HttpControlPlaneAdapter(
@@ -74,14 +75,17 @@ def _get_router():
         
         # Create bindings with kernel_id and governance tenant UUID
         # governanceTenantId is the UUID registered in Repo B during onboarding
+        # Support both ACP_TENANT_ID (new standard) and GOVERNANCE_TENANT_ID (legacy)
+        tenant_id = os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID')
         bindings = {
             'kernelId': os.environ.get('KERNEL_ID', 'leadscore-kernel'),
             'integration': 'leadscore',
-            'governanceTenantId': os.environ.get('GOVERNANCE_TENANT_ID'),  # Tenant UUID from Repo B
+            'governanceTenantId': tenant_id,  # Tenant UUID from Repo B
         }
         
         # Create audit adapter (send to Repo B if configured, otherwise stub)
-        governance_url = os.environ.get('GOVERNANCE_HUB_URL')
+        # Support both ACP_BASE_URL (new standard) and GOVERNANCE_HUB_URL (legacy)
+        governance_url = os.environ.get('ACP_BASE_URL') or os.environ.get('GOVERNANCE_HUB_URL')
         kernel_api_key = os.environ.get('ACP_KERNEL_KEY')
         if governance_url and kernel_api_key:
             audit_adapter = RepoBAuditAdapter(

@@ -14,9 +14,11 @@ CIA_SERVICE_KEY=cia_service_xxxxx  # Generated service key from Repo C UI
 KERNEL_ID=leadscore-kernel
 
 # Repo B (Governance Hub) Configuration (optional - if using governance)
-GOVERNANCE_HUB_URL=https://your-governance-hub.supabase.co
+ACP_BASE_URL=https://your-governance-hub.supabase.co  # Repo B base URL (standard name)
+# Legacy: GOVERNANCE_HUB_URL also supported for backward compatibility
 ACP_KERNEL_KEY=acp_kernel_xxxxx  # Generated kernel API key from Repo B
-GOVERNANCE_TENANT_ID=be1b7614-60ad-4e77-8661-cb4fcba9b314  # Tenant UUID registered in Repo B during onboarding
+ACP_TENANT_ID=be1b7614-60ad-4e77-8661-cb4fcba9b314  # Tenant UUID registered in Repo B during onboarding (standard name)
+# Legacy: GOVERNANCE_TENANT_ID also supported for backward compatibility
 ```
 
 ## Steps
@@ -36,7 +38,8 @@ GOVERNANCE_TENANT_ID=be1b7614-60ad-4e77-8661-cb4fcba9b314  # Tenant UUID registe
      - `CIA_ANON_KEY` = (Get from Repo C Supabase dashboard → Settings → API → anon/public key)
      - `CIA_SERVICE_KEY` = (Generated from Repo C UI → Service Keys)
      - `KERNEL_ID` = `leadscore-kernel`
-     - `GOVERNANCE_HUB_URL` = (Your Repo B URL, if using governance)
+     - `ACP_BASE_URL` = (Your Repo B URL, if using governance - standard name)
+     - `GOVERNANCE_HUB_URL` = (Legacy name, also supported for backward compatibility)
      - `ACP_KERNEL_KEY` = (Generated kernel API key from Repo B, if using governance)
 
 4. **Redeploy**
@@ -61,7 +64,10 @@ Already set: `https://rrzewykkwjdkkccwrjyf.supabase.co`
 ### KERNEL_ID
 Set to: `leadscore-kernel`
 
-### GOVERNANCE_HUB_URL (Optional - if using Repo B)
+### ACP_BASE_URL (Optional - if using Repo B)
+**Standard name:** `ACP_BASE_URL` (preferred)
+**Legacy name:** `GOVERNANCE_HUB_URL` (also supported for backward compatibility)
+
 1. Get your Repo B (Governance Hub) Supabase project URL
 2. Format: `https://your-project-id.supabase.co`
 
@@ -71,7 +77,10 @@ Set to: `leadscore-kernel`
 3. Compute HMAC hash and store in Repo B `kernels` table
 4. Use the raw key value here (not the hash)
 
-### GOVERNANCE_TENANT_ID (Required if using Repo B)
+### ACP_TENANT_ID (Required if using Repo B)
+**Standard name:** `ACP_TENANT_ID` (preferred)
+**Legacy name:** `GOVERNANCE_TENANT_ID` (also supported for backward compatibility)
+
 1. This is the tenant UUID that was registered in Repo B during onboarding
 2. Get this from Repo B after creating the tenant/organization
 3. Format: UUID (e.g., `be1b7614-60ad-4e77-8661-cb4fcba9b314`)

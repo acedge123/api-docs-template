@@ -73,7 +73,8 @@ Repo B's audit-ingest extracts `organization_id` from user metadata. For kernels
 ## 🧪 Testing Checklist
 
 ### Prerequisites
-- [ ] `GOVERNANCE_HUB_URL` set in Railway
+- [ ] `ACP_BASE_URL` set in Railway (or `GOVERNANCE_HUB_URL` for legacy)
+- [ ] `ACP_TENANT_ID` set in Railway (or `GOVERNANCE_TENANT_ID` for legacy)
 - [ ] `ACP_KERNEL_KEY` set in Railway
 - [ ] Kernel registered in Repo B (via heartbeat or manual SQL)
 - [ ] Policy created in Repo B (optional - default is allow)
@@ -114,7 +115,7 @@ Repo B's audit-ingest extracts `organization_id` from user metadata. For kernels
 ## 🔧 If Things Don't Work
 
 1. **Heartbeat fails:**
-   - Check `GOVERNANCE_HUB_URL` and `ACP_KERNEL_KEY` are set
+   - Check `ACP_BASE_URL` (or `GOVERNANCE_HUB_URL`) and `ACP_KERNEL_KEY` are set
    - Check kernel is registered in Repo B `kernels` table
    - Check Repo B `/heartbeat` endpoint is accessible
 

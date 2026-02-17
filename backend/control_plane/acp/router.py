@@ -104,7 +104,8 @@ def create_manage_router(
         
         # For Repo B (Governance Hub), use the registered tenant UUID from env
         # This is set during onboarding when the tenant is registered in Repo B
-        governance_tenant_id = bindings.get('governanceTenantId') or os.environ.get('GOVERNANCE_TENANT_ID', local_tenant_id)
+        # Support both ACP_TENANT_ID (new standard) and GOVERNANCE_TENANT_ID (legacy)
+        governance_tenant_id = bindings.get('governanceTenantId') or os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID', local_tenant_id)
 
         # No scoped keys yet; treat all valid tokens as full control-plane access.
         scopes = ["manage.read", "manage.domain"]

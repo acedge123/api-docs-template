@@ -25,7 +25,8 @@ class RepoBAuditAdapter:
             kernel_id: Kernel ID (optional, will use env var if not provided)
             kernel_api_key: Kernel API key for authentication (optional, will use env var if not provided)
         """
-        self.governance_url = (governance_url or os.environ.get('GOVERNANCE_HUB_URL', '')).rstrip('/')
+        # Support both ACP_BASE_URL (new standard) and GOVERNANCE_HUB_URL (legacy)
+        self.governance_url = (governance_url or os.environ.get('ACP_BASE_URL') or os.environ.get('GOVERNANCE_HUB_URL', '')).rstrip('/')
         self.kernel_id = kernel_id or os.environ.get('KERNEL_ID', 'leadscore-kernel')
         self.kernel_api_key = kernel_api_key or os.environ.get('ACP_KERNEL_KEY')
         self.integration = 'leadscore'
