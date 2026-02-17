@@ -1,7 +1,9 @@
 from django.urls import include, path
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken import views
 
 # Lazy import to avoid startup errors if control_plane has issues
+@csrf_exempt
 def manage_endpoint_lazy(request):
     """Lazy import of manage_endpoint to avoid startup failures"""
     from control_plane.views import manage_endpoint
