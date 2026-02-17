@@ -1,0 +1,164 @@
+"""
+ControlPlaneAdapter - Interface for calling Governance Hub (Repo B)
+
+This adapter allows kernels to consult the platform for authoritative
+authorization decisions.
+"""
+
+import hashlib
+import json
+import os
+from typing import Any, Dict, Optional
+
+import requests
+
+
+class AuthorizationRequest:
+    """Request for authorization decision"""
+    def __init__(self, kernel_id: str, tenant_id: str, actor: Dict[str, Any],
+                 action: str, request_hash: str, params_summary: Optional[Dict] = None):
+        self.kernel_id = kernel_id
+        self.tenant_id = tenant_id
+        self.actor = actor
+        self.action = action
+        self.request_hash = request_hash
+        self.params_summary = params_summary
+    
+    def to_dict(self) -> Dict:
+        return {
+            'kernel_id': self.kernel_id,
+            'tenant_id': self.tenant_id,
+            'actor': self.actor,
+            'action': self.action,
+            'request_hash': self.request_hash,
+            'params_summary': self.params_summary,
+        }
+
+
+class AuthorizationResponse:
+    """Response from authorization decision"""
+    def __init__(self, decision_id: str, decision: str, policy_version: str,
+                 approval_id: Optional[str] = None, reason: Optional[str] = None,
+                 policy_id: Optional[str] = None, expires_at: Optional[int] = None,
+                 decision_ttl_ms: Optional[int] = None):
+        self.decision_id = decision_id
+        self.decision = decision  # 'allow' | 'deny' | 'require_approval'
+        self.policy_version = policy_version
+        self.approval_id = approval_id
+        self.reason = reason
+        self.policy_id = policy_id
+        self.expires_at = expires_at
+        self.decision_ttl_ms = decision_ttl_ms
+
+
+class ControlPlaneAdapter:
+    """Interface for requesting authorization from Governance Hub"""
+    
+    def authorize(self, request: AuthorizationRequest) -> AuthorizationResponse:
+        """
+        Request authorization decision from Governance Hub
+        
+        CRITICAL: This is on the hot path - must be fast (<50ms ideally)
+        """
+        raise NotImplementedError
+
+
+class HttpControlPlaneAdapter(ControlPlaneAdapter):
+    """HTTP implementation - Calls Governance Hub /authorize endpoint"""
+    
+    def __init__(self, platform_url: str, kernel_api_key: str):
+        """
+        Initialize control plane adapter
+        
+        Args:
+            platform_url: Repo B base URL (e.g., https://xxx.supabase.co)
+            kernel_api_key: Kernel API key for authentication
+        """
+        self.platform_url = platform_url.rstrip('/')
+        self.kernel_api_key = kernel_api_key
+    
+    def authorize(self, request: AuthorizationRequest) -> AuthorizationResponse:
+        """
+        Request authorization decision from Repo B
+        
+        Args:
+            request: AuthorizationRequest with kernel_id, tenant_id, actor, action, etc.
+        
+        Returns:
+            AuthorizationResponse with decision
+        """
+        url = f"{self.platform_url}/functions/v1/authorize"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.kernel_api_key}',
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=request.to_dict(), timeout=5)
+            response.raise_for_status()
+            result = response.json()
+            
+            # Handle both {data: {...}} and direct response formats
+            data = result.get('data', result)
+            
+            return AuthorizationResponse(
+                decision_id=data['decision_id'],
+                decision=data['decision'],
+                policy_version=data['policy_version'],
+                approval_id=data.get('approval_id'),
+                reason=data.get('reason'),
+                policy_id=data.get('policy_id'),
+                expires_at=data.get('expires_at'),
+                decision_ttl_ms=data.get('decision_ttl_ms'),
+            )
+        except requests.exceptions.RequestException as e:
+            # If platform is unreachable, fail-closed (deny)
+            if hasattr(e, 'response') and e.response is not None:
+                if e.response.status_code >= 500:
+                    raise Exception(f"Platform unreachable: {e.response.status_code}")
+            
+            error_msg = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get('error') or error_msg
+                except:
+                    pass
+            raise Exception(f"Authorization failed: {error_msg}")
+    
+    def heartbeat(self, kernel_id: str, version: str, packs: list, env: str = 'production') -> Dict:
+        """
+        Send heartbeat to Repo B for kernel registration
+        
+        Args:
+            kernel_id: Kernel identifier
+            version: Kernel version
+            packs: List of pack names
+            env: Environment (production, staging, etc.)
+        
+        Returns:
+            Response dict with ok, kernelRegistered, policyVersion
+        """
+        url = f"{self.platform_url}/functions/v1/heartbeat"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.kernel_api_key}',
+        }
+        
+        body = {
+            'kernel_id': kernel_id,
+            'version': version,
+            'packs': packs,
+            'env': env,
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=body, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            # Log but don't fail - heartbeat is best-effort
+            print(f"Heartbeat failed: {e}")
+            return {'ok': False, 'error': str(e)}
