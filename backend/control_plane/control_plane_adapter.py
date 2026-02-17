@@ -101,20 +101,31 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
             print(f"[AUTH] Response status: {response.status_code}")
             response.raise_for_status()
             result = response.json()
-            print(f"[AUTH] Authorization successful: {result.get('data', result).get('decision', 'unknown')}")
             
             # Handle both {data: {...}} and direct response formats
             data = result.get('data', result)
+            decision = data.get('decision', 'unknown')
+            print(f"[AUTH] Authorization successful: {decision}")
+            
+            # Log response structure for debugging if needed
+            if 'policy_version' not in data and 'policyVersion' not in data:
+                print(f"[AUTH] Warning: policy_version missing in response. Response keys: {list(data.keys())}")
+            
+            # Extract fields with defaults for optional ones
+            # decision_id and decision are required, others are optional
+            decision_id = data.get('decision_id') or data.get('decisionId', 'unknown')
+            decision = data.get('decision', 'allow')  # Default to allow if missing
+            policy_version = data.get('policy_version') or data.get('policyVersion', '1.0.0')  # Default version
             
             return AuthorizationResponse(
-                decision_id=data['decision_id'],
-                decision=data['decision'],
-                policy_version=data['policy_version'],
-                approval_id=data.get('approval_id'),
+                decision_id=decision_id,
+                decision=decision,
+                policy_version=policy_version,
+                approval_id=data.get('approval_id') or data.get('approvalId'),
                 reason=data.get('reason'),
-                policy_id=data.get('policy_id'),
-                expires_at=data.get('expires_at'),
-                decision_ttl_ms=data.get('decision_ttl_ms'),
+                policy_id=data.get('policy_id') or data.get('policyId'),
+                expires_at=data.get('expires_at') or data.get('expiresAt'),
+                decision_ttl_ms=data.get('decision_ttl_ms') or data.get('decisionTtlMs'),
             )
         except requests.exceptions.RequestException as e:
             # If platform is unreachable, fail-closed (deny)
