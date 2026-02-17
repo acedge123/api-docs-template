@@ -1,30 +1,52 @@
-import axios from "axios";
+/**
+ * API client for backend endpoints
+ */
 
-// Vite convention: VITE_API_BASE_URL (e.g. http://127.0.0.1:8005)
-// If unset, default to same-origin.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-const client = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T }> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
 
-client.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    config.headers = config.headers ?? {};
-    // DRF token auth
-    config.headers.Authorization = `Token ${token}`;
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
   }
-  return config;
-});
+
+  const data = await response.json();
+  return { data };
+}
 
 export const authAPI = {
-  getProfile: () => client.get("/api/v1/auth/profile/"),
+  async getProfile() {
+    return request('/v1/auth/profile/');
+  },
+  
+  async login(email: string, password: string) {
+    return request('/v1/auth/login/', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+  
+  async logout() {
+    return request('/v1/auth/logout/', {
+      method: 'POST',
+    });
+  },
 };
 
 export const analyticsAPI = {
-  getLeadSummary: () => client.get("/api/v1/analytics/leads/summary/"),
+  async getLeadSummary() {
+    return request('/v1/analytics/leads/summary/');
+  },
+  
+  async getScoreDistribution() {
+    return request('/v1/analytics/scores/distribution/');
+  },
 };

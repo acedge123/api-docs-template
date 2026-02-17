@@ -3,6 +3,7 @@ ACP /manage endpoint view
 """
 
 import json
+import os
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -15,22 +16,89 @@ from control_plane.adapters import (
     StubIdempotencyAdapter,
     StubRateLimitAdapter,
 )
+from control_plane.repo_b_audit_adapter import RepoBAuditAdapter
+from control_plane.executor_adapter import HttpExecutorAdapter
+from control_plane.control_plane_adapter import HttpControlPlaneAdapter
 from control_plane.packs import leadscoring_pack
 
 # Initialize router once
 _router = None
+_control_plane = None
+
+
+def _send_heartbeat():
+    """Send heartbeat to Repo B on startup"""
+    global _control_plane
+    if _control_plane:
+        kernel_id = os.environ.get('KERNEL_ID', 'leadscore-kernel')
+        result = _control_plane.heartbeat(
+            kernel_id=kernel_id,
+            version='1.0.0',
+            packs=['leadscoring'],
+            env=os.environ.get('ENVIRONMENT', 'production')
+        )
+        if result.get('ok'):
+            print(f"✅ Kernel registered with Repo B: {kernel_id}")
+        else:
+            print(f"⚠️ Heartbeat failed: {result.get('error')}")
 
 
 def _get_router():
-    global _router
+    global _router, _control_plane
     if _router is None:
+        # Create executor adapter (Repo C) if configured
+        executor = None
+        cia_url = os.environ.get('CIA_URL')
+        cia_service_key = os.environ.get('CIA_SERVICE_KEY')
+        if cia_url and cia_service_key:
+            executor = HttpExecutorAdapter(
+                cia_url=cia_url,
+                cia_service_key=cia_service_key,
+                cia_anon_key=os.environ.get('CIA_ANON_KEY'),
+                kernel_id=os.environ.get('KERNEL_ID', 'leadscore-kernel'),
+            )
+        
+        # Create control plane adapter (Repo B) if configured
+        governance_url = os.environ.get('GOVERNANCE_HUB_URL')
+        kernel_api_key = os.environ.get('ACP_KERNEL_KEY')
+        if governance_url and kernel_api_key:
+            _control_plane = HttpControlPlaneAdapter(
+                platform_url=governance_url,
+                kernel_api_key=kernel_api_key,
+            )
+            # Send heartbeat on startup
+            try:
+                _send_heartbeat()
+            except Exception as e:
+                print(f"⚠️ Heartbeat error (non-fatal): {e}")
+        
+        # Create bindings with kernel_id
+        bindings = {
+            'kernelId': os.environ.get('KERNEL_ID', 'leadscore-kernel'),
+            'integration': 'leadscore',
+        }
+        
+        # Create audit adapter (send to Repo B if configured, otherwise stub)
+        governance_url = os.environ.get('GOVERNANCE_HUB_URL')
+        kernel_api_key = os.environ.get('ACP_KERNEL_KEY')
+        if governance_url and kernel_api_key:
+            audit_adapter = RepoBAuditAdapter(
+                governance_url=governance_url,
+                kernel_id=bindings['kernelId'],
+                kernel_api_key=kernel_api_key
+            )
+        else:
+            audit_adapter = StubAuditAdapter()
+        
         _router = create_manage_router(
-            audit_adapter=StubAuditAdapter(),
+            audit_adapter=audit_adapter,
             idempotency_adapter=StubIdempotencyAdapter(),
             rate_limit_adapter=StubRateLimitAdapter(),
             ceilings_adapter=StubCeilingsAdapter(),
-            bindings={},
+            bindings=bindings,
             packs=[leadscoring_pack],
+            executor=executor,  # Pass executor if available
+            control_plane=_control_plane,  # Pass control plane if available
         )
     return _router
 
