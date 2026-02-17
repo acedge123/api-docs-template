@@ -20,6 +20,7 @@ from control_plane.repo_b_audit_adapter import RepoBAuditAdapter
 from control_plane.executor_adapter import HttpExecutorAdapter
 from control_plane.control_plane_adapter import HttpControlPlaneAdapter
 from control_plane.packs import leadscoring_pack
+from control_plane.governance_pack import governance_pack
 
 # Initialize router once
 _router = None
@@ -81,7 +82,17 @@ def _get_router():
         # Debug logging to help diagnose env var issues
         if not tenant_uuid:
             print(f"⚠️ WARNING: ACP_TENANT_ID and GOVERNANCE_TENANT_ID are not set")
-            print(f"⚠️ Available env vars with 'TENANT' or 'ACP': {[k for k in os.environ.keys() if 'TENANT' in k or 'ACP' in k]}")
+            all_acp_vars = [k for k in os.environ.keys() if 'ACP' in k.upper()]
+            all_tenant_vars = [k for k in os.environ.keys() if 'TENANT' in k.upper()]
+            print(f"⚠️ Available env vars with 'ACP': {all_acp_vars}")
+            print(f"⚠️ Available env vars with 'TENANT': {all_tenant_vars}")
+            # Check if it exists but is empty
+            acp_tenant_id_raw = os.environ.get('ACP_TENANT_ID')
+            gov_tenant_id_raw = os.environ.get('GOVERNANCE_TENANT_ID')
+            if acp_tenant_id_raw is not None:
+                print(f"⚠️ ACP_TENANT_ID exists but is empty/whitespace: '{acp_tenant_id_raw}' (len={len(acp_tenant_id_raw) if acp_tenant_id_raw else 0})")
+            if gov_tenant_id_raw is not None:
+                print(f"⚠️ GOVERNANCE_TENANT_ID exists but is empty/whitespace: '{gov_tenant_id_raw}' (len={len(gov_tenant_id_raw) if gov_tenant_id_raw else 0})")
         else:
             print(f"✅ Found tenant UUID from env: {tenant_uuid[:8]}... (length: {len(tenant_uuid)})")
         
@@ -89,6 +100,7 @@ def _get_router():
             'kernelId': os.environ.get('KERNEL_ID', 'leadscore-kernel'),
             'integration': 'leadscore',
             'governanceTenantId': tenant_uuid,  # Tenant UUID from Repo B (kept for backward compatibility with bindings)
+            'org_id': os.environ.get('ACP_ORG_ID'),  # Organization UUID from Repo B (for governance proposals)
         }
         
         # Create audit adapter (send to Repo B if configured, otherwise stub)
@@ -110,7 +122,7 @@ def _get_router():
             rate_limit_adapter=StubRateLimitAdapter(),
             ceilings_adapter=StubCeilingsAdapter(),
             bindings=bindings,
-            packs=[leadscoring_pack],
+            packs=[leadscoring_pack, governance_pack],  # Add governance pack
             executor=executor,  # Pass executor if available
             control_plane=_control_plane,  # Pass control plane if available
         )

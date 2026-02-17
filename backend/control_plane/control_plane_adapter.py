@@ -181,3 +181,53 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
             # Log but don't fail - heartbeat is best-effort
             print(f"Heartbeat failed: {e}")
             return {'ok': False, 'error': str(e)}
+    
+    def proposePolicy(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Propose a policy to Governance Hub for review and approval
+        
+        Args:
+            request: Proposal request dict with:
+                - org_id: str
+                - title: str
+                - summary: str
+                - proposal_kind: str ('policy' | 'limit' | 'runbook' | 'revocation_suggestion')
+                - proposal_spec_version: int
+                - proposal: dict with 'type' and 'data'
+                - rationale: str
+                - evidence: dict (optional)
+                - author_type: str ('agent' | 'user' | 'system')
+                - author_id: str
+        
+        Returns:
+            Response dict with proposal_id, status, and message
+        """
+        url = f"{self.platform_url}/functions/v1/policy-propose"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.kernel_api_key}',
+        }
+        
+        try:
+            print(f"[GOVERNANCE] POST {url} with org_id={request.get('org_id')}, proposal_kind={request.get('proposal_kind')}")
+            response = requests.post(url, headers=headers, json=request, timeout=10)
+            print(f"[GOVERNANCE] Response status: {response.status_code}")
+            response.raise_for_status()
+            result = response.json()
+            
+            # Handle both {data: {...}} and direct response formats
+            data = result.get('data', result)
+            print(f"[GOVERNANCE] Proposal submitted successfully: {data.get('proposal_id')}")
+            
+            return data
+        except requests.exceptions.RequestException as e:
+            error_msg = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get('error') or error_msg
+                    print(f"[GOVERNANCE] Error response: {error_msg}")
+                except:
+                    pass
+            raise Exception(f"Policy proposal failed: {error_msg}")
