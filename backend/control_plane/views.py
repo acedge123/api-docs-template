@@ -3,6 +3,7 @@ ACP /manage endpoint view
 """
 
 import json
+import os
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -15,6 +16,7 @@ from control_plane.adapters import (
     StubIdempotencyAdapter,
     StubRateLimitAdapter,
 )
+from control_plane.executor_adapter import HttpExecutorAdapter
 from control_plane.packs import leadscoring_pack
 
 # Initialize router once
@@ -24,13 +26,32 @@ _router = None
 def _get_router():
     global _router
     if _router is None:
+        # Create executor adapter (Repo C) if configured
+        executor = None
+        cia_url = os.environ.get('CIA_URL')
+        cia_service_key = os.environ.get('CIA_SERVICE_KEY')
+        if cia_url and cia_service_key:
+            executor = HttpExecutorAdapter(
+                cia_url=cia_url,
+                cia_service_key=cia_service_key,
+                cia_anon_key=os.environ.get('CIA_ANON_KEY'),
+                kernel_id=os.environ.get('KERNEL_ID', 'leadscore-kernel'),
+            )
+        
+        # Create bindings with kernel_id
+        bindings = {
+            'kernelId': os.environ.get('KERNEL_ID', 'leadscore-kernel'),
+            'integration': 'leadscore',
+        }
+        
         _router = create_manage_router(
             audit_adapter=StubAuditAdapter(),
             idempotency_adapter=StubIdempotencyAdapter(),
             rate_limit_adapter=StubRateLimitAdapter(),
             ceilings_adapter=StubCeilingsAdapter(),
-            bindings={},
+            bindings=bindings,
             packs=[leadscoring_pack],
+            executor=executor,  # Pass executor if available
         )
     return _router
 

@@ -56,6 +56,8 @@ def create_manage_router(
     ceilings_adapter: Any,
     bindings: Dict[str, Any],
     packs: List[Pack],
+    executor: Any = None,  # Optional executor adapter (Repo C)
+    control_plane: Any = None,  # Optional control plane adapter (Repo B)
 ) -> Callable[[Dict, Dict], Dict]:
     """
     Returns router: (request, meta) -> response
@@ -230,6 +232,9 @@ def create_manage_router(
                 "dry_run": dry_run,
                 "request_id": request_id,
                 "user": user,
+                "executor": executor,  # Pass executor to handlers
+                "control_plane": control_plane,  # Pass control plane to handlers
+                "bindings": bindings,  # Pass bindings (includes kernelId, integration)
             }
             result = handler(params, ctx)
         except Exception as e:
