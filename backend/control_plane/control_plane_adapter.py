@@ -25,9 +25,10 @@ class AuthorizationRequest:
         self.params_summary = params_summary
     
     def to_dict(self) -> Dict:
+        """Convert to dict with camelCase field names for Repo B API"""
         return {
-            'kernel_id': self.kernel_id,
-            'tenant_id': self.tenant_id,
+            'kernelId': self.kernel_id,  # Repo B expects camelCase
+            'tenantId': self.tenant_id,  # Repo B expects camelCase
             'actor': self.actor,
             'action': self.action,
             'request_hash': self.request_hash,
