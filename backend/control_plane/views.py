@@ -130,8 +130,22 @@ def manage_endpoint(request):
         "user_agent": request.META.get("HTTP_USER_AGENT", ""),
     }
 
-    router = _get_router()
-    response = router(body, meta)
+    try:
+        router = _get_router()
+        response = router(body, meta)
+    except Exception as e:
+        # Log the exception for debugging
+        import traceback
+        print(f"❌ Error in manage_endpoint: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": f"Internal server error: {str(e)}",
+                "code": "INTERNAL_ERROR",
+            },
+            status=500,
+        )
 
     status = 200
     if not response.get("ok"):

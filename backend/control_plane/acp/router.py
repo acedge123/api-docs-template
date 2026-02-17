@@ -225,82 +225,42 @@ def create_manage_router(
             # No need to check action name keywords - scope is authoritative
             print(f"[AUTH] Checking authorization for action: {action}, scope: {required_scope}")
             try:
-                    from control_plane.control_plane_adapter import AuthorizationRequest
-                    import hashlib
-                    import json
-                    
-                    # Create request hash (simplified - should use canonical JSON)
-                    params_str = json.dumps(params, sort_keys=True)
-                    request_hash = hashlib.sha256(params_str.encode()).hexdigest()
-                    
-                    # Create params_summary (small subset, sanitized)
-                    params_summary = {}
-                    if isinstance(params, dict):
-                        # Only include non-sensitive fields, limit size
-                        for key, value in list(params.items())[:5]:  # Limit to 5 fields
-                            if key.lower() not in ['password', 'secret', 'token', 'key']:
-                                if isinstance(value, (str, int, float, bool)):
-                                    params_summary[key] = str(value)[:100]  # Truncate long values
-                    
-                    auth_request = AuthorizationRequest(
-                        kernel_id=bindings.get('kernelId', 'leadscore-kernel'),
-                        tenant_id=governance_tenant_id,  # Use Repo B tenant UUID
-                        actor={
-                            'type': 'api_key',
-                            'id': api_key_id or 'unknown',
-                            'api_key_id': api_key_id,
-                        },
-                        action=action,
-                        request_hash=request_hash,
-                        params_summary=params_summary if params_summary else None,
-                    )
-                    
-                    print(f"[AUTH] Calling Governance Hub /authorize for action: {action}")
-                    auth_response = control_plane.authorize(auth_request)
-                    policy_decision_id = auth_response.decision_id
-                    print(f"[AUTH] Authorization decision: {auth_response.decision}, decision_id: {policy_decision_id}")
-                    
-                    if auth_response.decision == 'deny':
-                        _log_audit({
-                            "tenant_id": tenant_id,
-                            "actor_type": "api_key",
-                            "actor_id": api_key_id or "unknown",
-                            "action": action,
-                            "request_id": request_id,
-                            "result": "denied",
-                            "error_message": auth_response.reason or "Policy denied",
-                            "ip_address": ip_address,
-                            "dry_run": dry_run,
-                        })
-                        return {
-                            "ok": False,
-                            "request_id": request_id,
-                            "error": auth_response.reason or "Action denied by policy",
-                            "code": "SCOPE_DENIED",
-                        }
-                    elif auth_response.decision == 'require_approval':
-                        _log_audit({
-                            "tenant_id": tenant_id,
-                            "actor_type": "api_key",
-                            "actor_id": api_key_id or "unknown",
-                            "action": action,
-                            "request_id": request_id,
-                            "result": "denied",
-                            "error_message": "Action requires approval",
-                            "ip_address": ip_address,
-                            "dry_run": dry_run,
-                        })
-                        return {
-                            "ok": False,
-                            "request_id": request_id,
-                            "error": "Action requires approval",
-                            "code": "REQUIRES_APPROVAL",
-                            "approval_id": auth_response.approval_id,
-                        }
-                    # If 'allow', continue execution
-                except Exception as e:
-                    # If Repo B is unreachable, fail-closed for write actions
-                    print(f"[AUTH] Authorization check FAILED: {str(e)}")
+                from control_plane.control_plane_adapter import AuthorizationRequest
+                import hashlib
+                import json
+                
+                # Create request hash (simplified - should use canonical JSON)
+                params_str = json.dumps(params, sort_keys=True)
+                request_hash = hashlib.sha256(params_str.encode()).hexdigest()
+                
+                # Create params_summary (small subset, sanitized)
+                params_summary = {}
+                if isinstance(params, dict):
+                    # Only include non-sensitive fields, limit size
+                    for key, value in list(params.items())[:5]:  # Limit to 5 fields
+                        if key.lower() not in ['password', 'secret', 'token', 'key']:
+                            if isinstance(value, (str, int, float, bool)):
+                                params_summary[key] = str(value)[:100]  # Truncate long values
+                
+                auth_request = AuthorizationRequest(
+                    kernel_id=bindings.get('kernelId', 'leadscore-kernel'),
+                    tenant_id=governance_tenant_id,  # Use Repo B tenant UUID
+                    actor={
+                        'type': 'api_key',
+                        'id': api_key_id or 'unknown',
+                        'api_key_id': api_key_id,
+                    },
+                    action=action,
+                    request_hash=request_hash,
+                    params_summary=params_summary if params_summary else None,
+                )
+                
+                print(f"[AUTH] Calling Governance Hub /authorize for action: {action}")
+                auth_response = control_plane.authorize(auth_request)
+                policy_decision_id = auth_response.decision_id
+                print(f"[AUTH] Authorization decision: {auth_response.decision}, decision_id: {policy_decision_id}")
+                
+                if auth_response.decision == 'deny':
                     _log_audit({
                         "tenant_id": tenant_id,
                         "actor_type": "api_key",
@@ -308,16 +268,56 @@ def create_manage_router(
                         "action": action,
                         "request_id": request_id,
                         "result": "denied",
-                        "error_message": f"Authorization check failed: {str(e)}",
+                        "error_message": auth_response.reason or "Policy denied",
                         "ip_address": ip_address,
                         "dry_run": dry_run,
                     })
                     return {
                         "ok": False,
                         "request_id": request_id,
-                        "error": f"Authorization check failed: {str(e)}",
-                        "code": "AUTHORIZATION_ERROR",
+                        "error": auth_response.reason or "Action denied by policy",
+                        "code": "SCOPE_DENIED",
                     }
+                elif auth_response.decision == 'require_approval':
+                    _log_audit({
+                        "tenant_id": tenant_id,
+                        "actor_type": "api_key",
+                        "actor_id": api_key_id or "unknown",
+                        "action": action,
+                        "request_id": request_id,
+                        "result": "denied",
+                        "error_message": "Action requires approval",
+                        "ip_address": ip_address,
+                        "dry_run": dry_run,
+                    })
+                    return {
+                        "ok": False,
+                        "request_id": request_id,
+                        "error": "Action requires approval",
+                        "code": "REQUIRES_APPROVAL",
+                        "approval_id": auth_response.approval_id,
+                    }
+                # If 'allow', continue execution
+            except Exception as e:
+                # If Repo B is unreachable, fail-closed for write actions
+                print(f"[AUTH] Authorization check FAILED: {str(e)}")
+                _log_audit({
+                    "tenant_id": tenant_id,
+                    "actor_type": "api_key",
+                    "actor_id": api_key_id or "unknown",
+                    "action": action,
+                    "request_id": request_id,
+                    "result": "denied",
+                    "error_message": f"Authorization check failed: {str(e)}",
+                    "ip_address": ip_address,
+                    "dry_run": dry_run,
+                })
+                return {
+                    "ok": False,
+                    "request_id": request_id,
+                    "error": f"Authorization check failed: {str(e)}",
+                    "code": "AUTHORIZATION_ERROR",
+                }
 
         # Idempotency replay (stub: idempotency_adapter would implement)
         # Use local_tenant_id for local operations
