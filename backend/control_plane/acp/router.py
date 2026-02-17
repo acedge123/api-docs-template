@@ -294,9 +294,9 @@ def create_manage_router(
                 policy_decision_id = auth_response.decision_id
                 print(f"[AUTH] Authorization decision: {auth_response.decision}, decision_id: {policy_decision_id}")
                 
-                    if auth_response.decision == 'deny':
-                        _log_audit({
-                            "tenant_id": governance_tenant_id or "",
+                if auth_response.decision == 'deny':
+                    _log_audit({
+                        "tenant_id": governance_tenant_id or "",
                         "actor_type": "api_key",
                         "actor_id": api_key_id or "unknown",
                         "action": action,
@@ -312,9 +312,9 @@ def create_manage_router(
                         "error": auth_response.reason or "Action denied by policy",
                         "code": "SCOPE_DENIED",
                     }
-                    elif auth_response.decision == 'require_approval':
-                        _log_audit({
-                            "tenant_id": governance_tenant_id or "",
+                elif auth_response.decision == 'require_approval':
+                    _log_audit({
+                        "tenant_id": governance_tenant_id or "",
                         "actor_type": "api_key",
                         "actor_id": api_key_id or "unknown",
                         "action": action,
@@ -334,9 +334,9 @@ def create_manage_router(
                 # If 'allow', continue execution
             except Exception as e:
                 # If Repo B is unreachable, fail-closed for write actions
-                    print(f"[AUTH] Authorization check FAILED: {str(e)}")
-                    _log_audit({
-                        "tenant_id": governance_tenant_id or "",
+                print(f"[AUTH] Authorization check FAILED: {str(e)}")
+                _log_audit({
+                    "tenant_id": governance_tenant_id or "",
                     "actor_type": "api_key",
                     "actor_id": api_key_id or "unknown",
                     "action": action,
