@@ -95,9 +95,12 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
         }
         
         try:
+            print(f"[AUTH] POST {url} with kernel_id={request.kernel_id}, action={request.action}")
             response = requests.post(url, headers=headers, json=request.to_dict(), timeout=5)
+            print(f"[AUTH] Response status: {response.status_code}")
             response.raise_for_status()
             result = response.json()
+            print(f"[AUTH] Authorization successful: {result.get('data', result).get('decision', 'unknown')}")
             
             # Handle both {data: {...}} and direct response formats
             data = result.get('data', result)
@@ -114,15 +117,19 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
             )
         except requests.exceptions.RequestException as e:
             # If platform is unreachable, fail-closed (deny)
+            status_code = None
             if hasattr(e, 'response') and e.response is not None:
-                if e.response.status_code >= 500:
-                    raise Exception(f"Platform unreachable: {e.response.status_code}")
+                status_code = e.response.status_code
+                print(f"[AUTH] Authorization request failed with status {status_code}")
+                if status_code >= 500:
+                    raise Exception(f"Platform unreachable: {status_code}")
             
             error_msg = str(e)
             if hasattr(e, 'response') and e.response is not None:
                 try:
                     error_data = e.response.json()
                     error_msg = error_data.get('error') or error_msg
+                    print(f"[AUTH] Error response: {error_msg}")
                 except:
                     pass
             raise Exception(f"Authorization failed: {error_msg}")
