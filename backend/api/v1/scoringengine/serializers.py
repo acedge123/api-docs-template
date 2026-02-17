@@ -51,7 +51,9 @@ class LeadSerializerCreate(serializers.ModelSerializer):
         return lead
 
 
-class AnswerSerializerView(serializers.ModelSerializer):
+class RecommendationSerializerView(serializers.ModelSerializer):
+    """A slim view of recommendation-related fields stored on Answer."""
+
     class Meta:
         model = Answer
         fields = [
@@ -64,12 +66,41 @@ class AnswerSerializerView(serializers.ModelSerializer):
         ]
 
 
+class AnswerSerializerView(serializers.ModelSerializer):
+    """Full answer payload for debugging/scoring validation."""
+
+    class Meta:
+        model = Answer
+        fields = [
+            "field_name",
+            "response",
+            "value_number",
+            "value",
+            "date_value",
+            "values",
+            "points",
+            "response_text",
+            "affiliate_name",
+            "affiliate_image",
+            "affiliate_link",
+            "redirect_url",
+        ]
+
+
 class LeadSerializerView(serializers.ModelSerializer):
-    recommendations = AnswerSerializerView(many=True, source="answers")
+    answers = AnswerSerializerView(many=True, source="answers")
+    recommendations = RecommendationSerializerView(many=True, source="answers")
 
     class Meta:
         model = Lead
-        fields = ["lead_id", "x_axis", "y_axis", "total_score", "recommendations"]
+        fields = [
+            "lead_id",
+            "x_axis",
+            "y_axis",
+            "total_score",
+            "answers",
+            "recommendations",
+        ]
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
@@ -86,7 +117,7 @@ class LeadSerializerView(serializers.ModelSerializer):
         non_empty_recommendations = {
             r.pop("field_name"): r
             for r in result["recommendations"]
-            if any([r[f] for f in fields_to_check])
+            if any([r.get(f) for f in fields_to_check])
         }
         result["recommendations"] = non_empty_recommendations
 

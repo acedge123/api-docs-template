@@ -43,7 +43,7 @@ RULE_REGEX = rf'(^{RULE_PREFIX})(({NUMBER_REGEX}|{DATE_REGEX}|{{{FIELD_NAME_REGE
 FORMULA_REGEX = rf'(({NUMBER_REGEX}|{{{FIELD_NAME_REGEX}}}|{AGGREGATE_FUNCTIONS_REGEX}|{MATH_FUNCTIONS_REGEX}|{DATE_FUNCTIONS_REGEX}|{DAYS_FUNCTIONS_REGEX})|({"|".join([re.escape(o) for o in ARITHMETIC_OPERATORS])})|\s*|[()]*)+'
 
 # Calculated score field names that can be used in recommendation rules
-CALCULATED_SCORE_FIELDS = ['x_axis_score', 'y_axis_score', 'total_score']
+CALCULATED_SCORE_FIELDS = ["x_axis_score", "y_axis_score", "total_score"]
 
 
 @receiver(post_save, sender=get_user_model())
@@ -65,9 +65,6 @@ def clear_user_cache(user_id):
         cache.delete(key)
 
 
-
-
-
 def days(dt):
     return dt.days
 
@@ -80,11 +77,11 @@ def generate_mocked_data(formula: str, owner: get_user_model()) -> dict:
 
         # Handle calculated score fields
         if field_name in CALCULATED_SCORE_FIELDS:
-            if field_name == 'x_axis_score':
+            if field_name == "x_axis_score":
                 value = randint(10, 50)  # Mock X-axis score
-            elif field_name == 'y_axis_score':
-                value = randint(5, 30)   # Mock Y-axis score
-            elif field_name == 'total_score':
+            elif field_name == "y_axis_score":
+                value = randint(5, 30)  # Mock Y-axis score
+            elif field_name == "total_score":
                 value = randint(15, 80)  # Mock total score
             mocked_data[field_name] = value
             continue
@@ -799,7 +796,9 @@ class AnswerAbstract(RecommendationFieldsMixin):
     value_number = models.PositiveBigIntegerField(blank=True, null=True)
     value = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
     date_value = models.DateField(blank=True, null=True)
-    values = models.TextField(null=True, blank=True)  # Store JSON as text for SQLite compatibility
+    values = models.TextField(
+        null=True, blank=True
+    )  # Store JSON as text for SQLite compatibility
     points = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
 
     def get_values(self):

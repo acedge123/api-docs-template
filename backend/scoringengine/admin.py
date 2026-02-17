@@ -203,9 +203,9 @@ class RestrictedAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             if hasattr(request.user, "catalogue_as_master"):
                 form.base_fields["owner"].required = True
-                form.base_fields["owner"].queryset = (
-                    request.user.catalogue_as_master.slaves.all()
-                )
+                form.base_fields[
+                    "owner"
+                ].queryset = request.user.catalogue_as_master.slaves.all()
 
             else:
                 form.base_fields["owner"].widget = forms.HiddenInput()
@@ -323,13 +323,13 @@ class QuestionAdmin(RestrictedAdmin):
         answers = {}
         for q in questions:
             if q.type == Question.MULTIPLE_CHOICES:
-                answers[q.field_name] = (
-                    f"put one or multiple responses separated by commas for '{q.field_name}' question here"
-                )
+                answers[
+                    q.field_name
+                ] = f"put one or multiple responses separated by commas for '{q.field_name}' question here"
             else:
-                answers[q.field_name] = (
-                    f"put response for '{q.field_name}' question here"
-                )
+                answers[
+                    q.field_name
+                ] = f"put response for '{q.field_name}' question here"
 
         payload = {
             "lead_id": "(optional) uuid4 lead identifier, if not used just remove whole line",
