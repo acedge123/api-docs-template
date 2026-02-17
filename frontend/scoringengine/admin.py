@@ -440,7 +440,9 @@ class ScoringModelAdmin(RestrictedAdmin):
         if db_field.name == "question":
             if not request.user.is_superuser:
                 if hasattr(request.user, "catalogue_as_master"):
-                    kwargs["queryset"] = Question.objects.filter(owner=request.user.catalogue_as_master.slaves.all())
+                    kwargs["queryset"] = Question.objects.filter(
+                        owner=request.user.catalogue_as_master.slaves.all()
+                    )
                 else:
                     kwargs["queryset"] = Question.objects.filter(owner=request.user)
 
