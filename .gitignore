@@ -16,6 +16,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!frontend/src/lib/  # Allow frontend/src/lib/ directory
 lib64/
 parts/
 sdist/
