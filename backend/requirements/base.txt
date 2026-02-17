@@ -14,6 +14,7 @@ drf-yasg==1.21.7
 psutil==5.9.6  # https://github.com/axnsan12/drf-yasg
 dj-database-url==2.1.0  # https://github.com/jacobian/dj-database-url
 psycopg2-binary==2.9.9  # https://github.com/psycopg/psycopg2
+requests==2.31.0  # https://github.com/psf/requests (for Repo B/C adapters)
 
 # Sentry
 # ------------------------------------------------------------------------------
