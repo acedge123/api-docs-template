@@ -67,6 +67,17 @@ class RepoBAuditAdapter:
             # If Repo B not configured, silently skip (like stub)
             return
         
+        # Validate tenant_id is a UUID before sending to Repo B
+        tenant_id = entry.get('tenant_id', '')
+        if tenant_id:
+            try:
+                # Try to parse as UUID to validate format
+                uuid.UUID(tenant_id)
+            except (ValueError, TypeError):
+                # Not a valid UUID - don't send to Repo B (would cause database error)
+                print(f"⚠️ Audit skipped: tenant_id '{tenant_id}' is not a valid UUID. Set ACP_TENANT_ID to the tenant UUID from Repo B.")
+                return
+        
         try:
             # Extract pack from action name (e.g., "domain.leadscoring.models.create" -> "leadscoring")
             action = entry.get('action', '')
