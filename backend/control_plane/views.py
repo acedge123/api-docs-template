@@ -96,12 +96,28 @@ def _get_router():
         else:
             print(f"✅ Found tenant UUID from env: {tenant_uuid[:8]}... (length: {len(tenant_uuid)})")
         
+        # Get org_id from environment and strip whitespace (Railway sometimes adds it)
+        org_id = os.environ.get('ACP_ORG_ID')
+        if org_id:
+            org_id = org_id.strip()
+            if not org_id:  # Empty string after stripping
+                org_id = None
+                print(f"⚠️ WARNING: ACP_ORG_ID is set but empty/whitespace")
+        else:
+            print(f"⚠️ WARNING: ACP_ORG_ID not set. Governance proposals will fail.")
+        
         bindings = {
             'kernelId': os.environ.get('KERNEL_ID', 'leadscore-kernel'),
             'integration': 'leadscore',
             'governanceTenantId': tenant_uuid,  # Tenant UUID from Repo B (kept for backward compatibility with bindings)
-            'org_id': os.environ.get('ACP_ORG_ID'),  # Organization UUID from Repo B (for governance proposals)
+            'org_id': org_id,  # Organization UUID from Repo B (for governance proposals)
         }
+        
+        # Debug log org_id status
+        if org_id:
+            print(f"✅ Found org_id from ACP_ORG_ID: {org_id[:8]}... (length: {len(org_id)})")
+        else:
+            print(f"⚠️ org_id not set - governance proposals will fail until ACP_ORG_ID is set in Railway")
         
         # Create audit adapter (send to Repo B if configured, otherwise stub)
         # Support both ACP_BASE_URL (new standard) and GOVERNANCE_HUB_URL (legacy)

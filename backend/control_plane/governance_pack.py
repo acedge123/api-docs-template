@@ -54,11 +54,27 @@ def handle_propose_policy(params: Dict[str, Any], ctx: Dict[str, Any]) -> Dict[s
     # It can be set in bindings or as an environment variable
     bindings = ctx.get("bindings", {})
     import os
-    org_id = bindings.get("org_id") or bindings.get("organization_id") or os.environ.get("ACP_ORG_ID")
+    
+    # Try multiple sources (bindings first, then env var directly)
+    org_id = bindings.get("org_id") or bindings.get("organization_id")
+    
+    # If not in bindings, try reading directly from environment (in case bindings were cached)
     if not org_id:
+        org_id = os.environ.get("ACP_ORG_ID")
+        if org_id:
+            org_id = org_id.strip()  # Remove any whitespace
+    
+    # Debug logging to help diagnose
+    if not org_id:
+        # Log available env vars for debugging
+        acp_vars = {k: v[:20] + "..." if len(v) > 20 else v for k, v in os.environ.items() if 'ACP' in k.upper() or 'ORG' in k.upper()}
+        print(f"[GOVERNANCE] DEBUG: org_id not found. Available ACP/ORG env vars: {list(acp_vars.keys())}")
+        print(f"[GOVERNANCE] DEBUG: bindings keys: {list(bindings.keys())}")
+        print(f"[GOVERNANCE] DEBUG: bindings.org_id value: {bindings.get('org_id')}")
         raise ValueError(
-            "org_id not found. Set ACP_ORG_ID environment variable or add 'org_id' to bindings. "
-            "This should be the organization UUID from Repo B (not the tenant UUID)."
+            "org_id not found. Set ACP_ORG_ID environment variable in Railway and redeploy. "
+            "This should be the organization UUID from Repo B (not the tenant UUID). "
+            f"Current bindings: {list(bindings.keys())}, ACP env vars: {list(acp_vars.keys())}"
         )
     
     # Validate proposal structure
