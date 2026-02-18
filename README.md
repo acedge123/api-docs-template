@@ -1,5 +1,7 @@
 # Lead Scoring Engine - Subtree Bridge Architecture
 
+<!-- Last updated: 2026-02-18 -->
+
 A modern lead scoring system with a clean separation between frontend and backend, using a git subtree workflow for seamless collaboration.
 
 ## 🏗️ Architecture Overview
