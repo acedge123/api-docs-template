@@ -56,6 +56,16 @@ def onboard_leadscoring(request):
             {"ok": False, "error": "Invalid JSON", "code": "VALIDATION_ERROR"},
             status=400,
         )
+    except Exception as e:
+        import traceback
+        print(f"[ONBOARD] Error parsing request: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse(
+            {"ok": False, "error": f"Request parsing error: {str(e)}", "code": "INTERNAL_ERROR"},
+            status=500,
+        )
+    
+    try:
     
     # Validate required fields
     agent_id = body.get("agent_id", "").strip()
@@ -94,7 +104,8 @@ def onboard_leadscoring(request):
     )
     
     # Call Repo B to create tenant
-    tenant_create_url = f"{governance_url}/functions/v1/tenants/create"
+        # Note: Supabase Edge Functions use folder name as path (tenants-create, not tenants/create)
+    tenant_create_url = f"{governance_url}/functions/v1/tenants-create"
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {kernel_api_key}',
@@ -269,3 +280,15 @@ def onboard_leadscoring(request):
             "billing_period": "monthly"
         }
     })
+    except Exception as e:
+        import traceback
+        print(f"[ONBOARD] Unexpected error in onboarding: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": f"Onboarding failed: {str(e)}",
+                "code": "INTERNAL_ERROR",
+            },
+            status=500,
+        )
