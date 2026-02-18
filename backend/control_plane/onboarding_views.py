@@ -268,9 +268,15 @@ def onboard_leadscoring(request):
                         "params": {
                             "questions": [
                                 {
-                                    "question": "What is your budget?",
-                                    "type": "multiple_choice",
-                                    "options": ["$0-10k", "$10k-50k", "$50k+"]
+                                    "field_name": "budget",
+                                    "number": 1,
+                                    "text": "What is your budget?",
+                                    "type": "MC",
+                                    "choices": [
+                                        {"text": "$0-10k", "value": 1},
+                                        {"text": "$10k-50k", "value": 2},
+                                        {"text": "$50k+", "value": 3}
+                                    ]
                                 }
                             ]
                         }
@@ -280,7 +286,24 @@ def onboard_leadscoring(request):
                     "calls_included": 100,
                     "message": "First 100 calls are free. After that, add a payment method to continue."
                 },
-                "documentation_url": "https://docs.example.com/leadscoring"
+                "documentation_url": f"{base_url}/api-docs",
+                "api_reference": {
+                    "endpoint": f"{base_url}/api/manage",
+                    "action": "domain.leadscoring.questions.upsert_bulk",
+                    "required_fields": {
+                        "field_name": "Unique identifier (letters, numbers, underscore only)",
+                        "number": "Question number (must be >= 1, unique per owner)",
+                        "text": "Question text (max 200 characters)",
+                        "type": "Question type: MC (multiple choice), CH (choice), O (open), I (integer), S (slider), D (date)"
+                    },
+                    "choices_format": {
+                        "description": "For MC/CH types, provide choices array with text and value",
+                        "example": [
+                            {"text": "Option 1", "value": 1},
+                            {"text": "Option 2", "value": 2}
+                        ]
+                    }
+                }
             },
             "upgrade_info": {
                 "message": "First 100 calls are free. After that, add a payment method to continue.",
