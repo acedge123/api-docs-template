@@ -287,6 +287,7 @@ def onboard_leadscoring(request):
                     "message": "First 100 calls are free. After that, add a payment method to continue."
                 },
                 "documentation_url": f"{base_url}/api-docs",
+                "troubleshooting_url": f"{base_url}/troubleshooting",
                 "api_reference": {
                     "endpoint": f"{base_url}/api/manage",
                     "action": "domain.leadscoring.questions.upsert_bulk",
@@ -302,6 +303,28 @@ def onboard_leadscoring(request):
                             {"text": "Option 1", "value": 1},
                             {"text": "Option 2", "value": 2}
                         ]
+                    },
+                    "common_mistakes": {
+                        "wrong": "question, question_number, options, multiple_choice",
+                        "correct": "text, number, choices, MC"
+                    }
+                },
+                "faq": {
+                    "q1": {
+                        "question": "What if I get a 'field_name validation error'?",
+                        "answer": "field_name can only contain letters, numbers, and underscores. No spaces, hyphens, or special characters."
+                    },
+                    "q2": {
+                        "question": "What if I get a 'number constraint violation'?",
+                        "answer": "number must be >= 1 (not 0). Use 'number' not 'question_number'."
+                    },
+                    "q3": {
+                        "question": "What if I get 'choice value required'?",
+                        "answer": "For MC/CH types, each choice must have both 'text' and 'value' fields. Use 'choices' not 'options'."
+                    },
+                    "q4": {
+                        "question": "What if authorization times out?",
+                        "answer": "Wait a few seconds and try again. If it persists, contact support."
                     }
                 }
             },
