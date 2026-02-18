@@ -1,6 +1,6 @@
 # Lead Scoring Engine - Subtree Bridge Architecture
 
-<!-- Last updated: 2026-02-18 -->
+<!-- Last updated: 2026-02-18 - Fixed onboarding path -->
 
 A modern lead scoring system with a clean separation between frontend and backend, using a git subtree workflow for seamless collaboration.
 
@@ -179,3 +179,4 @@ git subtree push --prefix=frontend origin main
 **🎯 TL;DR**: Frontend keeps its own repo and deployment. Backend keeps its own repo and deployment. We mirror the frontend into the backend repo as a read-only folder for convenience. Frontend is still the source of truth. No cross-repo surprises, no broken deploys.
 
 **Built with ❤️ using Django, React, TypeScript, and Tailwind CSS**
+# Trigger rebuild
