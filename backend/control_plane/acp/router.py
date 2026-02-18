@@ -5,6 +5,7 @@ ACP Router — implements spec/ contract
 import json
 import os
 import uuid
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from django.contrib.auth import get_user_model
@@ -80,6 +81,62 @@ def create_manage_router(
     def _log_audit(entry: Dict) -> None:
         if audit_adapter:
             audit_adapter.log(entry)
+    
+    def enforce_usage_limit(tenant_uuid: str, action: str, control_plane, bindings: Dict) -> Optional[Dict]:
+        """
+        Check usage before executing action.
+        Returns warning dict if approaching limit, raises UpgradeRequiredError if limit reached.
+        
+        CRITICAL FIX #2: Free tier enforcement must live in Repo A kernel/router.
+        """
+        if not tenant_uuid or not control_plane:
+            return None  # Skip if no tenant or control plane (will fail auth anyway)
+        
+        try:
+            # Query Repo B for usage (current month)
+            now = datetime.now(timezone.utc)
+            period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+            period_end = now.isoformat()
+            
+            from control_plane.control_plane_adapter import UpgradeRequiredError, UsageResponse
+            usage = control_plane.get_usage(
+                tenant_id=tenant_uuid,
+                period_start=period_start,
+                period_end=period_end
+            )
+            
+            # Check if free tier and limit reached
+            if usage.tier == "free" and usage.calls_used >= usage.calls_limit:
+                # Generate upgrade URL (will be implemented in onboarding endpoint)
+                upgrade_url = f"/api/upgrade/checkout?tenant={tenant_uuid}"
+                raise UpgradeRequiredError(
+                    message=f"Free tier limit reached ({usage.calls_limit} calls). Add a payment method to continue.",
+                    usage=usage,
+                    upgrade_url=upgrade_url
+                )
+            
+            # Check if approaching limit (90+ calls for free tier)
+            if usage.tier == "free" and usage.calls_used >= 90:
+                calls_remaining = usage.calls_limit - usage.calls_used
+                upgrade_url = f"/api/upgrade/checkout?tenant={tenant_uuid}"
+                return {
+                    "message": f"You have {calls_remaining} free calls remaining. Add a payment method to continue after {usage.calls_limit} calls.",
+                    "upgrade_url": upgrade_url,
+                    "usage": {
+                        "calls_used": usage.calls_used,
+                        "calls_limit": usage.calls_limit,
+                        "calls_remaining": calls_remaining,
+                        "tier": usage.tier
+                    }
+                }
+            
+            return None  # No warning needed
+        except UpgradeRequiredError:
+            raise  # Re-raise upgrade required errors
+        except Exception as e:
+            # If usage check fails, log but don't block (fail open for resilience)
+            print(f"[USAGE] Usage check failed: {e}, allowing request to proceed")
+            return None
 
     def _get_api_key(req) -> Tuple[bool, Optional[str], Optional[str], Optional[List[str]], Optional[get_user_model()], Optional[str]]:
         """Extract and validate API key.
@@ -384,6 +441,39 @@ def create_manage_router(
                     "code": "IDEMPOTENT_REPLAY",
                 }
 
+        # CRITICAL FIX #2: Enforce usage limits BEFORE executing action
+        # This prevents bypass - limits are enforced at the router level
+        usage_warning = None
+        if not dry_run and control_plane and tenant_uuid:
+            try:
+                from control_plane.control_plane_adapter import UpgradeRequiredError
+                usage_warning = enforce_usage_limit(tenant_uuid, action, control_plane, bindings)
+            except UpgradeRequiredError as e:
+                _log_audit({
+                    "tenant_id": tenant_uuid,
+                    "actor_type": "api_key",
+                    "actor_id": api_key_id or "unknown",
+                    "action": action,
+                    "request_id": request_id,
+                    "result": "denied",
+                    "error_message": str(e),
+                    "ip_address": ip_address,
+                    "dry_run": dry_run,
+                })
+                return {
+                    "ok": False,
+                    "request_id": request_id,
+                    "code": "UPGRADE_REQUIRED",
+                    "error": e.message,
+                    "upgrade_url": e.upgrade_url,
+                    "usage": {
+                        "calls_used": e.usage.calls_used,
+                        "calls_limit": e.usage.calls_limit,
+                        "calls_remaining": e.usage.calls_remaining,
+                        "tier": e.usage.tier
+                    },
+                }
+
         try:
             # Use local_tenant_id for context (handlers may need it for local operations)
             # But only send tenant_uuid to Repo B
@@ -426,7 +516,8 @@ def create_manage_router(
         if idempotency_key and not dry_run and idempotency_adapter:
             idempotency_adapter.store_replay(local_tenant_id, action, idempotency_key, data)
 
-        _log_audit({
+        # TWEAK #4: Include billable and billing_unit from action definition
+        audit_entry = {
             "tenant_id": tenant_uuid,  # Use UUID for Repo B audit (None if not set)
             "actor_type": "api_key",
             "actor_id": api_key_id or "unknown",
@@ -436,15 +527,29 @@ def create_manage_router(
             "ip_address": ip_address,
             "dry_run": dry_run,
             "policy_decision_id": policy_decision_id,  # Include if authorization was checked
-        })
+        }
+        
+        # Add billable and billing_unit from action definition (TWEAK #4)
+        if action_def:
+            audit_entry["billable"] = action_def.billable
+            if action_def.billing_unit:
+                audit_entry["billing_unit"] = action_def.billing_unit
+        
+        _log_audit(audit_entry)
 
-        return {
+        response = {
             "ok": True,
             "request_id": request_id,
             "data": data,
             "dry_run": dry_run,
             "constraints_applied": [f"tenant_scoped: {local_tenant_id}"],
         }
+        
+        # Add usage warning if approaching limit (90+ calls for free tier)
+        if usage_warning:
+            response["warning"] = usage_warning
+        
+        return response
 
     return router
 

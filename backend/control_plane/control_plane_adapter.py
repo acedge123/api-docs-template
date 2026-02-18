@@ -8,6 +8,7 @@ authorization decisions.
 import hashlib
 import json
 import os
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import requests
@@ -52,6 +53,31 @@ class AuthorizationResponse:
         self.decision_ttl_ms = decision_ttl_ms
 
 
+@dataclass
+class UsageResponse:
+    """Response from usage query"""
+    tenant_id: str
+    tier: str  # 'free' | 'paid'
+    calls_used: int
+    calls_limit: int  # 100 for free tier, unlimited (or high number) for paid
+    period_start: str  # ISO timestamp
+    period_end: str  # ISO timestamp
+    calls_remaining: Optional[int] = None  # Calculated: calls_limit - calls_used
+    
+    def __post_init__(self):
+        if self.calls_remaining is None:
+            self.calls_remaining = max(0, self.calls_limit - self.calls_used)
+
+
+class UpgradeRequiredError(Exception):
+    """Raised when free tier limit is reached and upgrade is required"""
+    def __init__(self, message: str, usage: UsageResponse, upgrade_url: str):
+        self.message = message
+        self.usage = usage
+        self.upgrade_url = upgrade_url
+        super().__init__(self.message)
+
+
 class ControlPlaneAdapter:
     """Interface for requesting authorization from Governance Hub"""
     
@@ -60,6 +86,21 @@ class ControlPlaneAdapter:
         Request authorization decision from Governance Hub
         
         CRITICAL: This is on the hot path - must be fast (<50ms ideally)
+        """
+        raise NotImplementedError
+    
+    def get_usage(self, tenant_id: str, period_start: Optional[str] = None, 
+                  period_end: Optional[str] = None) -> UsageResponse:
+        """
+        Get usage statistics for a tenant
+        
+        Args:
+            tenant_id: Tenant UUID
+            period_start: Start of period (ISO timestamp, defaults to start of current month)
+            period_end: End of period (ISO timestamp, defaults to now)
+        
+        Returns:
+            UsageResponse with tier, calls_used, calls_limit, etc.
         """
         raise NotImplementedError
 
@@ -231,3 +272,74 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
                 except:
                     pass
             raise Exception(f"Policy proposal failed: {error_msg}")
+    
+    def get_usage(self, tenant_id: str, period_start: Optional[str] = None,
+                  period_end: Optional[str] = None) -> UsageResponse:
+        """
+        Get usage statistics for a tenant from Repo B
+        
+        Args:
+            tenant_id: Tenant UUID
+            period_start: Start of period (ISO timestamp, defaults to start of current month)
+            period_end: End of period (ISO timestamp, defaults to now)
+        
+        Returns:
+            UsageResponse with tier, calls_used, calls_limit, etc.
+        """
+        url = f"{self.platform_url}/functions/v1/usage"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.kernel_api_key}',
+        }
+        
+        # Default to current month if not provided
+        from datetime import datetime, timezone
+        if not period_end:
+            period_end = datetime.now(timezone.utc).isoformat()
+        if not period_start:
+            # Start of current month
+            now = datetime.now(timezone.utc)
+            period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+        
+        body = {
+            'tenant_id': tenant_id,
+            'period_start': period_start,
+            'period_end': period_end,
+        }
+        
+        try:
+            print(f"[USAGE] GET {url} for tenant_id={tenant_id}")
+            response = requests.post(url, headers=headers, json=body, timeout=5)
+            print(f"[USAGE] Response status: {response.status_code}")
+            response.raise_for_status()
+            result = response.json()
+            
+            # Handle both {data: {...}} and direct response formats
+            data = result.get('data', result)
+            
+            # Extract usage data with defaults
+            tier = data.get('tier', 'free')
+            calls_used = data.get('calls_used', 0)
+            calls_limit = data.get('calls_limit', 100 if tier == 'free' else 999999)
+            
+            return UsageResponse(
+                tenant_id=tenant_id,
+                tier=tier,
+                calls_used=calls_used,
+                calls_limit=calls_limit,
+                period_start=period_start,
+                period_end=period_end,
+            )
+        except requests.exceptions.RequestException as e:
+            # If platform is unreachable, default to free tier with 0 calls
+            # This allows the system to continue operating
+            print(f"[USAGE] Usage query failed: {e}, defaulting to free tier")
+            return UsageResponse(
+                tenant_id=tenant_id,
+                tier='free',
+                calls_used=0,
+                calls_limit=100,
+                period_start=period_start or '',
+                period_end=period_end or '',
+            )

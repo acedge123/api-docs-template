@@ -15,6 +15,8 @@ class ActionDef:
     description: str
     params_schema: Dict[str, Any]
     supports_dry_run: bool
+    billable: bool = True  # TWEAK #4: Whether this action should be billed
+    billing_unit: Optional[str] = None  # TWEAK #4: "call" | "token" | "row" | "sec" | None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -23,6 +25,8 @@ class ActionDef:
             "description": self.description,
             "params_schema": self.params_schema,
             "supports_dry_run": self.supports_dry_run,
+            "billable": self.billable,
+            "billing_unit": self.billing_unit,
         }
 
 
