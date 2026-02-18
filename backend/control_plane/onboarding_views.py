@@ -15,6 +15,7 @@ from rest_framework.authtoken.models import Token
 
 from control_plane.control_plane_adapter import HttpControlPlaneAdapter
 from control_plane.executor_adapter import HttpExecutorAdapter
+from control_plane.models import UserTenantMapping
 
 User = get_user_model()
 
@@ -224,9 +225,12 @@ def onboard_leadscoring(request):
         token, created = Token.objects.get_or_create(user=user)
         api_key = token.key
         
-        # Store tenant_uuid in user profile or separate mapping table
-        # For now, we'll rely on environment variable or a separate mapping
-        # In production, you might want to create a UserProfile model with tenant_uuid
+        # Store tenant_uuid mapping for this user
+        UserTenantMapping.objects.update_or_create(
+            user=user,
+            defaults={'tenant_uuid': tenant_uuid}
+        )
+        print(f"[ONBOARD] Stored tenant mapping: user={user.username} -> tenant_uuid={tenant_uuid}")
         
         # Step 4: Return credentials
         base_url = request.build_absolute_uri('/').rstrip('/')
@@ -239,10 +243,19 @@ def onboard_leadscoring(request):
             "tenant_uuid": tenant_uuid,
             "free_calls_remaining": 100,
             "instructions": {
+                "required_fields": {
+                    "agent_id": "Unique identifier for your agent (e.g., 'openclaw-001')",
+                    "email": "Email address for billing and notifications (required)"
+                },
+                "optional_fields": {
+                    "organization_name": "Name of your organization (optional, defaults to agent_id)"
+                },
                 "setup_steps": [
-                    f"1. Set ACP_TENANT_ID environment variable to: {tenant_uuid}",
-                    "2. Use the api_key as X-API-Key header in requests",
-                    "3. Call /api/manage with action: domain.leadscoring.questions.upsert_bulk"
+                    f"1. Save your tenant_uuid: {tenant_uuid}",
+                    f"2. Save your API key: {api_key}",
+                    f"3. Set ACP_TENANT_ID environment variable to: {tenant_uuid}",
+                    "4. Use the api_key as X-API-Key header in all API requests",
+                    "5. Call /api/manage with action: domain.leadscoring.questions.upsert_bulk"
                 ],
                 "example_request": {
                     "url": f"{base_url}/api/manage",
@@ -262,6 +275,10 @@ def onboard_leadscoring(request):
                             ]
                         }
                     }
+                },
+                "free_tier_info": {
+                    "calls_included": 100,
+                    "message": "First 100 calls are free. After that, add a payment method to continue."
                 },
                 "documentation_url": "https://docs.example.com/leadscoring"
             },

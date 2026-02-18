@@ -138,7 +138,7 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
         
         try:
             print(f"[AUTH] POST {url} with kernel_id={request.kernel_id}, action={request.action}")
-            response = requests.post(url, headers=headers, json=request.to_dict(), timeout=5)
+            response = requests.post(url, headers=headers, json=request.to_dict(), timeout=10)
             print(f"[AUTH] Response status: {response.status_code}")
             response.raise_for_status()
             result = response.json()
@@ -286,6 +286,7 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
         Returns:
             UsageResponse with tier, calls_used, calls_limit, etc.
         """
+        # Note: Supabase Edge Functions use folder name as path
         url = f"{self.platform_url}/functions/v1/usage"
         
         headers = {

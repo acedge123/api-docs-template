@@ -159,11 +159,21 @@ def create_manage_router(
         # For local operations, use user.id
         local_tenant_id = str(user.id)
         
-        # For Repo B (Governance Hub), use the registered tenant UUID from env
-        # This is set during onboarding when the tenant is registered in Repo B
-        # Support both ACP_TENANT_ID (new standard) and GOVERNANCE_TENANT_ID (legacy)
-        # CRITICAL: Must be a UUID, not the local tenant ID
-        tenant_uuid = bindings.get('governanceTenantId') or os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID')
+        # For Repo B (Governance Hub), get tenant UUID from user mapping (created during onboarding)
+        # Fallback to env var for backward compatibility
+        tenant_uuid = None
+        try:
+            from control_plane.models import UserTenantMapping
+            mapping = UserTenantMapping.objects.filter(user=user).first()
+            if mapping:
+                tenant_uuid = mapping.tenant_uuid
+                print(f"[AUTH] Found tenant_uuid from user mapping: {tenant_uuid}")
+        except Exception as e:
+            print(f"[AUTH] Warning: Could not load tenant mapping: {e}")
+        
+        # Fallback to env var (for backward compatibility or if mapping doesn't exist)
+        if not tenant_uuid:
+            tenant_uuid = bindings.get('governanceTenantId') or os.environ.get('ACP_TENANT_ID') or os.environ.get('GOVERNANCE_TENANT_ID')
         
         # Strip whitespace if present (common issue with env vars)
         if tenant_uuid:
