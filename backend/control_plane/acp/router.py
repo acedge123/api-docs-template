@@ -128,7 +128,8 @@ def create_manage_router(
             print(f"⚠️ DEBUG: ACP_TENANT_ID not found. Available related env vars: {env_vars_with_tenant}")
 
         # No scoped keys yet; treat all valid tokens as full control-plane access.
-        scopes = ["manage.read", "manage.domain"]
+        # Include all standard scopes for now (can be made configurable later)
+        scopes = ["manage.read", "manage.domain", "manage.governance"]
         api_key_id = token.key
         return True, local_tenant_id, api_key_id, scopes, user, tenant_uuid
 
