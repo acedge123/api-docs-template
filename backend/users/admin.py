@@ -103,9 +103,11 @@ class UserOwnAdmin(UserAdmin):
             return redirect(reverse("admin:auth_user_change", kwargs={"object_id": user.pk}))
 
         tenant_create_url = f"{governance_url}/functions/v1/tenants-create"
+        idempotency_key = f"admin-user-{user.id}"
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {kernel_api_key}",
+            "Idempotency-Key": idempotency_key,
         }
         payload = {
             "agent_id": user.username,
