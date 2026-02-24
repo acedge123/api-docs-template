@@ -40,8 +40,8 @@
 3. Open governance-hub (Repo B)
    └─> Add billing_periods table
    └─> Add billable flag to audit_logs
-   └─> Create billing/run endpoint
-   └─> Create tenants/create endpoint
+   └─> Create billing-run endpoint
+   └─> Create tenants-create endpoint
    └─> Push and deploy
 
 4. Open key-vault (Repo C)
@@ -88,7 +88,7 @@ These tweaks prevent billing errors, security gaps, and operational pain:
 
 3. **Add Idempotency Keys for Billing** ✅
    - `billing_periods.idempotency_key` column added
-   - `Idempotency-Key` header required on `POST /functions/v1/billing/run`
+   - `Idempotency-Key` header required on `POST /functions/v1/billing-run`
    - Idempotency keys in Stripe calls prevent double-charging
    - Retries become no-ops
 
@@ -294,7 +294,7 @@ Content-Type: application/json
 
 **Repo A → Repo B:**
 ```http
-POST {ACP_BASE_URL}/functions/v1/tenants/create
+POST {ACP_BASE_URL}/functions/v1/tenants-create
 Authorization: Bearer {ACP_KERNEL_KEY}
 
 {
@@ -642,7 +642,7 @@ ALTER TABLE tenants ADD COLUMN payment_method_status VARCHAR(20) DEFAULT 'none';
 ┌─────────────────────────────────────────────────────────────────┐
 │ Repo A: Initiate Billing (Scheduled Job)                        │
 │ Runs: 1st of each month at 00:00 UTC                            │
-│ Calls: POST {ACP_BASE_URL}/functions/v1/billing/run            │
+│ Calls: POST {ACP_BASE_URL}/functions/v1/billing-run            │
 │ Headers: Idempotency-Key: billing-2026-02-01                   │
 └─────────────────────────────────────────────────────────────────┘
                             │
@@ -742,7 +742,7 @@ ALTER TABLE tenants ADD COLUMN payment_method_status VARCHAR(20) DEFAULT 'none';
   - Railway cron job calling Repo A endpoint
 - **TWEAK #3:** Include `Idempotency-Key` header:
   ```http
-  POST {ACP_BASE_URL}/functions/v1/billing/run
+  POST {ACP_BASE_URL}/functions/v1/billing-run
   Idempotency-Key: billing-2026-02-01
   Authorization: Bearer {ACP_KERNEL_KEY}
   ```
@@ -928,7 +928,7 @@ Authorization: Bearer {api_key}
 **If Repo B owns billing:**
 1. **Repo A initiates** (calls Repo B endpoint):
    ```http
-   POST {ACP_BASE_URL}/functions/v1/billing/run
+   POST {ACP_BASE_URL}/functions/v1/billing-run
    Authorization: Bearer {ACP_KERNEL_KEY}
    Idempotency-Key: billing-2026-02-01  # TWEAK #3: Required header
    ```

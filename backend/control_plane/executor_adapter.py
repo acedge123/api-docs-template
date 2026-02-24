@@ -115,7 +115,7 @@ class HttpExecutorAdapter(ExecutorAdapter):
         """
         # Extract integration and action from endpoint
         # e.g., "/api/tenants/{tenantId}/shopify/products.create" -> integration: "shopify", action: "products.create"
-        match = re.search(r'/(shopify|ciq|leadscore)/(.+)$', endpoint)
+        match = re.search(r'/(shopify|ciq|leadscore|stripe)/(.+)$', endpoint)
         if not match:
             raise ValueError(f"Invalid endpoint format: {endpoint}. Expected pattern: /api/tenants/{{tenantId}}/{{integration}}/{{action}}")
         

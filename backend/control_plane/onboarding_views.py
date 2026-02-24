@@ -253,8 +253,8 @@ def onboard_leadscoring(request):
                 "setup_steps": [
                     f"1. Save your tenant_uuid: {tenant_uuid}",
                     f"2. Save your API key: {api_key}",
-                    f"3. Set ACP_TENANT_ID environment variable to: {tenant_uuid}",
-                    "4. Use the api_key as X-API-Key header in all API requests",
+                    "3. Use the api_key as X-API-Key header in all API requests",
+                    "4. (Optional) Single-tenant installs can set ACP_TENANT_ID to the tenant_uuid",
                     "5. Call /api/manage with action: domain.leadscoring.questions.upsert_bulk"
                 ],
                 "example_request": {

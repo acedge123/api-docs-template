@@ -187,7 +187,7 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
                     pass
             raise Exception(f"Authorization failed: {error_msg}")
     
-    def heartbeat(self, kernel_id: str, version: str, packs: list, env: str = 'production') -> Dict:
+    def heartbeat(self, kernel_id: str, version: str, packs: list, env: str = 'production', actions: Optional[list] = None) -> Dict:
         """
         Send heartbeat to Repo B for kernel registration
         
@@ -213,6 +213,8 @@ class HttpControlPlaneAdapter(ControlPlaneAdapter):
             'packs': packs,
             'env': env,
         }
+        if actions is not None:
+            body['actions'] = actions
         
         try:
             response = requests.post(url, headers=headers, json=body, timeout=10)

@@ -306,11 +306,13 @@ def create_manage_router(
                 "code": "VALIDATION_ERROR",
             }
 
-        # Authorization check via Repo B (for write actions)
-        # CRITICAL: All actions with scope "manage.domain" or "manage.write" are write actions
-        # and MUST be authorized before execution. This is a security requirement.
+        # Authorization check via Repo B
+        # By default, only non-read scopes are authorized. Set ACP_AUTHORIZE_READS=true
+        # to enforce governance on read-only actions as well.
         policy_decision_id = None
-        if control_plane and not dry_run and required_scope in ("manage.domain", "manage.write"):
+        authorize_reads = str(os.environ.get("ACP_AUTHORIZE_READS", "false")).lower() in ("1", "true", "yes")
+        should_authorize = control_plane and not dry_run and (required_scope != "manage.read" or authorize_reads)
+        if should_authorize:
             # CRITICAL: Must have valid UUID tenant ID to call Repo B
             if not tenant_uuid:
                 _log_audit({
@@ -320,14 +322,14 @@ def create_manage_router(
                     "action": action,
                     "request_id": request_id,
                     "result": "error",
-                    "error_message": "ACP_TENANT_ID or GOVERNANCE_TENANT_ID must be set to a valid UUID for Repo B authorization",
+                    "error_message": "Repo B tenant UUID missing. Configure UserTenantMapping or ACP_TENANT_ID for single-tenant installs.",
                     "ip_address": ip_address,
                     "dry_run": dry_run,
                 })
                 return {
                     "ok": False,
                     "request_id": request_id,
-                    "error": "ACP_TENANT_ID or GOVERNANCE_TENANT_ID must be set to a valid UUID. Get the tenant UUID from Repo B Organizations drawer.",
+                    "error": "Repo B tenant UUID missing. Configure UserTenantMapping (multi-tenant) or ACP_TENANT_ID (single-tenant).",
                     "code": "CONFIGURATION_ERROR",
                 }
             # Since we're already inside the scope check, this IS a write action

@@ -27,6 +27,22 @@ _router = None
 _control_plane = None
 
 
+def _get_action_catalog():
+    """Return a list of action defs for heartbeat discovery."""
+    actions = []
+    for pack in [leadscoring_pack, governance_pack]:
+        for action in pack.actions:
+            try:
+                actions.append(action.to_dict())
+            except Exception:
+                actions.append({
+                    "name": getattr(action, "name", "unknown"),
+                    "scope": getattr(action, "scope", "manage.read"),
+                    "description": getattr(action, "description", ""),
+                })
+    return actions
+
+
 def _send_heartbeat():
     """Send heartbeat to Repo B on startup"""
     global _control_plane
@@ -36,7 +52,8 @@ def _send_heartbeat():
             kernel_id=kernel_id,
             version='1.0.0',
             packs=['leadscoring'],
-            env=os.environ.get('ENVIRONMENT', 'production')
+            env=os.environ.get('ENVIRONMENT', 'production'),
+            actions=_get_action_catalog(),
         )
         if result.get('ok'):
             print(f"✅ Kernel registered with Repo B: {kernel_id}")
