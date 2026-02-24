@@ -1,3 +1,6 @@
+import os
+
+import requests
 from django.contrib import messages, admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -8,6 +11,7 @@ from django.utils.html import mark_safe
 
 from scoringengine.admin import admin_site
 
+from control_plane.models import UserTenantMapping
 from users.forms import CloneUserForm, CatalogueForm
 from users.models import Catalogue
 
@@ -32,8 +36,9 @@ class UserOwnAdmin(UserAdmin):
 
     def actions_column(self, obj: User):
         return mark_safe(
-            '<a href="{}">Clone</a>'.format(
-                reverse("admin:auth_user_clone", kwargs={"object_id": obj.pk})
+            '<a href="{}">Clone</a> | <a href="{}">Provision Tenant</a>'.format(
+                reverse("admin:auth_user_clone", kwargs={"object_id": obj.pk}),
+                reverse("admin:auth_user_provision_tenant", kwargs={"object_id": obj.pk}),
             )
         )
 
@@ -71,12 +76,77 @@ class UserOwnAdmin(UserAdmin):
         except User.DoesNotExist:
             return redirect(reverse("admin:auth_user_changelist"))
 
+    def provision_tenant(self, request, object_id):
+        try:
+            user = User.objects.get(pk=object_id)
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+            return redirect(reverse("admin:auth_user_changelist"))
+
+        # Skip if mapping already exists
+        existing = UserTenantMapping.objects.filter(user=user).first()
+        if existing:
+            messages.info(
+                request,
+                f"Tenant already provisioned for {user.username}: {existing.tenant_uuid}",
+            )
+            return redirect(reverse("admin:auth_user_change", kwargs={"object_id": user.pk}))
+
+        governance_url = os.environ.get("ACP_BASE_URL") or os.environ.get("GOVERNANCE_HUB_URL")
+        kernel_api_key = os.environ.get("ACP_KERNEL_KEY")
+
+        if not governance_url or not kernel_api_key:
+            messages.error(
+                request,
+                "ACP_BASE_URL and ACP_KERNEL_KEY must be set to provision a tenant.",
+            )
+            return redirect(reverse("admin:auth_user_change", kwargs={"object_id": user.pk}))
+
+        tenant_create_url = f"{governance_url}/functions/v1/tenants-create"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {kernel_api_key}",
+        }
+        payload = {
+            "agent_id": user.username,
+            "email": user.email or f"{user.username}@example.com",
+        }
+
+        try:
+            response = requests.post(tenant_create_url, headers=headers, json=payload, timeout=10)
+            response.raise_for_status()
+            tenant_result = response.json()
+            tenant_data = tenant_result.get("data", tenant_result)
+            tenant_uuid = tenant_data.get("tenant_uuid") or tenant_data.get("tenant_id")
+        except Exception as e:
+            messages.error(request, f"Tenant provisioning failed: {e}")
+            return redirect(reverse("admin:auth_user_change", kwargs={"object_id": user.pk}))
+
+        if not tenant_uuid:
+            messages.error(request, "Tenant provisioning failed: no tenant_uuid returned.")
+            return redirect(reverse("admin:auth_user_change", kwargs={"object_id": user.pk}))
+
+        UserTenantMapping.objects.update_or_create(
+            user=user,
+            defaults={"tenant_uuid": tenant_uuid},
+        )
+        messages.success(
+            request,
+            f"Tenant provisioned for {user.username}: {tenant_uuid}",
+        )
+        return redirect(reverse("admin:auth_user_change", kwargs={"object_id": user.pk}))
+
     def get_urls(self):
         return [
             path(
                 "<int:object_id>/clone/",
                 self.clone,
                 name="auth_user_clone",
+            ),
+            path(
+                "<int:object_id>/provision-tenant/",
+                self.provision_tenant,
+                name="auth_user_provision_tenant",
             ),
         ] + super().get_urls()
 
