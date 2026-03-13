@@ -361,6 +361,83 @@ def handle_models_upsert_bulk(params, ctx):
     return {"data": {"created": created, "updated": updated}}
 
 
+def handle_ranges_upsert_bulk(params, ctx):
+    """Replace (upsert) ValueRanges for scoring models by question_field_name.
+
+    Params:
+      - ranges: [{question_field_name, ranges: [{start?, end?, points}]}]
+
+    For each item, deletes existing ValueRanges for that question's scoring model
+    and bulk-creates the new ones. start/end can be null for unbounded.
+    """
+    user = _require_user(ctx)
+    range_sets = params.get("ranges") or []
+    if not isinstance(range_sets, list) or not range_sets:
+        raise ValueError("Missing required param: ranges (non-empty array)")
+
+    replaced_models = 0
+    created_ranges = 0
+
+    with transaction.atomic():
+        for rs in range_sets:
+            qfn = (rs.get("question_field_name") or "").strip()
+            if not qfn:
+                raise ValueError("question_field_name is required")
+
+            q = Question.objects.filter(owner=user, field_name=qfn).first()
+            if not q:
+                raise ValueError(f"Question not found: {qfn}")
+
+            sm = ScoringModel.objects.filter(owner=user, question=q).first()
+            if not sm:
+                raise ValueError(f"ScoringModel not found for question: {qfn}")
+
+            ranges = rs.get("ranges") or []
+            if not isinstance(ranges, list) or not ranges:
+                raise ValueError(f"ranges must be a non-empty array for {qfn}")
+
+            sm.ranges.all().delete()
+
+            objs = []
+            for r in ranges:
+                start = r.get("start")
+                end = r.get("end")
+                points = r.get("points")
+                if points is None:
+                    raise ValueError(f"points is required for range in {qfn}")
+
+                d_start = (
+                    Decimal(str(start)).quantize(Decimal("0.01"))
+                    if start is not None
+                    else None
+                )
+                d_end = (
+                    Decimal(str(end)).quantize(Decimal("0.01"))
+                    if end is not None
+                    else None
+                )
+
+                objs.append(
+                    ValueRange(
+                        scoring_model=sm,
+                        start=d_start,
+                        end=d_end,
+                        points=int(points),
+                    )
+                )
+
+            ValueRange.objects.bulk_create(objs)
+            replaced_models += 1
+            created_ranges += len(objs)
+
+    return {
+        "data": {
+            "models_replaced": replaced_models,
+            "ranges_created": created_ranges,
+        }
+    }
+
+
 def handle_rules_upsert_bulk(params, ctx):
     """Upsert recommendation rules by question_field_name.
 
@@ -627,6 +704,40 @@ leadscoring_pack = Pack(
             supports_dry_run=False,
         ),
         ActionDef(
+            name="domain.leadscoring.ranges.upsert_bulk",
+            scope="manage.domain",
+            description="Replace ValueRanges for scoring models by question_field_name",
+            params_schema={
+                "type": "object",
+                "properties": {
+                    "ranges": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "question_field_name": {"type": "string"},
+                                "ranges": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "start": {"type": ["number", "null"]},
+                                            "end": {"type": ["number", "null"]},
+                                            "points": {"type": "integer"},
+                                        },
+                                        "required": ["points"],
+                                    },
+                                },
+                            },
+                            "required": ["question_field_name", "ranges"],
+                        },
+                    },
+                },
+                "required": ["ranges"],
+            },
+            supports_dry_run=False,
+        ),
+        ActionDef(
             name="domain.leadscoring.models.list",
             scope="manage.read",
             description="List all scoring models for the tenant",
@@ -691,6 +802,7 @@ leadscoring_pack = Pack(
         "domain.leadscoring.models.upsert_bulk": handle_models_upsert_bulk,
         "domain.leadscoring.rules.list": handle_rules_list,
         "domain.leadscoring.rules.upsert_bulk": handle_rules_upsert_bulk,
+        "domain.leadscoring.ranges.upsert_bulk": handle_ranges_upsert_bulk,
         "domain.leadscoring.scores.recompute": handle_scores_recompute,
         "domain.leadscoring.leads.export": handle_leads_export,
     },
