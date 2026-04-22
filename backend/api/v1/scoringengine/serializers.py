@@ -21,34 +21,57 @@ class AnswerSerializerCreate(serializers.ModelSerializer):
 
 
 class LeadSerializerCreate(serializers.ModelSerializer):
-    answers = AnswerSerializerCreate(many=True, required=True)
+    answers = AnswerSerializerCreate(many=True, required=False)
 
     class Meta:
         model = Lead
         fields = ["lead_id", "answers"]
 
     def to_internal_value(self, data):
-        # Reformat answers dict to list
-        data["answers"] = [
-            {"field_name": fn, "response": r} for fn, r in data["answers"].items()
-        ]
+        data = data.copy()
+
+        # Reformat answers dict to list when the API receives the create/update shape
+        if isinstance(data.get("answers"), dict):
+            data["answers"] = [
+                {"field_name": fn, "response": r}
+                for fn, r in data["answers"].items()
+            ]
 
         return super().to_internal_value(data)
 
-    def create(self, validated_data):
-        answers_data = validated_data.pop("answers")
-        validated_data["timestamp"] = now()
-        lead = Lead.objects.create(**validated_data)
+    def validate(self, data):
+        if not self.partial and "answers" not in data:
+            raise serializers.ValidationError({"answers": ["This field is required."]})
+        return data
+
+    def _save_answers(self, lead, answers_data):
+        lead.answers.all().delete()
 
         for answer_data in answers_data:
-            # Handle values field specially for SQLite compatibility
             values = answer_data.pop("values", None)
             answer = Answer.objects.create(lead=lead, **answer_data)
             if values is not None:
                 answer.set_values(values)
                 answer.save()
 
+    def create(self, validated_data):
+        answers_data = validated_data.pop("answers")
+        validated_data["timestamp"] = now()
+        lead = Lead.objects.create(**validated_data)
+        self._save_answers(lead, answers_data)
         return lead
+
+    def update(self, instance, validated_data):
+        answers_data = validated_data.pop("answers", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if answers_data is not None:
+            self._save_answers(instance, answers_data)
+
+        return instance
 
 
 class RecommendationSerializerView(serializers.ModelSerializer):

@@ -40,7 +40,10 @@ from users.models import User
 
 
 class LeadViewSet(
-    mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
 ):
     """
     API endpoint for lead management.
@@ -56,7 +59,7 @@ class LeadViewSet(
         return self.queryset.filter(owner=self.request.user).prefetch_related("answers")
 
     def get_serializer_class(self):
-        if self.action == "create":
+        if self.action in ["create", "update", "partial_update"]:
             return LeadSerializerCreate
         else:
             return LeadSerializerView
@@ -107,7 +110,6 @@ class LeadViewSet(
         logger.info(f"Creating lead for user {request.user.id}")
         data = request.data.copy()
 
-        # remove duplicate prior adding the new record
         allow_duplicates = data.pop("allow_duplicates", False)
 
         if allow_duplicates is True and data.get("lead_id"):
@@ -122,7 +124,6 @@ class LeadViewSet(
                 pass
 
         serializer = self.get_serializer(data=data)
-
         serializer.is_valid(raise_exception=True)
         obj = self.perform_create(serializer)
         add_lead_log(obj)
@@ -137,6 +138,41 @@ class LeadViewSet(
         return Response(
             view_serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        logger.info(f"Updating lead {instance.lead_id} for user {request.user.id}")
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        answers_data = serializer.validated_data.get("answers")
+        if answers_data is not None:
+            provided_answers_field_names = [
+                re.sub(r"\[\d+\]", "", a["field_name"]) for a in answers_data
+            ]
+
+            for question in self.request.user.questions.all():
+                if question.field_name not in provided_answers_field_names:
+                    raise serializers.ValidationError(
+                        {"answers": ["Not all answers provided"]}
+                    )
+
+        obj = serializer.save()
+
+        if answers_data is not None:
+            collect_answers_values(self.request.user, answers_data)
+            x_axis, y_axis = calculate_x_and_y_scores(self.request.user, answers_data)
+            obj.x_axis = x_axis
+            obj.y_axis = y_axis
+            obj.total_score = x_axis + y_axis
+            collect_recommendations(self.request.user, answers_data)
+            obj.save(update_fields=["x_axis", "y_axis", "total_score"])
+
+        add_lead_log(obj)
+        view_serializer = LeadSerializerView(obj, context={"request": request})
+        return Response(view_serializer.data, status=status.HTTP_200_OK)
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
