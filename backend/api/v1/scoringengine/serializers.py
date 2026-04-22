@@ -88,7 +88,7 @@ class AnswerSerializerView(serializers.ModelSerializer):
 
 
 class LeadSerializerView(serializers.ModelSerializer):
-    answers = AnswerSerializerView(many=True, source="answers")
+    answers = AnswerSerializerView(many=True)
     recommendations = RecommendationSerializerView(many=True, source="answers")
 
     class Meta:
