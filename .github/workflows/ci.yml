@@ -16,6 +16,48 @@ on:
 
 
 jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Fail on unresolved merge markers
+        run: |
+          python - <<'PY'
+          import pathlib
+          import subprocess
+          import sys
+
+          markers = ("<<<<<<<", "=======", ">>>>>>>")
+          files = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+
+          bad = []
+          for rel in files:
+            path = pathlib.Path(rel)
+            try:
+              text = path.read_text(encoding="utf-8")
+            except Exception:
+              continue
+            if any(m in text for m in markers):
+              bad.append(rel)
+
+          if bad:
+            print("Found unresolved merge markers in:")
+            for rel in bad:
+              print(f" - {rel}")
+            sys.exit(1)
+          print("No unresolved merge markers found.")
+          PY
+
+      - name: Compile critical control plane file
+        run: python -m py_compile backend/control_plane/packs.py
+
   linter:
     runs-on: ubuntu-latest
     steps:
