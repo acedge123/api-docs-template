@@ -364,13 +364,6 @@ def handle_models_upsert_bulk(params, ctx):
 def handle_ranges_upsert_bulk(params, ctx):
     """Replace (upsert) ValueRanges for scoring models by question_field_name.
 
-<<<<<<< Updated upstream
-    Params:
-      - ranges: [{question_field_name, ranges: [{start?, end?, points}]}]
-
-    For each item, deletes existing ValueRanges for that question's scoring model
-    and bulk-creates the new ones. start/end can be null for unbounded.
-=======
     Why: the upstream scoring engine requires ValueRange bins to translate a computed
     *value* (e.g., LTV%) into *points*. The /api/manage pack previously exposed
     model upserts but not range management.
@@ -391,7 +384,6 @@ def handle_ranges_upsert_bulk(params, ctx):
     Notes:
       - start/end are treated as the half-open interval [start, end)
       - null start/end represent -inf / +inf
->>>>>>> Stashed changes
     """
     user = _require_user(ctx)
     range_sets = params.get("ranges") or []
@@ -419,30 +411,15 @@ def handle_ranges_upsert_bulk(params, ctx):
             if not isinstance(ranges, list) or not ranges:
                 raise ValueError(f"ranges must be a non-empty array for {qfn}")
 
-<<<<<<< Updated upstream
-=======
-            # Replace existing bins
->>>>>>> Stashed changes
             sm.ranges.all().delete()
 
             objs = []
             for r in ranges:
-<<<<<<< Updated upstream
                 start = r.get("start")
                 end = r.get("end")
                 points = r.get("points")
                 if points is None:
                     raise ValueError(f"points is required for range in {qfn}")
-
-=======
-                start = r.get("start", None)
-                end = r.get("end", None)
-                points = r.get("points", None)
-                if points is None:
-                    raise ValueError(f"points is required for range in {qfn}")
-
-                # Normalize to 2dp to match model fields
->>>>>>> Stashed changes
                 d_start = (
                     Decimal(str(start)).quantize(Decimal("0.01"))
                     if start is not None
@@ -467,16 +444,7 @@ def handle_ranges_upsert_bulk(params, ctx):
             replaced_models += 1
             created_ranges += len(objs)
 
-<<<<<<< Updated upstream
-    return {
-        "data": {
-            "models_replaced": replaced_models,
-            "ranges_created": created_ranges,
-        }
-    }
-=======
     return {"data": {"models_replaced": replaced_models, "ranges_created": created_ranges}}
->>>>>>> Stashed changes
 
 
 def handle_rules_upsert_bulk(params, ctx):
@@ -751,7 +719,6 @@ leadscoring_pack = Pack(
             params_schema={
                 "type": "object",
                 "properties": {
-<<<<<<< Updated upstream
                     "ranges": {
                         "type": "array",
                         "items": {
@@ -774,9 +741,6 @@ leadscoring_pack = Pack(
                             "required": ["question_field_name", "ranges"],
                         },
                     },
-=======
-                    "ranges": {"type": "array", "items": {"type": "object"}},
->>>>>>> Stashed changes
                 },
                 "required": ["ranges"],
             },
