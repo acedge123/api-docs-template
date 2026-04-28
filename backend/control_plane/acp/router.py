@@ -144,16 +144,16 @@ def create_manage_router(
         For api-docs-template v1, we treat the **DRF Token** as the API key.
 
         Header: `X-API-Key: <token>`
-        Returns: (ok, tenant_id, api_key_id, scopes, user)
+        Returns: (ok, tenant_id, api_key_id, scopes, user, tenant_uuid)
         """
         api_key = req.headers.get("X-API-Key") or req.headers.get("x-api-key")
         if not api_key or not api_key.strip():
-            return False, None, None, None, None
+            return False, None, None, None, None, None
 
         try:
             token = Token.objects.select_related("user").get(key=api_key.strip())
         except Token.DoesNotExist:
-            return False, None, None, None, None
+            return False, None, None, None, None, None
 
         user = token.user
         # For local operations, use user.id
