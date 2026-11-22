@@ -154,6 +154,8 @@ git subtree push --prefix=frontend origin main
 
 ## 📚 Documentation
 
+- **Guild credit scoring proposal (pending approval)**: [Evidence, proposed rules, impact and implementation readiness](docs/guild-credit-scoring/README.md)
+
 - **API Documentation**: Available in the frontend documentation tabs
 - **Backend API**: Django REST Framework with full CRUD operations
 
